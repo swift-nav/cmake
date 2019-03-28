@@ -1,3 +1,19 @@
+##########################################################
+# 
+# Search for and correctly set up a dependency package
+#
+# A project which depends on a library can use this module
+# to prevent double inclusion of said library in complex
+# multi-level dependency trees where a single low level
+# library is likely to appear several times. It will 
+# avoid cmake errors when the same target is defined in
+# multiple places. As a fall back it will use libraries
+# provided by the system/sysroot/environment for which
+# it is being compiled. This fallback is required for
+# buildroot/yocto systems
+#
+##########################################################
+
 function(SetupDependency)
   set(options REQUIRED CHECK_TARGET NO_SYSTEM)
   set(oneValueArgs TARGET SUBDIR PACKAGE_NAME)

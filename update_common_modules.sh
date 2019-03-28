@@ -1,5 +1,25 @@
 #!/bin/sh
 
+############################################################################
+#
+# Use this script to automatically update the Swift common cmake modules
+# included in another project
+#
+# This script must not be called from within the swift common cmake modules
+# repository, it is only for use in updating other projects.
+#
+# By default it will pull the latest version from the master branch, pass
+# a branch name as a parameter to select something else
+#
+# This script will stage all changes and set up a commit. Delete the commit
+# message to abort.
+#
+# Be careful when updating common cmake modules, any changes made in a local
+# repository will be overwritten with the canonical version. Always change
+# common modules in the common module repository.
+#
+############################################################################
+
 if ! git remote >/dev/null 2>&1;
 then
   echo "This doesn't look like a git repository. You probably don't want"
