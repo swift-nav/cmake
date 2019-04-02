@@ -2,7 +2,7 @@ if(TARGET sbp)
   return()
 endif()
 
-set(SUBMOD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsbp/c")
+set(SUBMOD_PATH "${PROJECT_SOURCE_DIR}/third_party/libsbp/c")
 if(FINDSBP_SUBMOD_PATH)
   set(SUBMOD_PATH ${FINDSBP_SUBMOD_PATH})
 endif()

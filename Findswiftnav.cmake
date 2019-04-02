@@ -2,7 +2,7 @@ if(TARGET swiftnav)
   return()
 endif()
 
-set(SUBMOD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libswiftnav")
+set(SUBMOD_PATH "${PROJECT_SOURCE_DIR}/third_party/libswiftnav")
 if(FINDSWIFTNAV_SUBMOD_PATH)
   set(SUBMOD_PATH ${FINDSWIFTNAV_SUBMOD_PATH})
 endif()

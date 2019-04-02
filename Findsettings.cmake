@@ -2,7 +2,7 @@ if(TARGET settings)
   return()
 endif()
 
-set(SUBMOD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/libsettings")
+set(SUBMOD_PATH "${PROJECT_SOURCE_DIR}/third_party/libsettings")
 if(FINDSETTINGS_SUBMOD_PATH)
   set(SUBMOD_PATH ${FINDSETTINGS_SUBMOD_PATH})
 endif()

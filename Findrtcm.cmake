@@ -2,7 +2,7 @@ if(TARGET rtcm)
   return()
 endif()
 
-set(SUBMOD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/librtcm/c")
+set(SUBMOD_PATH "${PROJECT_SOURCE_DIR}/third_party/librtcm/c")
 if(FINDRTCM_SUBMOD_PATH)
   set(SUBMOD_PATH ${FINDRTCM_SUBMOD_PATH})
 endif()

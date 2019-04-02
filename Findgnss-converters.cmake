@@ -2,7 +2,7 @@ if(TARGET gnss-converters)
   return()
 endif()
 
-set(SUBMOD_PATH "${CMAKE_CURRENT_SOURCE_DIR}/third_party/gnss-converters/c")
+set(SUBMOD_PATH "${PROJECT_SOURCE_DIR}/third_party/gnss-converters/c")
 if(FINDGNSS_CONVERTERS_SUBMOD_PATH)
   set(SUBMOD_PATH ${FINDGNSS_CONVERTERS_SUBMOD_PATH})
 endif()
