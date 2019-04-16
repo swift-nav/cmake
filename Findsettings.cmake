@@ -1,4 +1,4 @@
-include("GenericFindDependency.cmake")
+include("GenericFindDependency")
 GenericFindDependency(
     TargetName settings
     SourceSubdir "c"
