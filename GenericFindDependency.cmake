@@ -1,7 +1,7 @@
 function(search_dependency_source)
   set(argOptions "")
-  set(argSingleArguments "TargetName" "SourceDir")
-  set(argMultiArguments "")
+  set(argSingleArguments "TargetName")
+  set(argMultiArguments "SourceSearchPaths")
 
   cmake_parse_arguments(x "${argOptions}" "${argSingleArguments}" "${argMultiArguments}" ${ARGN})
 
@@ -9,22 +9,27 @@ function(search_dependency_source)
     message(FATAL_ERROR "Unexpected extra arguments in search_dependency_source: ${x_UNPARSED_ARGUMENTS}")
   endif()
 
-  if(EXISTS "${x_SourceDir}/CMakeLists.txt")
-    message(STATUS "Found ${x_TargetName} source code in ${x_SourceDir}")
-    add_subdirectory(${x_SourceDir})
+  foreach(P ${x_SourceSearchPaths})
+    message(STATUS "Searching in ${P}")
+    if(EXISTS "${P}/CMakeLists.txt")
+      message(STATUS "Found ${x_TargetName} source code in ${P}")
+      add_subdirectory(${P})
+  
+      if(NOT TARGET ${x_TargetName})
+        message(WARNING "Source code in ${P} did not declare target ${x_TargetName} as was expected")
+      endif()
+  
+      # This is very ugly, but required for some python modules, it will not last beyond this temporary solution
+      if(EXISTS "${P}/include")
+        set(x_${x_TargetName}_IncludeDir "${P}/include" CACHE PATH "Path to ${x_TargetName} bundled source code header files")
+      endif()
 
-    if(NOT TARGET ${x_TargetName})
-      message(WARNING "Source code in ${x_SourceDir} did not declare target ${x_TargetName} as was expected")
+      message(STATUS "Found source code for ${x_TargetName} in ${P}")
       return()
     endif()
+  endforeach()
 
-    # This is very ugly, but required for some python modules, it will not last beyond this temporary solution
-    if(EXISTS "${x_SourceDir}/include")
-      set(x_${x_TargetName}_IncludeDir "${x_SourceDir}/include" CACHE PATH "Path to ${x_TargetName} bundled source code header files")
-    endif()
-  else()
-    message(STATUS "No ${x_TargetName} source available in ${x_SourceDir}")
-  endif()
+  message(STATUS "No ${x_TargetName} source available in search paths")
 endfunction()
 
 function(search_dependency_system)
@@ -111,21 +116,30 @@ function(GenericFindDependency)
   foreach(LOCATION ${x_Locations})
     if (${LOCATION} STREQUAL "source")
       # set defaults
+      set(x_SourceSearchPaths "")
       if(NOT x_SourceDir)
-        if(NOT x_SourcePrefix)
-          set(x_SourcePrefix "vendored/lib${x_TargetName}")
-        endif()
-
-        if (NOT x_SourceSubdir)
-          set(x_SourceSubdir ".")
-        endif()
-
-        set(x_SourceDir "${CMAKE_CURRENT_SOURCE_DIR}/${x_SourcePrefix}/${x_SourceSubdir}")
+        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/vendored/${CMAKE_FIND_PACKAGE_NAME}")
+        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/vendored/${x_TargetName}")
+        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/vendored/lib${x_TargetName}")
+        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/vendored/${CMAKE_FIND_PACKAGE_NAME}")
+        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/vendored/${x_TargetName}")
+        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/vendored/lib${x_TargetName}")
+      else()
+        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/${x_SourceDir}")
+        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/vendored/${x_SourceDir}")
+        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/${x_SourceDir}")
+        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/vendored/${x_SourceDir}")
+        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/vendored/${CMAKE_FIND_PACKAGE_NAME}/${x_SourceDir}")
+        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/vendored/${x_TargetName}/${x_SourceDir}")
+        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/vendored/lib${x_TargetName}/${x_SourceDir}")
+        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/vendored/${CMAKE_FIND_PACKAGE_NAME}/${x_SourceDir}")
+        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/vendored/${x_TargetName}/${x_SourceDir}")
+        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/vendored/lib${x_TargetName}/${x_SourceDir}")
       endif()
 
       search_dependency_source(
           TargetName "${x_TargetName}"
-          SourceDir "${x_SourceDir}"
+          SourceSearchPaths "${x_SourceSearchPaths}"
           )
       
       if(TARGET ${x_TargetName})
@@ -152,8 +166,8 @@ function(GenericFindDependency)
     endif()
   endforeach()
 
-  if(x_REQUIRED)
-    message(FATAL_ERROR "Could not find dependency ${x_TargetName} in any available location")
+  if(x_REQUIRED OR ${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED)
+    message(FATAL_ERROR "Could not find REQUIRED dependency ${x_TargetName} in any available location")
   else()
     message(WARNING "Could not find dependency ${x_TargetName} in any available location")
   endif()
