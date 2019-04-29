@@ -12,6 +12,16 @@ function(search_dependency_source)
   if(EXISTS "${x_SourceDir}/CMakeLists.txt")
     message(STATUS "Found ${x_TargetName} source code in ${x_SourceDir}")
     add_subdirectory(${x_SourceDir})
+
+    if(NOT TARGET ${x_TargetName})
+      message(WARNING "Source code in ${x_SourceDir} did not declare target ${x_TargetName} as was expected")
+      return()
+    endif()
+
+    # This is very ugly, but required for some python modules, it will not last beyond this temporary solution
+    if(EXISTS "${x_SourceDir}/include")
+      set(x_${x_TargetName}_IncludeDir "${x_SourceDir}/include" CACHE PATH "Path to ${x_TargetName} bundled source code header files")
+    endif()
   else()
     message(STATUS "No ${x_TargetName} source available in ${x_SourceDir}")
   endif()
