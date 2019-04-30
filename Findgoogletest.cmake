@@ -1,8 +1,7 @@
 include("GenericFindDependency")
 GenericFindDependency(
     TargetName gtest
-    SourcePrefix "vendored/googletest"
-    SourceSubdir "googletest"
+    SourceDir "googletest"
     )
 
 if(NOT CMAKE_CROSSCOMPILING OR THIRD_PARTY_INCLUDES_AS_SYSTEM)
