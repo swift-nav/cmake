@@ -1,4 +1,4 @@
 GenericFindDependency(
     TargetName rtcm
-    SourceSubdir "c"
+    SourceDir "c"
     )
