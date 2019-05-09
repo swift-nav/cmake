@@ -1,14 +1,19 @@
-include("GenericFindDependency")
-GenericFindDependency(
-  TargetName eigen
-  )
-
-if(NOT CMAKE_CROSSCOMPILING OR THIRD_PARTY_INCLUDES_AS_SYSTEM)
-  # Change all of Eigen's include directories to be system includes, to avoid
-  # compiler errors
-  get_target_property(eigen_include_directories eigen INTERFACE_INCLUDE_DIRECTORIES)
-  if(eigen_include_directories)
-    set_target_properties(eigen PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
-    target_include_directories(eigen SYSTEM INTERFACE ${eigen_include_directories})
-  endif()
+if(TARGET eigen)
+  return()
 endif()
+
+add_library(eigen INTERFACE)
+
+# Include Eigen library as system headers to suppress warnings when not
+# cross-compiling. GNU ARM toolchain wraps system headers with `extern "C"`,
+# causing errors, so in this case Eigen must be #included using
+# `#pragma GCC system_header` in the source.
+# See https://gcc.gnu.org/onlinedocs/cpp/System-Headers.html
+if (NOT CMAKE_CROSSCOMPILING OR THIRD_PARTY_INCLUDES_AS_SYSTEM)
+  target_include_directories(eigen SYSTEM INTERFACE
+      ${PROJECT_SOURCE_DIR}/third_party/eigen/)
+else()
+  target_include_directories(eigen INTERFACE
+      ${PROJECT_SOURCE_DIR}/third_party/eigen/)
+endif()
+
