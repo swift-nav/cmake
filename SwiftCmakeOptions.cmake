@@ -81,7 +81,7 @@ function(swift_create_project_options)
 
     if(NOT test_components_possible)
       set(build_tests OFF)
-      set(build_test_libraries OFF)
+      set(build_test_libs OFF)
     endif()
   endif()
 
