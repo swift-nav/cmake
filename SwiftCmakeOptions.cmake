@@ -226,7 +226,7 @@ function(swift_create_project_options)
     endif()
   endif()
 
-  if(x_EXAMPLES)
+  if(x_HAS_EXAMPLES)
     option(${x_PROJECT}_ENABLE_EXAMPLES "Enable build of example code for ${x_PROJECT}" ON)
     set(${x_PROJECT}_BUILD_EXAMPLES ${${x_PROJECT}_ENABLE_EXAMPLES} CACHE BOOL "Build examples for ${x_PROJECT}")
     if(NOT ${x_PROJECT}_BUILD_EXAMPLES)
