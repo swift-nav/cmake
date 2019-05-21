@@ -1,3 +1,56 @@
+#
+# A generic cmake function to search for a dependency from several places and
+# include in the build system as appropriate
+#
+# Dependencies can be picked up either from bundled source code, usually a git
+# submodule located in the 'third_party' directory, or from libraries installed
+# in the host system or cross compiling sysroot.
+#
+# By default dependencies are first sought in bundled source code, and if not
+# found from the system libraries. This default behaviour can be controlled by 
+# several options
+#
+# Exclude - can be used to disable searching in a particular location. Valid
+#   arguments are 'source' and 'system'
+# Prefer - used to override the default search location. Valid arguments are
+#   'source' and 'system'. If not specified defaults to 'source'
+#
+# Similar options can be specified on the command line as well.
+# SWIFT_PREFERRED_DEPENDENCY_SOURCE takes the same arguments as above but
+# will apply globally across the entire build tree at configure time. For example
+#
+# cmake -DSWIFT_PREFERRED_DEPENDENCY_SOURCE=system <path>
+#
+# will try to use depenedencies from the system libraries rather than bundled
+# source code.
+#
+# If the dependency is picked up from the system libraries this function will
+# create an interface target which can be used to link in to any other target.
+#
+# The options "SystemHeaderFile" and "SystemLibNames" will be passed verbatim
+# to the cmake functions find_header() and find_library() to search all the 
+# correct system locations.
+#
+# When using bundled source code the function will search several default locations
+# under '${CMAKE_CURRENT_SOURCE_DIR}/third_party' based on the package and target
+# names. The search location can be controlled by the "SourcePrefix" and # "SourceSubDir"
+# options
+#
+# The target name can be controlled by the option "TargetName". When using 
+# bundled source code this is used to verify the target was created properly
+# after calling add_subdirectory
+#
+# The option REQUIRED can be passed which will cause this function to fail
+# if the dependency was not found for any reason.
+#
+# Example: FindGoogletest.cmake
+#
+# GenericFindDependency(
+#    TargetName gtest
+#    SourceDir "googletest"
+#    )
+#
+
 function(search_dependency_source)
   set(argOptions "")
   set(argSingleArguments "TargetName")

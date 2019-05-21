@@ -1,3 +1,114 @@
+# Standard options for Swift cmake based project
+#
+# This module sets up cmake options for whatever features a project has.
+# Supports the following features:
+#
+# - Tests
+# - Test libraries for use by other projects
+# - Documentation
+# - Examples
+#
+# CMake options are set up with the names
+# - {project_name}_ENABLE_{feature}
+#
+# For example:
+# - libsbp_ENABLE_TESTS
+# - albatross_ENABLE_EXAMPLES
+#
+# Options are enabled by default but can be set on the command line at 
+# configure time, eg
+#
+# cmake -Dlibsbp_ENABLE_TESTS=OFF <path>
+#
+# They can also be disabled in CMakeLists.txt in a superproject, eg.
+#
+# ...
+# option(libsbp_ENABLE_TESTS "" OFF)
+# find_package(libsbp)
+# ...
+#
+# Usage:
+# Import this module and call the function swift_create_project_options 
+# specifying what features are available in the package. eg
+#
+# project(libsbp)
+# include(SwiftCmakeOptions)
+# swift_create_project_options(HAS_TESTS HAS_DOCS)
+#
+# Test components.
+# The TEST and TEST_LIBS features have some extra processing. They will
+# be automatically disabled when cross compiling, regardless of whether
+# they are explicitly enabled or not. This behaviour can be disabled
+# by passing the option SKIP_CROSS_COMPILING_CHECK. For example
+#
+# swift_create_project_options(HAS_TESTS SKIP_CROSS_COMPILING_CHECK)
+#
+# will enable unit tests and test libraries even when cross compiling.
+#
+# Conversely, the option DISABLE_TEST_COMPONENTS can be used to force
+# unit tests and test libraries to always be disabled, ignore any user
+# preference. For example
+#
+# swift_create_project_options(HAS_TESTS DISABLE_TEST_COMPONENTS TRUE)
+#
+# will disable unit tests and test libraries even if the user has
+# requested them. This is useful so a project can disable test components
+# based on other conditions that this module is not aware of, such as
+# when using a particular compiler. The following example will always
+# disable test components when using the Visual Studio compiler
+#
+# set(disable_tests FALSE)
+# if(MSVC)
+#   set(disable_tests TRUE)
+# endif()
+# swift_create_project_options(HAS_TESTS DISABLE_TEST_COMPONENTS ${disable_tests})
+#
+# A list of dependencies for test components can be specified using the 
+# TEST_PACKAGES option. Pass a list of packages which will be searched for
+# using the find_package() cmake function. If any of the packages is not
+# found the test components will be automatically disabled
+#
+# swift_create_project_options(HAS_TESTS TEST_PACKAGES "Googletest" "RapidCheck")
+#
+# The following test packages are currently supported:
+#
+# - Googletest (targets gtest etc)
+# - RapidCheck
+# - GFlags
+# - Json
+# - Yaml-Cpp
+# - FastCSV
+#
+# Finally, this function will use the current project name as a prefix
+# to all options and output variables. This can be overridden by
+# passing the PROJECT option
+#
+# swift_create_project_options(PROJECT test_project HAS_TESTS)
+#
+# will create an option called test_project_ENABLE_TESTS
+#
+# After processing this function sets several cache variables which can
+# be used elsewhere to determine which targets to compile. The output
+# cache variable name is in the form {project}_BUILD_{feature}. eg
+#
+# libsbp_BUILD_TESTS
+# albatross_BUILD_EXAMPLES
+#
+# This can be used in CMakeLists.txt to selective compile targets eg.
+#
+# if(libsbp_BUILD_TESTS)
+#   add_executable(libsbp-test <sources>)
+# endif()
+#
+# or include subdirectories
+#
+# if(albatross_BUILD_EXAMPLES)
+#   add_subdirectory(examples)
+# endif()
+#
+# or any other valid cmake construct.
+#
+
 function(verify_test_dependencies)
   cmake_parse_arguments(x "" "" "TEST_PACKAGES" ${ARGN})
 
