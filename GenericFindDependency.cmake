@@ -33,12 +33,17 @@
 #
 # When using bundled source code the function will search several default locations
 # under '${CMAKE_CURRENT_SOURCE_DIR}/third_party' based on the package and target
-# names. The search location can be controlled by the "SourcePrefix" and # "SourceSubDir"
+# names. The search location can be controlled by the "SourcePrefix" and "SourceSubDir"
 # options
 #
 # The target name can be controlled by the option "TargetName". When using 
 # bundled source code this is used to verify the target was created properly
 # after calling add_subdirectory
+#
+# Passing the option SYSTEM_INCLUDES will rewrite the target include directories
+# so that they are marked as system headers. This will usually be passed to
+# the compiler as an command line option as decided by cmake. Be careful with
+# this option, it will supress warning which might otherwise be helpful.
 #
 # The option REQUIRED can be passed which will cause this function to fail
 # if the dependency was not found for any reason.
@@ -111,7 +116,7 @@ function(search_dependency_system)
 endfunction()
 
 function(GenericFindDependency)
-  set(argOptions "REQUIRED")
+  set(argOptions "REQUIRED" "SYSTEM_INCLUDES")
   set(argSingleArguments "TargetName" "Prefer" "SourceDir" "SourcePrefix" "SourceSubdir" "SystemHeaderFile" "SystemLibNames")
   set(argMultiArguments "Exclude")
 
@@ -195,7 +200,7 @@ function(GenericFindDependency)
       
       if(TARGET ${x_TargetName})
         message(STATUS "Using dependency ${x_TargetName} from bundled source code")
-        return()
+        break()
       endif()
     else()
       if(NOT x_SystemHeaderFile)
@@ -212,15 +217,29 @@ function(GenericFindDependency)
 
       if(TARGET ${x_TargetName})
         message(STATUS "Using dependency ${x_TargetName} from system")
-        return()
+        break()
       endif()
     endif()
   endforeach()
 
-  if(x_REQUIRED OR ${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED)
-    message(FATAL_ERROR "Could not find REQUIRED dependency ${x_TargetName} in any available location")
+  if(TARGET ${x_TargetName})
+    if(x_SYSTEM_INCLUDES)
+      if(NOT CMAKE_CROSSCOMPILING OR THIRD_PARTY_INCLUDES_AS_SYSTEM)
+        get_target_property(directories ${x_TargetName} INTERFACE_INCLUDE_DIRECTORIES)
+        if(directories)
+          message(STATUS "Marking ${x_TargetName} include directories as system")
+          set_target_properties(${x_TargetName} PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
+          target_include_directories(${x_TargetName} SYSTEM INTERFACE ${directories})
+        endif()
+      endif()
+    endif()
   else()
-    message(WARNING "Could not find dependency ${x_TargetName} in any available location")
+    # Target not found in any location
+    if(x_REQUIRED OR ${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED)
+      message(FATAL_ERROR "Could not find REQUIRED dependency ${x_TargetName} in any available location")
+    else()
+      message(WARNING "Could not find dependency ${x_TargetName} in any available location")
+    endif()
   endif()
 endfunction()
     

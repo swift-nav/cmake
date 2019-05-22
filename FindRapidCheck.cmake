@@ -8,7 +8,8 @@ GenericFindDependency(
     )
 
 # Change all of rapidcheck's include directories to be system includes, to avoid
-# compiler errors
+# compiler errors. The generalised version in GenericFindDependency isn't suitable
+# in this instance.
 get_target_property(rapidcheck_interface_includes rapidcheck INTERFACE_INCLUDE_DIRECTORIES)
 if(rapidcheck_interface_includes)
   set_target_properties(rapidcheck PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
