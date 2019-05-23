@@ -1,5 +1,5 @@
 include("GenericFindDependency")
 GenericFindDependency(
-    TargetName orion-proto
-    SourceDir "orion_proto"
+    TARGET orion-proto
+    SOURCE_DIR "orion_proto"
     )

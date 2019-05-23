@@ -4,7 +4,7 @@ include("GenericFindDependency")
 set(RC_ENABLE_GTEST ON CACHE BOOL "" FORCE)
 
 GenericFindDependency(
-    TargetName rapidcheck
+    TARGET rapidcheck
     )
 
 # Change all of rapidcheck's include directories to be system includes, to avoid

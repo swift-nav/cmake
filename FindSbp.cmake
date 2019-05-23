@@ -1,5 +1,5 @@
 include("GenericFindDependency")
 GenericFindDependency(
-    TargetName sbp
-    SourceDir "c"
+    TARGET sbp
+    SOURCE_DIR "c"
     )

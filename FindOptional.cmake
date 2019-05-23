@@ -1,5 +1,5 @@
 include("GenericFindDependency")
 GenericFindDependency(
-    TargetName optional
+    TARGET optional
     SYSTEM_INCLUDES
     )

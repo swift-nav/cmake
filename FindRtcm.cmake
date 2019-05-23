@@ -1,5 +1,5 @@
 include("GenericFindDependency")
 GenericFindDependency(
-    TargetName rtcm
-    SourceDir "c"
+    TARGET rtcm
+    SOURCE_DIR "c"
     )

@@ -1,4 +1,4 @@
 include("GenericFindDependency")
 GenericFindDependency(
-    TargetName settings
+    TARGET settings
     )

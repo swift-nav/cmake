@@ -1,7 +1,7 @@
 include("GenericFindDependency")
 GenericFindDependency(
-    TargetName "nlohmann_json"
-    SourceDir "json"
+    TARGET "nlohmann_json"
+    SOURCE_DIR "json"
     SYSTEM_INCLUDES
     )
 

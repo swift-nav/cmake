@@ -1,12 +1,12 @@
 include("GenericFindDependency")
 GenericFindDependency(
-    TargetName gflags
-    SourceDir "googleflags"
+    TARGET gflags
+    SOURCE_DIR "googleflags"
     )
 
 if(NOT CMAKE_CROSSCOMPILING OR THIRD_PARTY_INCLUDES_AS_SYSTEM)
   # Change all of GoogleFlags's include directories to be system includes, to avoid
-  # compiler errors. The generalised version of this in GenericFindDependency won'y
+  # compiler errors. The generalised version of this in GenericFindDependency won't
   # work here because we are dealing with an aliased target
   get_target_property(_aliased gflags ALIASED_TARGET)
   if(_aliased)

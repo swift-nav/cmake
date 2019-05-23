@@ -1,4 +1,4 @@
 include("GenericFindDependency")
 GenericFindDependency(
-    TargetName swiftnav
+    TARGET swiftnav
     )

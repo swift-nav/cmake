@@ -1,5 +1,5 @@
 include("GenericFindDependency")
 GenericFindDependency(
-    TargetName "libprotobuf"
-    SourceDir "protobuf/cmake"
+    TARGET "libprotobuf"
+    SOURCE_DIR "protobuf/cmake"
     )

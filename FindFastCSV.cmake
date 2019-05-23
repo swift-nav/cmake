@@ -1,6 +1,6 @@
 include("GenericFindDependency")
 GenericFindDependency(
-    TargetName "fast-csv"
-    SourceDir "fast-cpp-csv-parser"
+    TARGET "fast-csv"
+    SOURCE_DIR "fast-cpp-csv-parser"
     SYSTEM_INCLUDES
     )

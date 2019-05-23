@@ -1,6 +1,6 @@
 include("GenericFindDependency")
 GenericFindDependency(
-    TargetName gtest
-    SourceDir "googletest"
+    TARGET gtest
+    SOURCE_DIR "googletest"
     SYSTEM_INCLUDES
     )
