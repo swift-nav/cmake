@@ -33,8 +33,7 @@
 #
 # When using bundled source code the function will search several default locations
 # under '${CMAKE_CURRENT_SOURCE_DIR}/third_party' based on the package and target
-# names. The search location can be controlled by the "SourcePrefix" and "SourceSubDir"
-# options
+# names. The search location can be controlled by the "SourceDir" parameter
 #
 # The target name can be controlled by the option "TargetName". When using 
 # bundled source code this is used to verify the target was created properly
@@ -53,6 +52,7 @@
 # GenericFindDependency(
 #    TargetName gtest
 #    SourceDir "googletest"
+#    SYSTEM_INCLUDES
 #    )
 #
 
@@ -115,22 +115,27 @@ function(search_dependency_system)
   message(STATUS "Found ${x_TargetName} from the system at ${x_${x_TargetName}_Library}")
 endfunction()
 
-function(GenericFindDependency)
-  set(argOptions "REQUIRED" "SYSTEM_INCLUDES")
-  set(argSingleArguments "TargetName" "Prefer" "SourceDir" "SourcePrefix" "SourceSubdir" "SystemHeaderFile" "SystemLibNames")
-  set(argMultiArguments "Exclude")
-
-  cmake_parse_arguments(x "${argOptions}" "${argSingleArguments}" "${argMultiArguments}" ${ARGN})
-
-  if(x_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "Unexpected unparsed arguments ${x_UNPARSED_ARGUMENTS}")
-  endif()
-
-  if(TARGET ${x_TargetName})
-    # Target already defined, no need to do anything more
-    return()
-  endif()
-
+# To be called from GenericFindDependency
+#
+# Create the variable which will contain a list of possible search locations sorted
+# by order of preference
+#
+# This is a macro so all input and output variable exist in the context of the caller
+#
+# This macro will return(), ie cause the caller to return, if there are no available locations.
+# It will raise a fatal error if unknown values are specified for any of the input parameters.
+#
+# Inputs: 
+# - x_Prefer - Parameter to GenericFindDependency, preferred location as defined by the project
+# - SWIFT_PREFERRED_DEPENDENCY_SOURCE - Global user preference, defined on the command line
+# - x_Exclude - List of sources to exclude from consideration
+# - SWIFT_EXCLUDE_DEPENDENCY_SOURCE - Global user exclude list, defined on the command line
+#
+# Outputs:
+# - x_Locations - List of locations to search for the dependency
+# - x_NumLocations - Length of x_Locations
+#
+macro(setup_search_locations)
   if(NOT x_Prefer)
     if (SWIFT_PREFERRED_DEPENDENCY_SOURCE)
       set(x_Prefer "${SWIFT_PREFERRED_DEPENDENCY_SOURCE}")
@@ -168,53 +173,121 @@ function(GenericFindDependency)
       return()
     endif()
   endif()
+endmacro()
+
+#
+# To be called from GenericFindDependency
+#
+# Creates a list of paths to be searched for source code for the dependency
+#
+# This is a macro, all input and output variables exist in the context of the caller
+#
+# If a source dir path is not explicitly specified this macro will generate a list of
+# probable locations for the dependency source code. It outputs a list of absolute
+# paths to be searched
+#
+# Inputs:
+# - x_SourceDir - Parameter to GenericFindDependency, appened to the generated search paths
+#
+# Outputs:
+# - x_SourceSearchPaths - A list of paths to be searched for source code
+#
+macro(create_source_search_paths)
+  # set defaults
+  set(x_SourceSearchPaths "")
+  if(NOT x_SourceDir)
+    list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${CMAKE_FIND_PACKAGE_NAME}")
+    list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${x_TargetName}")
+    list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/lib${x_TargetName}")
+    list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/${CMAKE_FIND_PACKAGE_NAME}")
+    list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/${x_TargetName}")
+    list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/lib${x_TargetName}")
+  else()
+    list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/${x_SourceDir}")
+    list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${x_SourceDir}")
+    list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/${x_SourceDir}")
+    list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/${x_SourceDir}")
+    list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${CMAKE_FIND_PACKAGE_NAME}/${x_SourceDir}")
+    list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${x_TargetName}/${x_SourceDir}")
+    list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/lib${x_TargetName}/${x_SourceDir}")
+    list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/${CMAKE_FIND_PACKAGE_NAME}/${x_SourceDir}")
+    list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/${x_TargetName}/${x_SourceDir}")
+    list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/lib${x_TargetName}/${x_SourceDir}")
+  endif()
+endmacro()
+
+#
+# Helper function to mark the specified target's include directories as system. This is
+# then passed to the compiler which will surpress warnings generated from any header file
+# included by this path. Use with care
+#
+# Should only be called from GenericFindDependency
+#
+function(mark_target_as_system_includes TGT)
+  get_target_property(directories ${x_TargetName} INTERFACE_INCLUDE_DIRECTORIES)
+  if(directories)
+    message(STATUS "Marking ${x_TargetName} include directories as system")
+    set_target_properties(${x_TargetName} PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
+    target_include_directories(${x_TargetName} SYSTEM INTERFACE ${directories})
+  endif()
+endfunction()
+
+function(GenericFindDependency)
+  set(argOptions "REQUIRED" "SYSTEM_INCLUDES")
+  set(argSingleArguments "TargetName" "Prefer" "SourceDir" "SystemHeaderFile" "SystemLibNames")
+  set(argMultiArguments "Exclude")
+
+  cmake_parse_arguments(x "${argOptions}" "${argSingleArguments}" "${argMultiArguments}" ${ARGN})
+
+  if(x_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "Unexpected unparsed arguments ${x_UNPARSED_ARGUMENTS}")
+  endif()
+
+  if(TARGET ${x_TargetName})
+    # Target already defined, no need to do anything more
+    return()
+  endif()
+
+  # Generate a list of locations to search for the dependency in order of preference
+  setup_search_locations()
 
   foreach(LOCATION ${x_Locations})
     if (${LOCATION} STREQUAL "source")
-      # set defaults
-      set(x_SourceSearchPaths "")
-      if(NOT x_SourceDir)
-        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${CMAKE_FIND_PACKAGE_NAME}")
-        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${x_TargetName}")
-        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/lib${x_TargetName}")
-        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/${CMAKE_FIND_PACKAGE_NAME}")
-        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/${x_TargetName}")
-        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/lib${x_TargetName}")
-      else()
-        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/${x_SourceDir}")
-        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${x_SourceDir}")
-        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/${x_SourceDir}")
-        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/${x_SourceDir}")
-        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${CMAKE_FIND_PACKAGE_NAME}/${x_SourceDir}")
-        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/${x_TargetName}/${x_SourceDir}")
-        list(APPEND x_SourceSearchPaths "${CMAKE_CURRENT_SOURCE_DIR}/third_party/lib${x_TargetName}/${x_SourceDir}")
-        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/${CMAKE_FIND_PACKAGE_NAME}/${x_SourceDir}")
-        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/${x_TargetName}/${x_SourceDir}")
-        list(APPEND x_SourceSearchPaths "${PROJECT_SOURCE_DIR}/third_party/lib${x_TargetName}/${x_SourceDir}")
-      endif()
+      # Try looking for bundled source code
 
+      # Set up search locations for source code
+      create_source_search_paths()
+
+      # Look for a suitably named directory which contains a CMakeLists.txt, try to add it
       search_dependency_source(
           TargetName "${x_TargetName}"
           SourceSearchPaths "${x_SourceSearchPaths}"
           )
       
+      # If the expected target was created we have succeeded
       if(TARGET ${x_TargetName})
         message(STATUS "Using dependency ${x_TargetName} from bundled source code")
         break()
       endif()
     else()
+      # Try looking for a header file and library in the system paths
+
       if(NOT x_SystemHeaderFile)
+        # Use a sensible header file name if not explicitly set
         set(x_SystemHeaderFile "lib${x_TargetName}/${x_TargetName}.h")
       endif()
 
+      # Look for common library naming patterns
       set(x_SystemLibNames "${x_SystemLibName}" "${x_TargetName}" "lib${x_TargetName}")
 
+      # Search either system libraries or sysroot, this is handled by cmake itself
       search_dependency_system(
           TargetName "${x_TargetName}"
           SystemHeaderFile "${x_SystemHeaderFile}"
           SystemLibNames "${x_SystemLibNames}"
           )
 
+      # If the target was found we have succeeded
       if(TARGET ${x_TargetName})
         message(STATUS "Using dependency ${x_TargetName} from system")
         break()
@@ -222,15 +295,11 @@ function(GenericFindDependency)
     endif()
   endforeach()
 
+  # Final validation that the target was properly created from some source
   if(TARGET ${x_TargetName})
     if(x_SYSTEM_INCLUDES)
       if(NOT CMAKE_CROSSCOMPILING OR THIRD_PARTY_INCLUDES_AS_SYSTEM)
-        get_target_property(directories ${x_TargetName} INTERFACE_INCLUDE_DIRECTORIES)
-        if(directories)
-          message(STATUS "Marking ${x_TargetName} include directories as system")
-          set_target_properties(${x_TargetName} PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
-          target_include_directories(${x_TargetName} SYSTEM INTERFACE ${directories})
-        endif()
+        mark_target_as_system_includes(${x_TargetName})
       endif()
     endif()
   else()
