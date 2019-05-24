@@ -66,9 +66,14 @@
 # A list of dependencies for test components can be specified using the 
 # TEST_PACKAGES option. Pass a list of packages which will be searched for
 # using the find_package() cmake function. If any of the packages is not
-# found the test components will be automatically disabled
+# found the unit tests will be disabled
 #
 # swift_create_project_options(HAS_TESTS TEST_PACKAGES "Googletest" "RapidCheck")
+#
+# Similarly, the TEST_LIBS_PACKAGES can be used to specify the dependencies
+# of the test libraries. If takes the same behaviour as the TEST_PACKAGES library
+# except it will only disable the test libraries feature if requirements are not
+# met. If this option is not specified it assumes the same value as TEST_PACKAGES
 #
 # The following test packages are currently supported:
 #
@@ -134,18 +139,19 @@ function(verify_test_dependencies)
       endif()
       if(NOT found)
         message(STATUS "Disable tests because dependency ${P} was not found")
-        set(test_components_possible OFF PARENT_SCOPE)
+        set(test_component_possible OFF PARENT_SCOPE)
+      else()
+        set(test_component_possible ON PARENT_SCOPE)
       endif()
     endforeach()
   endif()
-  set(x_test_packages_verified TRUE PARENT_SCOPE)
 endfunction()
 
 
 function(swift_create_project_options)
   set(argOptions "HAS_TESTS" "HAS_TEST_LIBS" "HAS_DOCS" "HAS_EXAMPLES" "SKIP_CROSS_COMPILING_CHECK")
   set(argSingleArguments "PROJECT" "DISABLE_TEST_COMPONENTS")
-  set(argMultiArguments "TEST_PACKAGES")
+  set(argMultiArguments "TEST_PACKAGES" "TEST_LIBS_PACKAGES")
 
   cmake_parse_arguments(x "${argOptions}" "${argSingleArguments}" "${argMultiArguments}" ${ARGN})
 
@@ -191,13 +197,22 @@ function(swift_create_project_options)
     endif()
   endif()
 
-  if(build_tests OR build_test_libs)
-    if(NOT x_test_packages_verified)
+  if(build_tests)
+    verify_test_dependencies(TEST_PACKAGES ${x_TEST_PACKAGES})
+
+    if(NOT test_component_possible)
+      set(build_tests OFF)
+    endif()
+  endif()
+
+  if(build_test_libs)
+    if(x_TEST_LIBS_PACKAGES)
+      verify_test_dependencies(TEST_PACKAGES ${x_TEST_LIBS_PACKAGES})
+    else()
       verify_test_dependencies(TEST_PACKAGES ${x_TEST_PACKAGES})
     endif()
 
-    if(NOT test_components_possible)
-      set(build_tests OFF)
+    if(NOT test_component_possible)
       set(build_test_libs OFF)
     endif()
   endif()
