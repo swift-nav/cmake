@@ -9,6 +9,14 @@ function(swift_setup_clang_format)
     set(PROJECT ${PROJECT_NAME})
   endif()
 
+  option(${PROJECT}_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format" ON)
+
+  if(NOT ${PROJECT}_ENABLE_CLANG_FORMAT)
+    # Explicitly disabled
+    message(STATUS "${PROJECT} clang-format support is DISABLED")
+    return()
+  endif()
+
   if(NOT x_CLANG_FORMAT_NAMES)
     set(x_CLANG_FORMAT_NAMES 
         clang-format60 clang-format-6.0
