@@ -1,19 +1,27 @@
 function(swift_setup_clang_format)
   set(argOption "")
-  set(argSingle "PROJECT" "SCRIPT")
+  set(argSingle "SCRIPT")
   set(argMulti "CLANG_FORMAT_NAMES")
 
   cmake_parse_arguments(x "${argOptions}" "${argSingle}" "${argMulti}" ${ARGN})
 
-  if(NOT PROJECT)
-    set(PROJECT ${PROJECT_NAME})
+  set(top_level_project OFF)
+  if(${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
+    # This is the top level project, ie the CMakeLists.txt which cmake was run
+    # on directly, not a submodule/subproject. We can do some special things now.
+    # The option to enable clang formatting will be enabled by default only for
+    # top level projects. Also the top level project will create an alias target
+    # clang-format-all against the project specific target
+    set(top_level_project ON)
   endif()
 
-  option(${PROJECT}_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format" ON)
+  message(STATUS "top_level_project ${top_level_project}")
 
-  if(NOT ${PROJECT}_ENABLE_CLANG_FORMAT)
+  option(${PROJECT_NAME}_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format" ${top_level_project})
+
+  if(NOT ${PROJECT_NAME}_ENABLE_CLANG_FORMAT)
     # Explicitly disabled
-    message(STATUS "${PROJECT} clang-format support is DISABLED")
+    message(STATUS "${PROJECT_NAME} clang-format support is DISABLED")
     return()
   endif()
 
@@ -40,10 +48,10 @@ function(swift_setup_clang_format)
     set(${PROJECT_NAME}_CLANG_FORMAT ${CLANG_FORMAT} CACHE STRING "Absolute path to clang-format for ${PROJECT_NAME}")
   endif()
 
-  set(target clang-format-${PROJECT})
+  set(target clang-format-${PROJECT_NAME})
 
   if(x_SCRIPT)
-    set(custom_scripts {x_SCRIPT})
+    set(custom_scripts ${x_SCRIPT})
   else()
     set(custom_scripts "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-format.sh" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-format.bash")
   endif()
@@ -59,11 +67,20 @@ function(swift_setup_clang_format)
     endif()
   endforeach()
 
+  # Don't quote the command here, we need it to come out as a cmake list to be passed to
+  # add_custom_target correctly
+  set(format_all_command git ls-files '*.[ch]' '*.cpp' '*.cc' '*.hpp' | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i)
+
   add_custom_target(${target}
-      echo "format"
-      COMMAND git ls-files '*.[ch]' '*.cpp' '*.cc' '*.hpp'
-      COMMAND git ls-files '*.[ch]' '*.cpp' '*.cc' '*.hpp'
-        | xargs ${${PROJECT}_CLANG_FORMAT} -i
+      COMMAND ${format_all_command}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       )
+
+  if(${top_level_project})
+    # Cmake doesn't support aliasing non-library targets, so we have to just redefine the target entirely
+    add_custom_target(clang-format-all
+        COMMAND ${format_all_command}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+  endif()
 endfunction()
