@@ -88,7 +88,7 @@ function(swift_setup_clang_tidy)
     if(abs_target_srcs)
       add_custom_target(
           clang-tidy-${target}
-          COMMAND echo ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes-${target}.yaml ${abs_target_srcs}
+          COMMAND ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes-${target}.yaml ${abs_target_srcs}
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
           )
       list(APPEND all_srcs ${abs_target_srcs})
