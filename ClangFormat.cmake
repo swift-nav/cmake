@@ -41,7 +41,7 @@ function(swift_setup_clang_format)
   find_program(CLANG_FORMAT NAMES ${x_CLANG_FORMAT_NAMES})
 
   if("${CLANG_FORMAT}" STREQUAL "CLANG_FORMAT-NOTFOUND")
-    message(warning "Could not find appropriate clang-format, target disabled")
+    message(WARNING "Could not find appropriate clang-format, target disabled")
     return()
   else()
     message(STATUS "Using ${CLANG_FORMAT}")
@@ -56,30 +56,30 @@ function(swift_setup_clang_format)
     set(custom_scripts "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-format.sh" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-format.bash")
   endif()
 
-  foreach(script ${x_SCRIPTS})
+  foreach(script ${custom_scripts})
     if(EXISTS ${script})
       message(STATUS "Initialising clang format target for ${PROJECT_NAME} using existing script in ${script}")
-      add_custom_target(${target}
-          COMMAND "${script}"
-          WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
-          )
-      return()
+      set(command ${script})
     endif()
   endforeach()
 
-  # Don't quote the command here, we need it to come out as a cmake list to be passed to
-  # add_custom_target correctly
-  set(format_all_command git ls-files '*.[ch]' '*.cpp' '*.cc' '*.hpp' | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i)
+  if(NOT command)
+    # Use a default formatting command
 
+    # Don't quote the command here, we need it to come out as a cmake list to be passed to
+    # add_custom_target correctly
+    set(command git ls-files '*.[ch]' '*.cpp' '*.cc' '*.hpp' | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i)
+  endif()
+  
   add_custom_target(${target}
-      COMMAND ${format_all_command}
+      COMMAND ${command}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       )
 
   if(${top_level_project})
     # Cmake doesn't support aliasing non-library targets, so we have to just redefine the target entirely
     add_custom_target(clang-format-all
-        COMMAND ${format_all_command}
+        COMMAND ${command}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
   endif()
