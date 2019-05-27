@@ -51,15 +51,10 @@ function(swift_setup_clang_tidy)
   foreach(script ${custom_scripts})
     if(EXISTS ${script})
       message(STATUS "Initialising clang tidy target for ${PROJECT_NAME} using existing script in ${script}")
-      add_custom_target(
-          clang-tidy-${PROJECT_NAME}
-          COMMAND ${script}
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          )
       if(top_level_project)
         add_custom_target(
             clang-tidy-all
-            COMMAND ${script}
+            COMMAND ${script} all
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
       endif()
@@ -118,5 +113,5 @@ function(swift_target_enable_clang_tidy TARGET)
   endif()
 
   list(APPEND ${PROJECT_NAME}_clang_tidy_targets ${TARGET})
-  set(${PROJECT_NAME}_clang_tidy_targets ${${PROJECT_NAME}_clang_tidy_targets} CACHE INTERNAL "List of targets in ${PROJECT_NAME} to auto-lint with clang-tidy")
+  set(${PROJECT_NAME}_clang_tidy_targets ${${PROJECT_NAME}_clang_tidy_targets} CACHE INTERNAL "List of targets in ${PROJECT_NAME} to auto-lint with clang-tidy" FORCE)
 endfunction()

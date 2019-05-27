@@ -58,7 +58,7 @@ function(swift_setup_clang_format)
   foreach(script ${custom_scripts})
     if(EXISTS ${script})
       message(STATUS "Initialising clang format target for ${PROJECT_NAME} using existing script in ${script}")
-      set(command ${script})
+      set(command ${script} all)
     endif()
   endforeach()
 
