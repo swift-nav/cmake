@@ -15,7 +15,6 @@ function(swift_setup_clang_format)
     set(top_level_project ON)
   endif()
 
-  message(STATUS "top_level_project ${top_level_project}")
 
   option(${PROJECT_NAME}_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format" ${top_level_project})
 
