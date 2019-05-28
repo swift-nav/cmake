@@ -114,9 +114,19 @@ function(swift_setup_clang_tidy)
       list(REMOVE_DUPLICATES all_srcs)
       add_custom_target(
           clang-tidy-all
-          COMMAND ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml ${all_srcs}
+          COMMAND 
+            ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml 
+            `git ls-files ${all_srcs}`
           WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
           )
+      add_custom_target(
+          clang-tidy-diff
+          COMMAND
+            ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml 
+            `git diff --diff-filter=ACMRTUXB --name-only master -- ${all_srcs}`
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          )
+
     endif()
   else()
     message(WARNING "Project ${PROJECT_NAME} did not enable linting for any files/targets")
