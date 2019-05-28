@@ -1,0 +1,12 @@
+option(SWIFT_ENABLE_CCACHE "Use ccache to speed up compilation process" OFF)
+
+if(SWIFT_ENABLE_CCACHE)
+  find_program(CCACHE_PATH ccache)
+  if(CCACHE_PATH)
+    message(STATUS "Using ccache at ${CCACHE_PATH}")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_PATH})
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${CCACHE_PATH})
+  else()
+    message(STATUS "Could not find ccache")
+  endif()
+endif()
