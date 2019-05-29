@@ -58,27 +58,46 @@ function(swift_setup_clang_format)
   foreach(script ${custom_scripts})
     if(EXISTS ${script})
       message(STATUS "Initialising clang format target for ${PROJECT_NAME} using existing script in ${script}")
-      set(command ${script} all)
+      set(all_command ${script} all)
+      set(diff_command ${script} diff)
     endif()
   endforeach()
 
-  if(NOT command)
+  if(x_SCRIPT)
+    message(WARNING "Specified clang-format script ${x_SCRIPT} doesn't exist")
+    return()
+  endif()
+
+  set(default_patterns "*.[ch]" "*.cpp" "*.cc" "*.hpp")
+  if(NOT all_command)
     # Use a default formatting command
 
     # Don't quote the command here, we need it to come out as a cmake list to be passed to
     # add_custom_target correctly
-    set(command git ls-files '*.[ch]' '*.cpp' '*.cc' '*.hpp' | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i)
+    set(all_command git ls-files ${default_patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i)
+  endif()
+
+  if(NOT diff_command)
+    set(diff_command git diff --diff-filter=ACMRTUXB --name-only master -- ${default_patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i)
   endif()
   
-  add_custom_target(${target}
-      COMMAND ${command}
+  add_custom_target(clang-format-all-${PROJECT_NAME}
+      COMMAND ${all_command}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      )
+  add_custom_target(clang-format-diff-${PROJECT_NAME}
+      COMMAND ${diff_command}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
       )
 
   if(${top_level_project})
     # Cmake doesn't support aliasing non-library targets, so we have to just redefine the target entirely
     add_custom_target(clang-format-all
-        COMMAND ${command}
+        COMMAND ${all_command}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+    add_custom_target(clang-format-diff
+        COMMAND ${diff_command}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
   endif()
