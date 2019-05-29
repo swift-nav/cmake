@@ -46,6 +46,20 @@
 # from the top level CMakeLists.txt, using in a subdirectory may not work as
 # intended.
 #
+# In addition this function sets up a cmake option which can be used to control
+# whether the targets are created either on the command line or by a super project.
+# The option has the name
+#
+# ${PROJECT_NAME}_ENABLE_CLANG_FORMAT
+#
+# The default value is ON for top level projects, and OFF for any others.
+#
+# Running 
+#
+# cmake -D<project>_ENABLE_CLANG_FORMAT=OFF ..
+#
+# will explicitly disable these targets from the command line at configure time
+#
 
 # Helper function to actually create the targets, not to be used outside this file
 function(create_targets)
