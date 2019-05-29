@@ -81,8 +81,6 @@ function(create_targets)
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
-  message(STATUS "ALL_COMMAND ${x_ALL_COMMAND}")
-  message(STATUS "DIFF_COMMAND ${x_DIFF_COMMAND}")
   add_custom_target(
       clang-tidy-all-${PROJECT_NAME}
       COMMAND ${x_ALL_COMMAND}
