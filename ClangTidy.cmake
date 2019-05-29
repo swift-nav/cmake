@@ -1,7 +1,150 @@
+#
+# A module to create custom targets to lint source files using clang-tidy
+#
+# The function swift_setup_clang_tidy will create several targets which will
+# use clang-tidy to lint source files. 2 types of targets will be created, one
+# for linting all listed source files and the other for linting only those which
+# differ from the master branch. The list of file to lint can be created in 2
+# ways which are explained below.
+#
+# The created targets have the names
+#
+# - clang-tidy-all-${PROJECT_NAME} - lints all files
+# - clang-tidy-diff-${PROJECT_NAME} - lints only changed files
+#
+# In addition if the current project is at the top level of the working tree 2 more
+# targets will be created
+#
+# - clang-tidy-all
+# - clang-tidy-diff
+#
+# which behave in exactly the same way as the namespaced targets.
+#
+# The parameter SCRIPT can be passed to specify a custom linting script. If given
+# the create targets will call this script directly. The script will be passed
+# a single argument of 'all' or 'diff' according to the target
+#
+# clang-tidy-all - will run `<script> all`
+# clang-tidy-diff - will run `<script> diff`
+#
+# If a script is not explicitly passed this function will first search for a 
+# custom linting script. The script must exist in ${CMAKE_CURRENT_SOURCE_DIR}/scripts
+# and be named either clang-tidy.sh or clang-tidy.bash. It will be called with
+# the same arguments as described above.
+#
+# If no custom script is available this function will generate some default linting
+# commands. clang-tidy will be called and passed a list of files to lint. 
+#
+# The file list can be constructed in one of two ways, either by GLOB patterns or
+# a list of targets
+#
+# GLOB
+#   Pass the parameter 'PATTERNS' with 1 or more GLOB patterns as arguments. These
+#   patterns will be passed to git directly which will generate a list of files to
+#   lint.
+#
+#   swift_setup_clang_tidy(PATTERNS 'src/*.c' 'src/*.cc' 'src/*.cpp')
+#
+# TARGETS
+#   Pass the parameter 'TARGETS" with 1 or more cmake targets as arguments. These
+#   target must already have been created. The list of source files will be extracted
+#   from these targets and passed first to git so it can correctly filter them, then
+#   to clang-tidy.
+#
+# This function must be called with one of the above options, or it must be able to
+# find a custom script in the file system otherwise it will throw an error.
+#
+# All commands are run from ${CMAKE_CURRENT_SOURCE_DIR}. It is highly recommended
+# that this module only be included from the top level CMakeLists.txt of a project,
+# using it from a subdirectory may not work as expected.
+#
+
+# Helper function to actually create the targets, not to be used outside this file
+function(create_targets)
+  set(argOption "")
+  set(argSingle "TOP_LEVEL")
+  set(argMulti "ALL_COMMAND" "DIFF_COMMAND")
+
+  cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
+
+  message(STATUS "ALL_COMMAND ${x_ALL_COMMAND}")
+  message(STATUS "DIFF_COMMAND ${x_DIFF_COMMAND}")
+  add_custom_target(
+      clang-tidy-all-${PROJECT_NAME}
+      COMMAND ${x_ALL_COMMAND}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      )
+  add_custom_target(
+      clang-tidy-diff-${PROJECT_NAME}
+      COMMAND ${x_DIFF_COMMAND}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+      )
+
+  # Top level projects will create the targets clang-tidy-all and
+  # clang-tidy-diff with the same commands as the namespaced targets
+  # above. However, cmake doesn't support aliases for non-library targets
+  # so we have to create them fully.
+  if(x_TOP_LEVEL)
+    add_custom_target(
+        clang-tidy-all
+        COMMAND ${x_ALL_COMMAND}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+    add_custom_target(
+        clang-tidy-diff
+        COMMAND ${x_DIFF_COMMAND}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+  endif()
+endfunction()
+
+# Scan a list of targets and build up a list of source files
+function(generate_file_list_from_targets)
+  set(argOption "")
+  set(argSingle "")
+  set(argMulti "TARGETS")
+
+  cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
+
+  foreach(target ${x_TARGETS})
+    if(NOT TARGET ${target})
+      message(WARNING "clang-tidy enabled for non-existent target ${target}")
+      continue()
+    endif()
+
+    # Extract the list of source files from the target and convert to absolute paths
+    set(target_srcs "")
+    set(abs_target_srcs "")
+    get_target_property(target_srcs ${target} SOURCES)
+    foreach(file ${target_srcs})
+      if(${file} MATCHES ".*\\.h$")
+        list(REMOVE_ITEM target_srcs ${file})
+      endif()
+    endforeach()
+
+    list(REMOVE_DUPLICATES target_srcs)
+
+    get_target_property(target_dir ${target} SOURCE_DIR)
+    foreach(file ${target_srcs})
+      get_filename_component(abs_file ${file} ABSOLUTE BASE_DIR ${target_dir})
+      list(APPEND abs_target_srcs ${abs_file})
+    endforeach()
+
+    if(abs_target_srcs)
+      list(APPEND srcs ${abs_target_srcs})
+      set(srcs ${srcs} PARENT_SCOPE)
+    else()
+      message(WARNING "Target ${target} does not have any lintable sources")
+    endif()
+  endforeach()
+endfunction()
+
+# External function to create clang-tidy-* targets, Call according to the
+# documentation in the file header.
 function(swift_setup_clang_tidy)
   set(argOption "")
   set(argSingle "SCRIPT")
-  set(argMulti "CLANG_TIDY_NAMES" "TARGETS" "FILES")
+  set(argMulti "CLANG_TIDY_NAMES" "TARGETS" "PATTERNS")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
@@ -17,8 +160,42 @@ function(swift_setup_clang_tidy)
     return()
   endif()
 
+  # This is required so that clang-tidy can work out what compiler options to use
+  # for each file
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile commands" FORCE)
 
+  # Use a custom script if explicitly passed
+  if(x_SCRIPT)
+    if(EXISTS ${x_SCRIPT})
+      message(STATUS "Initialising clang tidy targets for ${PROJECT_NAME} using existing script in ${x_SCRIPT}")
+      create_targets(
+          TOP_LEVEL ${top_level_project}
+          ALL_COMMAND ${x_SCRIPT} all
+          DIFF_COMMAND ${x_SCRIPT} diff
+          )
+      return()
+    endif()
+    message(FATAL_ERROR "Specified clang-tidy script ${x_SCRIPT} doesn't exist")
+  endif()
+
+  # Search some default locations for a custom tidy script
+  set(custom_scripts "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-tidy.sh" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-tidy.bash")
+
+  foreach(script ${custom_scripts})
+    if(EXISTS ${script})
+      message(STATUS "Initialising clang tidy target for ${PROJECT_NAME} using existing script in ${script}")
+      create_targets(
+          TOP_LEVEL ${top_level_project}
+          ALL_COMMAND ${script} all
+          DIFF_COMMAND ${script} diff
+          )
+      return()
+    endif()
+  endforeach()
+
+  # Didn't find a custom script. Generate some default commands
+
+  # First search for an appropriate clang-tidy
   if(NOT x_CLANG_TIDY_NAMES)
     set(x_CLANG_TIDY_NAMES 
         clang-tidy60 clang-tidy-6.0
@@ -42,122 +219,28 @@ function(swift_setup_clang_tidy)
   message(STATUS "Using ${CLANG_TIDY}")
   set(${PROJECT_NAME}_CLANG_TIDY ${CLANG_TIDY} CACHE STRING "Absolute path to clang-tidy for ${PROJECT_NAME}")
 
-  if(x_SCRIPT)
-    set(custom_scripts ${x_SCRIPT})
-  else()
-    set(custom_scripts "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-tidy.sh" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-tidy.bash")
-  endif()
-
-  foreach(script ${custom_scripts})
-    if(EXISTS ${script})
-      message(STATUS "Initialising clang tidy target for ${PROJECT_NAME} using existing script in ${script}")
-      add_custom_target(
-          clang-tidy-all-${PROJECT_NAME}
-          COMMAND ${script} all
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          )
-      add_custom_target(
-          clang-tidy-diff-${PROJECT_NAME}
-          COMMAND ${script} diff
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          )
-      if(top_level_project)
-        add_custom_target(
-            clang-tidy-all
-            COMMAND ${script} all
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            )
-        add_custom_target(
-            clang-tidy-diff
-            COMMAND ${script} diff
-            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-            )
-      endif()
-      return()
-    endif()
-
-    if(x_SCRIPT)
-      # Was passed a script name but it doesn't exist
-      message(WARNING "Specified clang-tidy script ${x_SCRIPT} doesn't exist")
-      return()
-    endif()
-  endforeach()
-
+  set(srcs "")
   if(x_TARGETS)
-    foreach(target ${x_TARGETS})
-      if(NOT TARGET ${target})
-        message(WARNING "clang-tidy enabled for non-existent target ${target}")
-        continue()
-      endif()
-
-      # Extract the list of source files from the target and convert to absolute paths
-      set(target_srcs "")
-      set(abs_target_srcs "")
-      get_target_property(target_srcs ${target} SOURCES)
-      foreach(file ${target_srcs})
-        if(${file} MATCHES ".*\\.h$")
-          list(REMOVE_ITEM target_srcs ${file})
-        endif()
-      endforeach()
-  
-      list(REMOVE_DUPLICATES target_srcs)
-  
-      get_target_property(target_dir ${target} SOURCE_DIR)
-      foreach(file ${target_srcs})
-        get_filename_component(abs_file ${file} ABSOLUTE BASE_DIR ${target_dir})
-        list(APPEND abs_target_srcs ${abs_file})
-      endforeach()
-  
-      if(abs_target_srcs)
-        list(APPEND all_srcs ${abs_target_srcs})
-      else()
-        message(WARNING "Target ${target} does not have any lintable sources")
-      endif()
-    endforeach()
-  elseif(x_FILES)
-    foreach(pattern ${x_FILES})
-      set(files "")
-      file(GLOB files ${pattern})
-      list(APPEND all_srcs ${files})
-    endforeach()
+    # Extract a list of source files from each of the specified targets
+    generate_file_list_from_targets(TARGETS ${x_TARGETS})
+  elseif(x_PATTERNS)
+    # Just use the provided pattern as the file list
+    set(srcs ${x_PATTERNS})
   else()
-    message(FATAL_ERROR "Must specify either SCRIPT, FILES, or TARGETS in order to set up clang-tidy")
+    message(FATAL_ERROR "ClangTidy modules must be set up to use either a custom script, a list of targets, or file patterns")
   endif()
 
-  if(all_srcs)
-    list(REMOVE_DUPLICATES all_srcs)
-    add_custom_target(
-        clang-tidy-all-${PROJECT_NAME}
-        COMMAND 
-          ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml 
-          `git ls-files ${all_srcs}`
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
-    add_custom_target(
-        clang-tidy-diff-${PROJECT_NAME}
-        COMMAND
-          ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml 
-          `git diff --diff-filter=ACMRTUXB --name-only master -- ${all_srcs}`
-        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
-
-    if(top_level_project)
-      add_custom_target(
-          clang-tidy-all
-          COMMAND 
-            ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml 
-            `git ls-files ${all_srcs}`
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          )
-      add_custom_target(
-          clang-tidy-diff
-          COMMAND
-            ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml 
-            `git diff --diff-filter=ACMRTUXB --name-only master -- ${all_srcs}`
-          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-          )
-    endif()
+  if(NOT srcs)
+    message(WARNING "Couldn't find any source/header files to tidy in ${PROJECT_NAME}")
   else()
-    message(WARNING "Project ${PROJECT_NAME} did not enable linting for any files/targets")
+    create_targets(
+        TOP_LEVEL ${top_level_project}
+        ALL_COMMAND
+          ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
+          `git ls-files ${srcs}`
+        DIFF_COMMAND
+          ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
+          `git diff --diff-filter=ACMRTUXB --name-only master -- ${srcs}`
+        )
   endif()
 endfunction()
