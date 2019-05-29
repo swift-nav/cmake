@@ -51,10 +51,25 @@ function(swift_setup_clang_tidy)
   foreach(script ${custom_scripts})
     if(EXISTS ${script})
       message(STATUS "Initialising clang tidy target for ${PROJECT_NAME} using existing script in ${script}")
+      add_custom_target(
+          clang-tidy-all-${PROJECT_NAME}
+          COMMAND ${script} all
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          )
+      add_custom_target(
+          clang-tidy-diff-${PROJECT_NAME}
+          COMMAND ${script} diff
+          WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+          )
       if(top_level_project)
         add_custom_target(
             clang-tidy-all
             COMMAND ${script} all
+            WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+            )
+        add_custom_target(
+            clang-tidy-diff
+            COMMAND ${script} diff
             WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
             )
       endif()
