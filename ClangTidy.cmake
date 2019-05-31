@@ -235,7 +235,7 @@ function(swift_setup_clang_tidy)
   find_program(CLANG_TIDY NAMES ${x_CLANG_TIDY_NAMES})
 
   if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
-    message(FATAL_ERROR "Could not find appropriate clang-tidy, can't create targets")
+    message(WARNING "Could not find appropriate clang-tidy, target disabled")
   endif()
 
   message(STATUS "Using ${CLANG_TIDY}")
