@@ -159,6 +159,7 @@ function(swift_setup_clang_tidy)
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
+  # Keep track of whether the project cmake option should be on or off by default
   set(default_option_state ON)
 
   # Global clang-tidy enable option, influences the default project specific enable option
@@ -175,94 +176,142 @@ function(swift_setup_clang_tidy)
     set(default_option_state OFF)
   endif()
 
-  # Create a cmake option to enable linting of this specific project
-  option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy for project ${PROJECT_NAME}" ${default_option_state})
-
-  if(NOT ${PROJECT_NAME}_ENABLE_CLANG_TIDY)
-    message(STATUS "${PROJECT_NAME} clang-tidy support is DISABLED")
-    return()
-  endif()
-
   # This is required so that clang-tidy can work out what compiler options to use
   # for each file
   set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile commands" FORCE)
 
+  # We are going to generate two commands, all and diff, which could be a script or a call
+  # directly to clang-tidy. These commands may or may not be found so keep track of whether
+  # they are valid. Once they are valid we will be able to create the cmake option and
+  # the actual targets
+  set(commands_valid FALSE)
+  unset(success_msg)
+  unset(failure_msg)
+
   # Use a custom script if explicitly passed
   if(x_SCRIPT)
     if(EXISTS ${x_SCRIPT})
-      message(STATUS "Initialising clang tidy targets for ${PROJECT_NAME} using existing script in ${x_SCRIPT}")
-      create_targets(
-          TOP_LEVEL ${top_level_project}
-          ALL_COMMAND ${x_SCRIPT} all
-          DIFF_COMMAND ${x_SCRIPT} diff
-          )
-      return()
+      set(success_msg "Initialising clang tidy targets for ${PROJECT_NAME} using existing script in ${x_SCRIPT}")
+      set(all_cmd ${x_SCRIPT} all)
+      set(diff_cmd ${x_SCRIPT} diff)
+      set(commands_valid TRUE)
+    else()
+      # The project has specified a script to use, this is not a user configuration option
+      # The script doesn't exist so we can bail out early
+      message(FATAL_ERROR "Specified clang-tidy script ${x_SCRIPT} doesn't exist")
     endif()
-    message(FATAL_ERROR "Specified clang-tidy script ${x_SCRIPT} doesn't exist")
   endif()
 
-  # Search some default locations for a custom tidy script
-  set(custom_scripts "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-tidy.sh" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-tidy.bash")
+  if(NOT commands_valid)
+    # Search some default locations for a custom tidy script
+    set(custom_scripts "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-tidy.sh" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-tidy.bash")
 
-  foreach(script ${custom_scripts})
-    if(EXISTS ${script})
-      message(STATUS "Initialising clang tidy target for ${PROJECT_NAME} using existing script in ${script}")
-      create_targets(
-          TOP_LEVEL ${top_level_project}
-          ALL_COMMAND ${script} all
-          DIFF_COMMAND ${script} diff
-          )
-      return()
-    endif()
-  endforeach()
-
-  # Didn't find a custom script. Generate some default commands
-
-  # First search for an appropriate clang-tidy
-  if(NOT x_CLANG_TIDY_NAMES)
-    set(x_CLANG_TIDY_NAMES 
-        clang-tidy60 clang-tidy-6.0
-        clang-tidy40 clang-tidy-4.0
-        clang-tidy39 clang-tidy-3.9
-        clang-tidy38 clang-tidy-3.8
-        clang-tidy37 clang-tidy-3.7
-        clang-tidy36 clang-tidy-3.6
-        clang-tidy35 clang-tidy-3.5
-        clang-tidy34 clang-tidy-3.4
-        clang-tidy
-       )
-  endif()
-  find_program(CLANG_TIDY NAMES ${x_CLANG_TIDY_NAMES})
-
-  if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
-    message(FATAL_ERROR "Could not find appropriate clang-tidy, can't create targets")
+    foreach(script ${custom_scripts})
+      if(EXISTS ${script})
+        # Found a valid custom linting script. Set up the commands now but hold off creating
+        # the targets for the moment until we know whether or not they are actually enabled
+        set(success_msg "Initialising clang tidy target for ${PROJECT_NAME} using existing script in ${script}")
+        set(all_cmd ${script} all)
+        set(diff_cmd ${script} diff)
+        set(commands_valid TRUE)
+      endif()
+    endforeach()
   endif()
 
-  message(STATUS "Using ${CLANG_TIDY}")
-  set(${PROJECT_NAME}_CLANG_TIDY ${CLANG_TIDY} CACHE STRING "Absolute path to clang-tidy for ${PROJECT_NAME}")
+  if(NOT commands_valid)
+    # Didn't find a custom script. Generate some default commands
 
-  set(srcs "")
-  if(x_TARGETS)
-    # Extract a list of source files from each of the specified targets
-    generate_file_list_from_targets(TARGETS ${x_TARGETS})
-  elseif(x_PATTERNS)
-    # Just use the provided pattern as the file list
-    set(srcs ${x_PATTERNS})
-  else()
-    message(FATAL_ERROR "ClangTidy modules must be set up to use either a custom script, a list of targets, or file patterns")
-  endif()
-
-  if(NOT srcs)
-    message(WARNING "Couldn't find any source/header files to tidy in ${PROJECT_NAME}")
-  else()
-    create_targets(
-        TOP_LEVEL ${top_level_project}
-        ALL_COMMAND
-          ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
-          `git ls-files ${srcs}`
-        DIFF_COMMAND
-          ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
-          `git diff --diff-filter=ACMRTUXB --name-only master -- ${srcs}`
+    # First search for an appropriate clang-tidy
+    if(NOT x_CLANG_TIDY_NAMES)
+      set(x_CLANG_TIDY_NAMES 
+          clang-tidy60 clang-tidy-6.0
+          clang-tidy40 clang-tidy-4.0
+          clang-tidy39 clang-tidy-3.9
+          clang-tidy38 clang-tidy-3.8
+          clang-tidy37 clang-tidy-3.7
+          clang-tidy36 clang-tidy-3.6
+          clang-tidy35 clang-tidy-3.5
+          clang-tidy34 clang-tidy-3.4
+          clang-tidy
         )
+    endif()
+    find_program(CLANG_TIDY NAMES ${x_CLANG_TIDY_NAMES})
+
+    if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
+      # Can't find a valid clang tidy. We can still continue and just not create
+      # the targets so set the default enable option state to off. Also set up
+      # a failure message just in case the user is trying to force the targets
+      # to be created even though we don't have a linter
+      set(failure_msg "Could not find appropriate clang-tidy, can't create targets")
+      set(default_option_state FALSE)
+    else()
+      set(success_msg "Using ${CLANG_TIDY} to auto-lint ${PROJECT_NAME} sources")
+      set(${PROJECT_NAME}_CLANG_TIDY ${CLANG_TIDY} CACHE STRING "Absolute path to clang-tidy for ${PROJECT_NAME}")
+
+      # Find a list of source files to tidy
+      set(srcs "")
+      if(x_TARGETS)
+        # Extract a list of source files from each of the specified targets
+        generate_file_list_from_targets(TARGETS ${x_TARGETS})
+      elseif(x_PATTERNS)
+        # Just use the provided pattern as the file list
+        set(srcs ${x_PATTERNS})
+      else()
+        message(FATAL_ERROR "ClangTidy modules must be set up to use either a custom script, a list of targets, or file patterns")
+      endif()
+
+      if(NOT srcs)
+        # Not finding any source files could be a fatal error, or it could be ignored if the user
+        # is not trying to force the targets to be created. Set up the default option value, generate
+        # a failure message and leave the processing until later
+        set(failure_msg "Couldn't find any source/header files to tidy in ${PROJECT_NAME}")
+        set(default_option_state OFF)
+      else()
+        # Now we have a list of source files we can generate the commands to be used for the
+        # targets. Everything should be set up properly after this
+        set(all_command
+            ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
+            `git ls-files ${srcs}`
+          )
+        set(diff_command
+            ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
+            `git diff --diff-filter=ACMRTUXB --name-only master -- ${srcs}`
+          )
+        set(commands_valid TRUE)
+      endif()
+    endif()
+  endif()
+
+  # Create a cmake option to enable linting of this specific project
+  option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy for project ${PROJECT_NAME}" ${default_option_state})
+
+  if(${PROJECT_NAME}_ENABLE_CLANG_TIDY)
+    # Linting has been enabled, either by the default option or because a user
+    # has explicitly enabled it on the command line
+    if(commands_valid)
+      # We have some valid commands to start the linting process so we
+      # can create the targets
+      message(STATUS "${success_msg}")
+      create_targets(
+          TOP_LEVEL ${top_level_project}
+          ALL_COMMAND ${all_command}
+          DIFF_COMMAND ${diff_command}
+          )
+    else()
+      # Without valid commands linting is impossible. If we get here then the user
+      # has explicitly tried to enable auto-linting on the command line, since that
+      # is impossible we will thrown a fatal error here using a message previously
+      # generated
+      message(FATAL_ERROR "${failure_msg}")
+    endif()
+  else()
+    # Linting is either not possible or not requested for this project, skip
+    # target creation
+    if(failure_msg)
+      # We may have encountered an error, but since the target would have been
+      # disabled anyway it's not a big deal. Just log it so the user is aware
+      message(STATUS "${failure_msg}")
+    endif()
+    message(STATUS "clang-tidy for project ${PROJECT_NAME} is DISABLED")
   endif()
 endfunction()

@@ -103,6 +103,7 @@ function(swift_setup_clang_format)
 
   cmake_parse_arguments(x "${argOptions}" "${argSingle}" "${argMulti}" ${ARGN})
 
+  # Keep track of whether the project cmake option should be on or off by default
   set(default_option_state ON)
 
   # Global clang-format enable option, influences the default project specific enable option
@@ -124,78 +125,116 @@ function(swift_setup_clang_format)
     set(default_option_state OFF)
   endif()
 
-  # Create a cmake option to enable formatting of this specific project
-  option(${PROJECT_NAME}_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format for project ${PROJECT_NAME}" ${default_option_state})
-
-  if(NOT ${PROJECT_NAME}_ENABLE_CLANG_FORMAT)
-    # Explicitly disabled
-    message(STATUS "${PROJECT_NAME} clang-format support is DISABLED")
-    return()
-  endif()
+  # We are going to generate two commands, all and diff, which could be a script or a call
+  # directly o clang-format. These commands may or may not be found so keep track of whether
+  # they are valid. Once they are valid we will be able to create the cmake option and
+  # the actual targets
+  set(commands_valid FALSE)
+  unset(status_message)
+  unset(failure_message)
 
   # If a custom script has been specified always use that by default
   if(x_SCRIPT)
     if(EXISTS ${x_SCRIPT})
-      message(STATUS "Initialising clang format targets for ${PROJECT_NAME} using existing script in ${x_SCRIPT}")
-      create_targets(
-          TOP_LEVEL ${top_level_project}
-          ALL_COMMAND ${x_SCRIPT} all
-          DIFF_COMMAND ${x_SCRIPT} diff
-          )
+      set(status_message "Initialising clang format targets for ${PROJECT_NAME} using existing script in ${x_SCRIPT}")
+      set(all_command ${x_SCRIPT} all)
+      set(diff_command ${x_SCRIPT} Diff)
+      set(commands_valid TRUE)
     else()
+      # The project has specified a script to use but it doesn't exist. Since this is a
+      # option that comes directly from project code and not a user configuration option
+      # we can bail out early
       message(FATAL_ERROR "Specified clang-format script ${x_SCRIPT} doesn't exist")
     endif()
-    return()
   endif()
 
-  # Search for a custom formatting script in some reasonable places
-  set(custom_scripts "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-format.sh" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-format.bash")
+  if(NOT commands_valid)
+    # Search for a custom formatting script in some reasonable places
+    set(custom_scripts "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-format.sh" "${CMAKE_CURRENT_SOURCE_DIR}/scripts/clang-format.bash")
 
-  foreach(script ${custom_scripts})
-    if(EXISTS ${script})
-      # Found a custom formatting script
-      message(STATUS "Initialising clang format target for ${PROJECT_NAME} using existing script in ${script}")
+    foreach(script ${custom_scripts})
+      if(EXISTS ${script})
+        # Found a custom formatting script. Set up the commands now but hold off creating
+        # the targets for the moment until we know whether or not they are actually enabled
+        set(status_message "Initialising clang format target for ${PROJECT_NAME} using existing script in ${script}")
+        set(all_command ${script} all)
+        set(diff_command ${script} diff)
+        set(commands_valid TRUE)
+      endif()
+    endforeach()
+  endif()
+
+  if(NOT commands_valid)
+    # Did not find any script to use, generate a default formatting command to process all code files in the repo
+
+    # First try to find clang-format
+    if(NOT x_CLANG_FORMAT_NAMES)
+      set(x_CLANG_FORMAT_NAMES 
+#clang-format60 clang-format-6.0
+#clang-format40 clang-format-4.0
+#clang-format39 clang-format-3.9
+#clang-format38 clang-format-3.8
+#clang-format37 clang-format-3.7
+#clang-format36 clang-format-3.6
+#clang-format35 clang-format-3.5
+#clang-format34 clang-format-3.4
+#clang-format
+          asdfasdfasdfasdf
+        )
+    endif()
+    find_program(CLANG_FORMAT NAMES ${x_CLANG_FORMAT_NAMES})
+  
+    if("${CLANG_FORMAT}" STREQUAL "CLANG_FORMAT-NOTFOUND")
+      # Can't find a valid clang-format. We can still continue and just not create
+      # the targets so set the default enable option state to off. Also set up
+      # a failure message just in case the user is trying to force the targets
+      # to be created even though we don't have a formatter
+      set(failure_msg "Could not find appropriate clang-format, can't create targets")
+      set(default_option_state OFF)
+    else()
+      set(success_msg "Using ${CLANG_FORMAT} to auto-format ${PROJECT_NAME} sources")
+      set(${PROJECT_NAME}_CLANG_FORMAT ${CLANG_FORMAT} CACHE STRING "Absolute path to clang-format for ${PROJECT_NAME}")
+        
+      # Format all source and header files in the repo, use a git command to build the file list
+      set(default_patterns "*.[ch]" "*.cpp" "*.cc" "*.hpp")
+
+      set(all_command git ls-files ${default_patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i)
+      set(diff_command git diff --diff-filter=ACMRTUXB --name-only master -- ${default_patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i)
+      set(commands_valid TRUE)
+    endif()
+  
+  endif()
+
+  # Create a cmake option to enable formatting of this specific project
+  option(${PROJECT_NAME}_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format for project ${PROJECT_NAME}" ${default_option_state})
+
+  if(${PROJECT_NAME}_ENABLE_CLANG_FORMAT)
+    # Auto-formatting has been enabled, either by the default option or because a user
+    # has explicitly enabled it on the command line
+    if(commands_valid)
+      # We have some valid commands to start the linting process so we 
+      # can create the targets
+      message(STATUS "${success_msg}")
       create_targets(
           TOP_LEVEL ${top_level_project}
-          ALL_COMMAND ${script} all
-          DIFF_COMMAND ${script} diff
+          ALL_COMMAND ${all_command}
+          DIFF_COMMAND ${diff_command}
           )
-      return()
+    else()
+      # Without valid commands formatting is impossible. If we get here then the user
+      # has explicitly tried to enable auto-formatting on the command line, since that
+      # is impossible we will throw a fatal error here using a message previously
+      # generated
+      message(FATAL_ERROR "${failure_msg}")
     endif()
-  endforeach()
-
-  # Did not find any script to use, generate a default formatting command to process all code files in the repo
-
-  # First try to find clang-format
-  if(NOT x_CLANG_FORMAT_NAMES)
-    set(x_CLANG_FORMAT_NAMES 
-        clang-format60 clang-format-6.0
-        clang-format40 clang-format-4.0
-        clang-format39 clang-format-3.9
-        clang-format38 clang-format-3.8
-        clang-format37 clang-format-3.7
-        clang-format36 clang-format-3.6
-        clang-format35 clang-format-3.5
-        clang-format34 clang-format-3.4
-        clang-format
-       )
-  endif()
-  find_program(CLANG_FORMAT NAMES ${x_CLANG_FORMAT_NAMES})
-
-  if("${CLANG_FORMAT}" STREQUAL "CLANG_FORMAT-NOTFOUND")
-    # clang-format not found, can't continue
-    message(FATAL_ERROR "Could not find appropriate clang-format, can't create target")
   else()
-    message(STATUS "Using ${CLANG_FORMAT}")
-    set(${PROJECT_NAME}_CLANG_FORMAT ${CLANG_FORMAT} CACHE STRING "Absolute path to clang-format for ${PROJECT_NAME}")
+    # Formatting is etiher not possible or not requested for this project, skip
+    # target creation
+    if(failure_msg)
+      # We may have encountered an error, but since the target would have been
+      # disabled anyway it's not a big deal. Just log it so the user is aware
+      message(STATUS "${failure_msg}")
+    endif()
+    message(STATUS "clang-format for project ${PROJECT_NAME} is DISABLED")
   endif()
-
-  # Format all source and header files in the repo, use a git command to build the file list
-  set(default_patterns "*.[ch]" "*.cpp" "*.cc" "*.hpp")
-
-  create_targets(
-      TOP_LEVEL ${top_level_project}
-      ALL_COMMAND git ls-files ${default_patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
-      DIFF_COMMAND git diff --diff-filter=ACMRTUXB --name-only master -- ${default_patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
-  )
 endfunction()
