@@ -111,7 +111,6 @@ function(swift_setup_clang_format)
     set(default_option_state OFF)
   endif()
 
-  set(top_level_project OFF)
   if(${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
     # This is the top level project, ie the CMakeLists.txt which cmake was run
     # on directly, not a submodule/subproject. We can do some special things now.
@@ -119,6 +118,10 @@ function(swift_setup_clang_format)
     # top level projects. Also the top level project will create an alias target
     # clang-format-all against the project specific target
     set(top_level_project ON)
+  else()
+    set(top_level_project OFF)
+    # Projects which are not top level have formatting disabled by default
+    set(default_option_state OFF)
   endif()
 
   # Create a cmake option to enable formatting of this specific project
