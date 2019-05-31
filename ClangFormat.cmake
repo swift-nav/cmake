@@ -103,6 +103,14 @@ function(swift_setup_clang_format)
 
   cmake_parse_arguments(x "${argOptions}" "${argSingle}" "${argMulti}" ${ARGN})
 
+  set(default_option_state ON)
+
+  # Global clang-format enable option, influences the default project specific enable option
+  option(SWIFT_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format globally" ON)
+  if(NOT SWIFT_ENABLE_CLANG_FORMAT)
+    set(default_option_state OFF)
+  endif()
+
   set(top_level_project OFF)
   if(${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
     # This is the top level project, ie the CMakeLists.txt which cmake was run
@@ -113,7 +121,8 @@ function(swift_setup_clang_format)
     set(top_level_project ON)
   endif()
 
-  option(${PROJECT_NAME}_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format" ${top_level_project})
+  # Create a cmake option to enable formatting of this specific project
+  option(${PROJECT_NAME}_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format for project ${PROJECT_NAME}" ${default_option_state})
 
   if(NOT ${PROJECT_NAME}_ENABLE_CLANG_FORMAT)
     # Explicitly disabled

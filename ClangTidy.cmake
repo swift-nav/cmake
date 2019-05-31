@@ -160,12 +160,24 @@ function(swift_setup_clang_tidy)
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
-  set(top_level_project OFF)
-  if(${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
-    set(top_level_project ON)
+  set(default_option_state ON)
+
+  # Global clang-tidy enable option, influences the default project specific enable option
+  option(SWIFT_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy globally" ON)
+  if(NOT SWIFT_ENABLE_CLANG_TIDY)
+    set(default_option_state OFF)
   endif()
 
-  option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable auto-linting of code using code-tidy" ${top_level_project})
+  if(${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
+    set(top_level_project ON)
+  else()
+    set(top_level_project OFF)
+    # Projects which are not top level have linting disabled by default
+    set(default_option_state OFF)
+  endif()
+
+  # Create a cmake option to enable linting of this specific project
+  option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy for project ${PROJECT_NAME}" ${default_option_state})
 
   if(NOT ${PROJECT_NAME}_ENABLE_CLANG_TIDY)
     message(STATUS "${PROJECT_NAME} clang-tidy support is DISABLED")
