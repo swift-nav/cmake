@@ -182,7 +182,6 @@ function(swift_setup_clang_format)
   if("${CLANG_FORMAT}" STREQUAL "CLANG_FORMAT-NOTFOUND")
     # clang-format not found, can't continue
     message(FATAL_ERROR "Could not find appropriate clang-format, can't create target")
-    return()
   else()
     message(STATUS "Using ${CLANG_FORMAT}")
     set(${PROJECT_NAME}_CLANG_FORMAT ${CLANG_FORMAT} CACHE STRING "Absolute path to clang-format for ${PROJECT_NAME}")

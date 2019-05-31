@@ -121,7 +121,6 @@ function(generate_file_list_from_targets)
   foreach(target ${x_TARGETS})
     if(NOT TARGET ${target})
       message(FATAL_ERROR "Trying to enable clang-tidy for target ${target} which doesn't exist")
-      continue()
     endif()
 
     # Extract the list of source files from the target and convert to absolute paths
@@ -237,7 +236,6 @@ function(swift_setup_clang_tidy)
 
   if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
     message(FATAL_ERROR "Could not find appropriate clang-tidy, can't create targets")
-    return()
   endif()
 
   message(STATUS "Using ${CLANG_TIDY}")
