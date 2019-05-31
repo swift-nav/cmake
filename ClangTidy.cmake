@@ -120,7 +120,7 @@ function(generate_file_list_from_targets)
 
   foreach(target ${x_TARGETS})
     if(NOT TARGET ${target})
-      message(WARNING "clang-tidy enabled for non-existent target ${target}")
+      message(FATAL_ERROR "Trying to enable clang-tidy for target ${target} which doesn't exist")
       continue()
     endif()
 
@@ -224,7 +224,7 @@ function(swift_setup_clang_tidy)
   find_program(CLANG_TIDY NAMES ${x_CLANG_TIDY_NAMES})
 
   if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
-    message(WARNING "Could not find appropriate clang-tidy, target disabled")
+    message(FATAL_ERROR "Could not find appropriate clang-tidy, can't create targets")
     return()
   endif()
 
