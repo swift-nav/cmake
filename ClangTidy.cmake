@@ -172,8 +172,8 @@ function(swift_setup_clang_tidy)
   endif()
 
   # Global clang-tidy enable option, influences the default project specific enable option
-  option(SWIFT_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy globally" ON)
-  if(NOT SWIFT_ENABLE_CLANG_TIDY)
+  option(ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy globally" ON)
+  if(NOT ENABLE_CLANG_TIDY)
     early_exit(STATUS "auto-linting is disabled globally")
   endif()
 
