@@ -150,37 +150,44 @@ function(generate_file_list_from_targets)
   endforeach()
 endfunction()
 
+macro(early_exit level msg)
+  message(${level} "${msg}")
+  if(x_REQUIRED)
+    message(FATAL_ERROR "clang-tidy support is REQUIRED for ${PROJECT_NAME}")
+  endif()
+  return()
+endmacro()
+
 # External function to create clang-tidy-* targets, Call according to the
 # documentation in the file header.
 function(swift_setup_clang_tidy)
-  set(argOption "")
+  set(argOption "REQUIRED")
   set(argSingle "SCRIPT")
   set(argMulti "CLANG_TIDY_NAMES" "TARGETS" "PATTERNS")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
-  set(default_option_state ON)
+  if(x_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "Unparsed arguments ${x_UNPARSED_ARGUMENTS}")
+  endif()
 
   # Global clang-tidy enable option, influences the default project specific enable option
   option(SWIFT_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy globally" ON)
   if(NOT SWIFT_ENABLE_CLANG_TIDY)
-    set(default_option_state OFF)
+    early_exit(STATUS "auto-linting is disabled globally")
   endif()
 
   if(${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
     set(top_level_project ON)
   else()
     set(top_level_project OFF)
-    # Projects which are not top level have linting disabled by default
-    set(default_option_state OFF)
   endif()
 
   # Create a cmake option to enable linting of this specific project
-  option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy for project ${PROJECT_NAME}" ${default_option_state})
+  option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy for project ${PROJECT_NAME}" ${top_level_project})
 
   if(NOT ${PROJECT_NAME}_ENABLE_CLANG_TIDY)
-    message(STATUS "${PROJECT_NAME} clang-tidy support is DISABLED")
-    return()
+    early_exit(STATUS "${PROJECT_NAME} clang-tidy support is DISABLED")
   endif()
 
   # This is required so that clang-tidy can work out what compiler options to use
@@ -235,7 +242,7 @@ function(swift_setup_clang_tidy)
   find_program(CLANG_TIDY NAMES ${x_CLANG_TIDY_NAMES})
 
   if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
-    message(WARNING "Could not find appropriate clang-tidy, target disabled")
+    early_exit(WARNING "Could not find appropriate clang-tidy, targets disabled")
   endif()
 
   message(STATUS "Using ${CLANG_TIDY}")
@@ -253,7 +260,7 @@ function(swift_setup_clang_tidy)
   endif()
 
   if(NOT srcs)
-    message(WARNING "Couldn't find any source/header files to tidy in ${PROJECT_NAME}")
+    early_exit(WARNING "Couldn't find any source/header files to tidy in ${PROJECT_NAME}")
   else()
     create_targets(
         TOP_LEVEL ${top_level_project}

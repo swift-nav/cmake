@@ -94,21 +94,31 @@ function(create_targets)
   endif()
 endfunction()
 
+macro(early_exit level msg)
+  message(${level} "${msg}")
+  if(x_REQUIRED)
+    message(FATAL_ERROR "clang-format support is REQUIRED for ${PROJECT_NAME}")
+  endif()
+  return()
+endmacro()
+
 # External function to create clang-format-* targets. Call according to the
 # documentation in the file header.
 function(swift_setup_clang_format)
-  set(argOption "")
+  set(argOption "REQUIRED")
   set(argSingle "SCRIPT")
   set(argMulti "CLANG_FORMAT_NAMES")
 
-  cmake_parse_arguments(x "${argOptions}" "${argSingle}" "${argMulti}" ${ARGN})
+  cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
-  set(default_option_state ON)
+  if(x_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "Unparsed arguments ${x_UNPARSED_ARGUMENTS}")
+  endif()
 
   # Global clang-format enable option, influences the default project specific enable option
-  option(SWIFT_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format globally" ON)
-  if(NOT SWIFT_ENABLE_CLANG_FORMAT)
-    set(default_option_state OFF)
+  option(ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format globally" ON)
+  if(NOT ENABLE_CLANG_FORMAT)
+    early_exit(STATUS "auto-formatting is disabled globally")
   endif()
 
   if(${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
@@ -120,17 +130,14 @@ function(swift_setup_clang_format)
     set(top_level_project ON)
   else()
     set(top_level_project OFF)
-    # Projects which are not top level have formatting disabled by default
-    set(default_option_state OFF)
   endif()
 
   # Create a cmake option to enable formatting of this specific project
-  option(${PROJECT_NAME}_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format for project ${PROJECT_NAME}" ${default_option_state})
+  option(${PROJECT_NAME}_ENABLE_CLANG_FORMAT "Enable auto-formatting of code using clang-format for project ${PROJECT_NAME}" ${top_level_project})
 
   if(NOT ${PROJECT_NAME}_ENABLE_CLANG_FORMAT)
     # Explicitly disabled
-    message(STATUS "${PROJECT_NAME} clang-format support is DISABLED")
-    return()
+    early_exit(STATUS "${PROJECT_NAME} clang-format support is DISABLED")
   endif()
 
   # If a custom script has been specified always use that by default
@@ -184,11 +191,11 @@ function(swift_setup_clang_format)
 
   if("${CLANG_FORMAT}" STREQUAL "CLANG_FORMAT-NOTFOUND")
     # clang-format not found, can't continue
-    message(WARNING "Could not find appropriate clang-format, target disabled")
-  else()
-    message(STATUS "Using ${CLANG_FORMAT}")
-    set(${PROJECT_NAME}_CLANG_FORMAT ${CLANG_FORMAT} CACHE STRING "Absolute path to clang-format for ${PROJECT_NAME}")
+    early_exit(WARNING "Could not find appropriate clang-format, targets disabled")
   endif()
+
+  message(STATUS "Using ${CLANG_FORMAT}")
+  set(${PROJECT_NAME}_CLANG_FORMAT ${CLANG_FORMAT} CACHE STRING "Absolute path to clang-format for ${PROJECT_NAME}")
 
   # Format all source and header files in the repo, use a git command to build the file list
   set(default_patterns "*.[ch]" "*.cpp" "*.cc" "*.hpp")
