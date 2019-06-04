@@ -64,16 +64,16 @@
 # swift_create_project_options(HAS_TESTS DISABLE_TEST_COMPONENTS ${disable_tests})
 #
 # A list of dependencies for test components can be specified using the 
-# TEST_PACKAGES option. Pass a list of packages which will be searched for
+# DEPENDENCIES option. Pass a list of packages which will be searched for
 # using the find_package() cmake function. If any of the packages is not
 # found the unit tests will be disabled
 #
-# swift_create_project_options(HAS_TESTS TEST_PACKAGES "Googletest" "RapidCheck")
+# swift_create_project_options(HAS_TESTS DEPENDENCIES "Googletest" "RapidCheck")
 #
-# Similarly, the TEST_LIBS_PACKAGES can be used to specify the dependencies
-# of the test libraries. If takes the same behaviour as the TEST_PACKAGES library
+# Similarly, the TEST_LIBS_DEPENDENCIES can be used to specify the dependencies
+# of the test libraries. If takes the same behaviour as the DEPENDENCIES library
 # except it will only disable the test libraries feature if requirements are not
-# met. If this option is not specified it assumes the same value as TEST_PACKAGES
+# met. If this option is not specified it assumes the same value as DEPENDENCIES
 #
 # The following test packages are currently supported:
 #
@@ -115,30 +115,16 @@
 #
 
 function(verify_test_dependencies)
-  cmake_parse_arguments(x "" "" "TEST_PACKAGES" ${ARGN})
+  cmake_parse_arguments(x "" "" "DEPENDENCIES" ${ARGN})
+
+  if(x_UNPARSED_ARGUMENTS)
+    message(FATAL_ERROR "Unparsed arguments ${x_UNPARSED_ARGUMENTS}")
+  endif()
 
   set(dependencies_available ON PARENT_SCOPE)
-  if(x_TEST_PACKAGES)
-    foreach(P ${x_TEST_PACKAGES})
-      find_package(${P})
-      # Annoyingly, different test packages have different ways of reporting they were found
-      set(found FALSE)
-      if(${P} STREQUAL "Check" AND CHECK_FOUND)
-        set(found TRUE)
-      elseif(${P} STREQUAL "Googletest" AND TARGET gtest)
-        set(found TRUE)
-      elseif(${P} STREQUAL "RapidCheck" AND TARGET rapidcheck)
-        set(found TRUE)
-      elseif(${P} STREQUAL "GFlags" AND TARGET gflags)
-        set(found TRUE)
-      elseif(${P} STREQUAL "Json" AND TARGET nlohmann_json)
-        set(found TRUE)
-      elseif(${P} STREQUAL "Yaml-Cpp" AND TARGET yaml-cpp)
-        set(found TRUE)
-      elseif(${P} STREQUAL "FastCSV" AND TARGET fast-csv)
-        set(found TRUE)
-      endif()
-      if(NOT found)
+  if(x_DEPENDENCIES)
+    foreach(P ${x_DEPENDENCIES})
+      if(NOT TARGET ${P})
         message(STATUS "Disable tests because dependency ${P} was not found")
         set(dependencies_available OFF PARENT_SCOPE)
       endif()
@@ -150,7 +136,7 @@ endfunction()
 function(swift_create_project_options)
   set(argOptions "HAS_TESTS" "HAS_TEST_LIBS" "HAS_DOCS" "HAS_EXAMPLES" "SKIP_CROSS_COMPILING_CHECK")
   set(argSingleArguments "PROJECT" "DISABLE_TEST_COMPONENTS")
-  set(argMultiArguments "TEST_PACKAGES" "TEST_LIBS_PACKAGES")
+  set(argMultiArguments "TEST_DEPENDENCIES" "TEST_LIBS_DEPENDENCIES")
 
   cmake_parse_arguments(x "${argOptions}" "${argSingleArguments}" "${argMultiArguments}" ${ARGN})
 
@@ -201,7 +187,7 @@ function(swift_create_project_options)
   endif()
 
   if(build_tests)
-    verify_test_dependencies(TEST_PACKAGES ${x_TEST_PACKAGES})
+    verify_test_dependencies(DEPENDENCIES ${x_TEST_DEPENDENCIES})
 
     if(NOT dependencies_available)
       set(build_tests OFF)
@@ -209,10 +195,10 @@ function(swift_create_project_options)
   endif()
 
   if(build_test_libs)
-    if(x_TEST_LIBS_PACKAGES)
-      verify_test_dependencies(TEST_PACKAGES ${x_TEST_LIBS_PACKAGES})
+    if(x_TEST_LIBS_DEPENDENCIES)
+      verify_test_dependencies(DEPENDENCIES ${x_TEST_LIBS_DEPENDENCIES})
     else()
-      verify_test_dependencies(TEST_PACKAGES ${x_TEST_PACKAGES})
+      verify_test_dependencies(DEPENDENCIES ${x_TEST_DEPENDENCIES})
     endif()
 
     if(NOT dependencies_available)
