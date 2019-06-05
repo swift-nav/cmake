@@ -50,6 +50,20 @@ IF( NOT CHECK_FOUND AND NOT PKG_CONFIG_FOUND )
 	ENDIF ( CHECK_INCLUDE_DIRS AND CHECK_LIBRARIES )
 ENDIF( NOT CHECK_FOUND AND NOT PKG_CONFIG_FOUND )
 
+if(CHECK_FOUND)
+  message(STATUS "x ${CHECK_INCLUDE_DIRS} x ${CHECK_LIBRARIES}")
+  add_library(Check::check UNKNOWN IMPORTED)
+  if(CHECK_INCLUDE_DIRS)
+    set_target_properties(Check::check APPEND PROPERTIES
+        INTERFACE_INCLUDE_DIRECTORIES ${CHECK_INCLUDE_DIRS})
+  endif()
+  if(CHECK_LIBRARIES)
+    string(REPLACE ";" " " libs ${CHECK_LIBRARIES})
+    set_target_properties(Check::check PROPERTIES
+        INTERFACE_LINK_LIBRARIES ${libs})
+  endif()
+endif()
+
 # Hide advanced variables from CMake GUIs
 MARK_AS_ADVANCED( CHECK_INCLUDE_DIRS CHECK_LIBRARIES )
 

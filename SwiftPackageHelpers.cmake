@@ -94,6 +94,9 @@ function(swift_install_targets)
     message(FATAL_ERROR "Must give at least 1 target to install")
   endif()
 
+  set(exes)
+  set(libs)
+
   foreach(target ${x_TARGETS})
     get_target_property(target_type ${target} TYPE)
     if("${target_type}" STREQUAL "EXECUTABLE")
