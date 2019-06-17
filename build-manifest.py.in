@@ -1,0 +1,157 @@
+#!/usr/bin/python
+
+import os
+import re
+import git
+from datetime import datetime
+
+raw_project_list = "@SWIFT_BUNDLED_PROJECTS@"
+project_list = sorted(raw_project_list.split(";"))
+
+
+def sanitise_url(url):
+    url = re.sub(r"http://", "https://", url)
+    url = re.sub(r"https://github.com/", "git@github.com:", url)
+    url = re.sub(r".git$", "", url)
+    url = url + ".git"
+    return url
+
+
+all_submodules = []
+all_projects = []
+
+
+class Submodule(object):
+    """ Describes a git submodule within a working tree"""
+
+    def __init__(self, path):
+        try:
+            self.repo = git.Repo(path)
+        except:
+            return
+
+        self.path = path
+        self.url = sanitise_url(self.repo.remotes.origin.url)
+        self.head = self.repo.head
+        self.sha = self.head.commit.hexsha
+        self.date = datetime.fromtimestamp(self.head.commit.committed_date)
+        self.dirty = self.repo.is_dirty()
+
+        all_submodules.append(self)
+
+        # Can't use the pygit submodule feature here because it
+        # doesn't work for uninitialised submodules or ones where
+        # a submodule isn't actually present in the head
+        oldcwd = os.getcwd()
+        os.chdir(path)
+        import subprocess
+        proc = subprocess.Popen(['git', 'submodule'], stdout=subprocess.PIPE)
+        while True:
+            line = proc.stdout.readline()
+            if not line:
+                break
+            line = line.rstrip()
+            if line.startswith('-'):
+                # Uninitialised submodule
+                continue
+
+            # Extract path
+            spath = line.split(' ')[2]
+
+            # Analyse submodule
+            Submodule(path + "/" + spath)
+        os.chdir(oldcwd)
+
+    def __eq__(self, other):
+        return self.path == other.path
+
+    def __ne__(self, other):
+        return self.path != other.path
+
+    def __lt__(self, other):
+        return self.date < other.date
+
+    def __le__(self, other):
+        return self.date <= other.date
+
+    def __gt__(self, other):
+        return self.date > other.date
+
+    def __ge__(self, other):
+        return self.date >= other.date
+
+
+def find_top_level_path(path):
+    while path != '/':
+        if os.path.exists(path + "/.git"):
+            return path
+        (path, tail) = os.path.split(path)
+    return ""
+
+
+class Subproject:
+    """ Describes a project included in a build tree """
+
+    def __init__(self, name, cmakecache):
+        pattern = name + "_SOURCE_DIR:STATIC=(.*)"
+        m = re.search(pattern, cmakecache)
+
+        self.name = name
+        self.path = m.group(1)
+        self.top_level_path = find_top_level_path(self.path)
+
+        try:
+            self.repo = git.Repo(self.top_level_path)
+        except:
+            return
+
+        self.url = sanitise_url(self.repo.remotes.origin.url)
+        self.alternatives = sorted([x for x in all_submodules if x.url == self.url], reverse=True)
+        for a in self.alternatives:
+            if a.path == self.top_level_path:
+                self.selected = a
+                break
+
+        if not hasattr(self, "selected"):
+            print("Error: project " + self.name + " apparently doesn't have a submodule")
+        else:
+            self.alternatives.remove(self.selected)
+
+        all_projects.append(self)
+
+
+def format_date(stamp):
+    return datetime.strftime(stamp, "%d/%m/%y %H:%M:%S%z")
+
+
+def generate_manifest():
+    # First build up a list of all git submodules available in this tree
+    print("Searching submodules...")
+    working_root = find_top_level_path(os.getcwd())
+    Submodule(working_root)
+
+    print("Building project list...")
+    # Now search for all cmake projects which are going to be build
+    cmakecache = open("CMakeCache.txt", "r")
+    contents = cmakecache.read()
+    cmakecache.close()
+
+    for project in project_list:
+        Subproject(project, contents)
+
+    print("Manifest:")
+    print("")
+    # Now loop over projects and dump result
+    for project in all_projects:
+        print("Project: " + project.name)
+        print("  Selected:    " + project.selected.path + " " + project.selected.sha + " " + format_date(project.selected.date))
+        for a in project.alternatives:
+            if a.date > project.selected.date:
+                newer = " (NEWER)"
+            else:
+                newer = ""
+            print("  Alternative: " + a.path + " " + a.sha + " " + format_date(a.date) + newer)
+
+
+if __name__ == "__main__":
+    generate_manifest()
