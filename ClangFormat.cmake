@@ -198,7 +198,7 @@ function(swift_setup_clang_format)
   set(${PROJECT_NAME}_CLANG_FORMAT ${CLANG_FORMAT} CACHE STRING "Absolute path to clang-format for ${PROJECT_NAME}")
 
   # Format all source and header files in the repo, use a git command to build the file list
-  set(default_patterns "*.[ch]" "*.cpp" "*.cc" "*.hpp")
+  set(default_patterns '*.[ch]' '*.cpp' '*.cc' '*.hpp')
 
   create_targets(
       TOP_LEVEL ${top_level_project}
