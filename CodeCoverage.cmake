@@ -383,7 +383,17 @@ function(add_code_coverage_all_targets)
                         "${multi_value_keywords}"
                         ${ARGN})
 
-  if(CODE_COVERAGE)
+  if(${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
+      # This is the top level project, ie the CMakeLists.txt which cmake was run
+      # on directly, not a submodule/subproject. We can do some special things now.
+      # The option to enable code coverage will be enabled by default only for
+      # top level projects.
+      set(TOP_LEVEL_PROJECT ON)
+  else()
+      set(TOP_LEVEL_PROJECT OFF)
+  endif()
+
+  if(CODE_COVERAGE AND TOP_LEVEL_PROJECT)
     if("${CMAKE_C_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang"
        OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang")
       # Targets
