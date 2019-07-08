@@ -107,7 +107,7 @@ endmacro()
 function(swift_setup_clang_format)
   set(argOption "REQUIRED")
   set(argSingle "SCRIPT")
-  set(argMulti "CLANG_FORMAT_NAMES")
+  set(argMulti "CLANG_FORMAT_NAMES" "PATTERNS")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
@@ -197,12 +197,16 @@ function(swift_setup_clang_format)
   message(STATUS "Using ${CLANG_FORMAT}")
   set(${PROJECT_NAME}_CLANG_FORMAT ${CLANG_FORMAT} CACHE STRING "Absolute path to clang-format for ${PROJECT_NAME}")
 
-  # Format all source and header files in the repo, use a git command to build the file list
-  set(default_patterns '*.[ch]' '*.cpp' '*.cc' '*.hpp')
+  if(x_PATTERNS)
+    set(patterns ${x_PATTERNS})
+  else()
+    # Format all source and header files in the repo, use a git command to build the file list
+    set(patterns '*.[ch]' '*.cpp' '*.cc' '*.hpp')
+  endif()
 
   create_targets(
       TOP_LEVEL ${top_level_project}
-      ALL_COMMAND git ls-files ${default_patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
-      DIFF_COMMAND git diff --diff-filter=ACMRTUXB --name-only master -- ${default_patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
+      ALL_COMMAND git ls-files ${patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
+      DIFF_COMMAND git diff --diff-filter=ACMRTUXB --name-only master -- ${patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
   )
 endfunction()
