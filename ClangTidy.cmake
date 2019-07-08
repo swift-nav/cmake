@@ -54,6 +54,16 @@
 # This function must be called with one of the above options, or it must be able to
 # find a custom script in the file system otherwise it will throw an error.
 #
+# The option EXTRA_ARGS may be used to pass command line options directly to the
+# clang-tidy command. This can be useful or even required when a compiler other
+# than clang is used to configure the project. clang-tidy will use the compile_commands.json
+# database to work out how to analyse files, but some GNU options are not understood.
+#
+# swift_setup_clang_tidy(EXTRA_ARGS '-extra-arg=-Wno-unknown-warning-option')
+#
+# will disable a clang-tidy error when it encounters a compiler warning switch it
+# doesn't support, such as -Wno-psabi (GNU does understand this one)
+#
 # All commands are run from ${CMAKE_CURRENT_SOURCE_DIR}. It is highly recommended
 # that this module only be included from the top level CMakeLists.txt of a project,
 # using it from a subdirectory may not work as expected.
