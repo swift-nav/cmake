@@ -163,7 +163,7 @@ endmacro()
 function(swift_setup_clang_tidy)
   set(argOption "REQUIRED")
   set(argSingle "SCRIPT")
-  set(argMulti "CLANG_TIDY_NAMES" "TARGETS" "PATTERNS")
+  set(argMulti "CLANG_TIDY_NAMES" "TARGETS" "PATTERNS" "EXTRA_ARGS")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
@@ -262,14 +262,15 @@ function(swift_setup_clang_tidy)
   if(NOT srcs)
     early_exit(WARNING "Couldn't find any source/header files to tidy in ${PROJECT_NAME}")
   else()
+    message(WARNING "$$$$ ${x_EXTRA_ARGS}")
     create_targets(
         TOP_LEVEL ${top_level_project}
         ALL_COMMAND
-          ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
+        ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
           `git ls-files ${srcs}`
         DIFF_COMMAND
         git diff --diff-filter=ACMRTUXB --quiet -- ${srcs} ||
-        ${${PROJECT_NAME}_CLANG_TIDY} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
+        ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
           `git diff --diff-filter=ACMRTUXB --name-only master -- ${srcs}`
         )
   endif()
