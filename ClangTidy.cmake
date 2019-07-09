@@ -272,7 +272,6 @@ function(swift_setup_clang_tidy)
   if(NOT srcs)
     early_exit(WARNING "Couldn't find any source/header files to tidy in ${PROJECT_NAME}")
   else()
-    message(WARNING "$$$$ ${x_EXTRA_ARGS}")
     create_targets(
         TOP_LEVEL ${top_level_project}
         ALL_COMMAND
