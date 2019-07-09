@@ -27,13 +27,13 @@
 # clang-tidy-all - will run `<script> all`
 # clang-tidy-diff - will run `<script> diff`
 #
-# If a script is not explicitly passed this function will first search for a 
+# If a script is not explicitly passed this function will first search for a
 # custom linting script. The script must exist in ${CMAKE_CURRENT_SOURCE_DIR}/scripts
 # and be named either clang-tidy.sh or clang-tidy.bash. It will be called with
 # the same arguments as described above.
 #
 # If no custom script is available this function will generate some default linting
-# commands. clang-tidy will be called and passed a list of files to lint. 
+# commands. clang-tidy will be called and passed a list of files to lint.
 #
 # The file list can be constructed in one of two ways, either by GLOB patterns or
 # a list of targets
@@ -76,7 +76,7 @@
 #
 # The default value is ON for top level projects, and OFF for any others.
 #
-# Running 
+# Running
 #
 # cmake -D<project>_ENABLE_CLANG_TIDY=OFF ..
 #
@@ -237,7 +237,7 @@ function(swift_setup_clang_tidy)
 
   # First search for an appropriate clang-tidy
   if(NOT x_CLANG_TIDY_NAMES)
-    set(x_CLANG_TIDY_NAMES 
+    set(x_CLANG_TIDY_NAMES
         clang-tidy60 clang-tidy-6.0
         clang-tidy40 clang-tidy-4.0
         clang-tidy39 clang-tidy-3.9
@@ -272,7 +272,6 @@ function(swift_setup_clang_tidy)
   if(NOT srcs)
     early_exit(WARNING "Couldn't find any source/header files to tidy in ${PROJECT_NAME}")
   else()
-    message(WARNING "$$$$ ${x_EXTRA_ARGS}")
     create_targets(
         TOP_LEVEL ${top_level_project}
         ALL_COMMAND
