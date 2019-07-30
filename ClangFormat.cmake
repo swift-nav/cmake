@@ -105,6 +105,16 @@ function(create_targets)
         COMMAND ${x_DIFF_COMMAND}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
+    add_custom_target(clang-format-all-check
+        COMMAND git diff --exit-code
+        DEPENDS clang-format-all
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+    add_custom_target(clang-format-diff-check
+        COMMAND git diff --exit-code
+        DEPENDS clang-format-diff
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
   endif()
 endfunction()
 
