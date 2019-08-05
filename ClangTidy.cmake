@@ -117,6 +117,16 @@ function(create_targets)
         COMMAND ${x_DIFF_COMMAND}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
         )
+    add_custom_target(clang-tidy-all-check
+        COMMAND test ! -f fixes.yaml
+        DEPENDS clang-tidy-all
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
+    add_custom_target(clang-tidy-diff-check
+        COMMAND test ! -f fixes.yaml
+        DEPENDS clang-tidy-diff
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        )
   endif()
 endfunction()
 
