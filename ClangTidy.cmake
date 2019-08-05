@@ -278,6 +278,7 @@ function(swift_setup_clang_tidy)
         ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
           `git ls-files ${srcs}`
         DIFF_COMMAND
+        git diff --diff-filter=ACMRTUXB --quiet --name-only master -- ${srcs} ||
         ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
           `git diff --diff-filter=ACMRTUXB --name-only master -- ${srcs}`
         )
