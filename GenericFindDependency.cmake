@@ -7,7 +7,7 @@
 # in the host system or cross compiling sysroot.
 #
 # By default dependencies are first sought in bundled source code, and if not
-# found from the system libraries. This default behaviour can be controlled by 
+# found from the system libraries. This default behaviour can be controlled by
 # several options
 #
 # EXCLUDE - can be used to disable searching in a particular location. Valid
@@ -28,14 +28,14 @@
 # create an interface target which can be used to link in to any other target.
 #
 # The options "SYSTEM_HEADER_FILE" and "SYSTEM_LIB_NAMES" will be passed verbatim
-# to the cmake functions find_header() and find_library() to search all the 
+# to the cmake functions find_header() and find_library() to search all the
 # correct system locations.
 #
 # When using bundled source code the function will search several default locations
 # under '${CMAKE_CURRENT_SOURCE_DIR}/third_party' based on the package and target
 # names. The search location can be controlled by the "SOURCE_DIR" parameter
 #
-# The target name can be controlled by the option "TARGET". When using 
+# The target name can be controlled by the option "TARGET". When using
 # bundled source code this is used to verify the target was created properly
 # after calling add_subdirectory
 #
@@ -70,12 +70,12 @@ function(search_dependency_source)
   foreach(P ${x_SOURCE_SEARCH_PATHS})
     if(EXISTS "${P}/CMakeLists.txt")
       message(STATUS "Found ${x_TARGET} source code in ${P}")
-      add_subdirectory(${P})
-  
+      add_subdirectory(${P} EXCLUDE_FROM_ALL)
+
       if(NOT TARGET ${x_TARGET})
         message(WARNING "Source code in ${P} did not declare target ${x_TARGET} as was expected")
       endif()
-  
+
       # This is very ugly, but required for some python modules, it will not last beyond this temporary solution
       if(EXISTS "${P}/include")
         set(x_${x_TARGET}_IncludeDir "${P}/include" CACHE PATH "Path to ${x_TARGET} bundled source code header files")
@@ -125,7 +125,7 @@ endfunction()
 # This macro will return(), ie cause the caller to return, if there are no available locations.
 # It will raise a fatal error if unknown values are specified for any of the input parameters.
 #
-# Inputs: 
+# Inputs:
 # - x_PREFER - Parameter to GenericFindDependency, preferred location as defined by the project
 # - SWIFT_PREFERRED_DEPENDENCY_SOURCE - Global user preference, defined on the command line
 # - x_EXCLUDE - List of sources to exclude from consideration
@@ -263,7 +263,7 @@ function(GenericFindDependency)
           TARGET "${x_TARGET}"
           SOURCE_SEARCH_PATHS "${x_SOURCE_SEARCH_PATHS}"
           )
-      
+
       # If the expected target was created we have succeeded
       if(TARGET ${x_TARGET})
         message(STATUS "Using dependency ${x_TARGET} from bundled source code")
@@ -311,4 +311,4 @@ function(GenericFindDependency)
     endif()
   endif()
 endfunction()
-    
+
