@@ -70,6 +70,47 @@ function(search_dependency_source)
   foreach(P ${x_SOURCE_SEARCH_PATHS})
     if(EXISTS "${P}/CMakeLists.txt")
       message(STATUS "Found ${x_TARGET} source code in ${P}")
+      # Function arguments are automatically parsed out in to numbered variables
+      # ARG#, and a complete argument list is stored in ARGN. Variables are passed
+      # down the function call stack until they are overwritten. This allows a 
+      # badly written function to test for the existance of an optional variable
+      # in it's own argument list but actually pick up a variable for a function
+      # much higher up the call stack.
+      #
+      # This behaviour has been observed in benchmark (included from grpc) in
+      # the add_cxx_compiler_flag function. It has an optional second argument
+      # and tests it against an empty string. This test will work if the project
+      # is included in the build tree via a call to add_subdirectory outside any
+      # function calls (ie. directly from CMakeLists.txt) but has the potential
+      # to fail when called from within a another function, such as is happening
+      # here.
+      #
+      # This is a very ugly way of mitigating the error. We manually unset all
+      # the cmake variable related to function arguments immediately before 
+      # including the dependency project. This will make it APPEAR as though
+      # add_subdirectory was called from outside a function or macro.
+      #
+      # Note the limitation, argument lists are apparently unlimited, we are only
+      # unsetting the first 100 argument variables. This will probably be enough 
+      # as I haven't seen functions taking that many arguments, but it certainly
+      # isn't bulletproof. Cmake doesn't appear to have any functionality which
+      # could be used to achieve this so we are left with few, if any, other options.
+      #
+      # In this instance it is safe to unset all the function argument variables.
+      # We have already called cmake_parse_arguments to separate them out in to
+      # other variable which we use instead of the function argument variables
+      # directly. Should this function be extended in the future it will be fine
+      # so long as it carries on using to parsed variable (everything beginning
+      # with "x_".
+      #
+      # Additionally, cmake variable are only propogated down the stack, not up
+      # (unless PARENT_SCOPE is used in set()) so by unsetting variables here we
+      # won't affect whatever function called us, or anything even higher up 
+      # the call stack.
+      foreach(i RANGE 0 100)
+        unset(ARGV${i})
+      endforeach()
+      unset(ARGN)
       add_subdirectory(${P})
   
       if(NOT TARGET ${x_TARGET})
