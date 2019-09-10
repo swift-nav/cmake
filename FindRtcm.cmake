@@ -1,4 +1,5 @@
 include("GenericFindDependency")
+option(librtcm_ENABLE_TESTS "" OFF)
 GenericFindDependency(
     TARGET rtcm
     SOURCE_DIR "c"
