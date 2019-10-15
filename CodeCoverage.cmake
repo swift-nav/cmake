@@ -86,6 +86,7 @@ if (NOT LLVM_COV_PATH)
     endif()
     find_program(LLVM_COV_PATH ${LLVM_COV_NAME})
 endif()
+find_program(GCOV_PATH gcov)
 find_program(LCOV_PATH lcov)
 find_program(GENHTML_PATH genhtml)
 
@@ -301,11 +302,12 @@ function(target_code_coverage TARGET_NAME)
         add_custom_target(
           ccov-${TARGET_NAME}
           COMMAND ${LCOV_PATH} --directory ${CMAKE_BINARY_DIR} --zerocounters
-          COMMAND $<TARGET_FILE:${TARGET_NAME}>
+          COMMAND $<TARGET_FILE:${TARGET_NAME}> || true
           COMMAND ${LCOV_PATH}
                   --directory ${CMAKE_BINARY_DIR}
                   --capture
                   --output-file ${COVERAGE_INFO}
+                  $<$<BOOL:${GCOV_PATH}>:--gcov-tool=${GCOV_PATH}>
           COMMAND ${EXCLUDE_COMMAND}
           COMMAND ${GENHTML_PATH} -o
                   ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/${TARGET_NAME}
@@ -466,6 +468,7 @@ function(add_code_coverage_all_targets)
                                 --directory ${CMAKE_BINARY_DIR}
                                 --capture
                                 --output-file ${COVERAGE_INFO}
+                                $<$<BOOL:${GCOV_PATH}>:--gcov-tool=${GCOV_PATH}>
                         COMMAND ${EXCLUDE_COMMAND}
                         COMMAND ${GENHTML_PATH} -o
                                 ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/all-merged
