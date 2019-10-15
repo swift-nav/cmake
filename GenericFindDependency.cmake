@@ -269,7 +269,7 @@ function(mark_target_as_system_includes TARGET)
   if(directories)
     message(STATUS "Marking ${x_TARGET} include directories as system")
     set_target_properties(${x_TARGET} PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
-    target_include_directories(${x_TARGET} SYSTEM INTERFACE ${directories})
+    target_include_directories(${x_TARGET} SYSTEM INTERFACE "${directories}")
   endif()
 endfunction()
 
