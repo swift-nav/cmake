@@ -84,7 +84,7 @@
 #
 
 # Helper function to actually create the targets, not to be used outside this file
-function(create_targets)
+function(create_clang_tidy_targets)
   set(argOption "")
   set(argSingle "TOP_LEVEL")
   set(argMulti "ALL_COMMAND" "DIFF_COMMAND")
@@ -218,7 +218,7 @@ function(swift_setup_clang_tidy)
   if(x_SCRIPT)
     if(EXISTS ${x_SCRIPT})
       message(STATUS "Initialising clang tidy targets for ${PROJECT_NAME} using existing script in ${x_SCRIPT}")
-      create_targets(
+      create_clang_tidy_targets(
           TOP_LEVEL ${top_level_project}
           ALL_COMMAND ${x_SCRIPT} all
           DIFF_COMMAND ${x_SCRIPT} diff
@@ -234,7 +234,7 @@ function(swift_setup_clang_tidy)
   foreach(script ${custom_scripts})
     if(EXISTS ${script})
       message(STATUS "Initialising clang tidy target for ${PROJECT_NAME} using existing script in ${script}")
-      create_targets(
+      create_clang_tidy_targets(
           TOP_LEVEL ${top_level_project}
           ALL_COMMAND ${script} all
           DIFF_COMMAND ${script} diff
@@ -282,7 +282,7 @@ function(swift_setup_clang_tidy)
   if(NOT srcs)
     early_exit(WARNING "Couldn't find any source/header files to tidy in ${PROJECT_NAME}")
   else()
-    create_targets(
+    create_clang_tidy_targets(
         TOP_LEVEL ${top_level_project}
         ALL_COMMAND
         ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
