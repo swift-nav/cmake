@@ -76,7 +76,7 @@
 #
 
 # Helper function to actually create the targets, not to be used outside this file
-function(create_targets)
+function(create_clang_format_targets)
   set(argOption "")
   set(argSingle "TOP_LEVEL")
   set(argMulti "ALL_COMMAND" "DIFF_COMMAND")
@@ -168,7 +168,7 @@ function(swift_setup_clang_format)
   if(x_SCRIPT)
     if(EXISTS ${x_SCRIPT})
       message(STATUS "Initialising clang format targets for ${PROJECT_NAME} using existing script in ${x_SCRIPT}")
-      create_targets(
+      create_clang_format_targets(
           TOP_LEVEL ${top_level_project}
           ALL_COMMAND ${x_SCRIPT} all
           DIFF_COMMAND ${x_SCRIPT} diff
@@ -186,7 +186,7 @@ function(swift_setup_clang_format)
     if(EXISTS ${script})
       # Found a custom formatting script
       message(STATUS "Initialising clang format target for ${PROJECT_NAME} using existing script in ${script}")
-      create_targets(
+      create_clang_format_targets(
           TOP_LEVEL ${top_level_project}
           ALL_COMMAND ${script} all
           DIFF_COMMAND ${script} diff
@@ -228,7 +228,7 @@ function(swift_setup_clang_format)
     set(patterns '*.[ch]' '*.cpp' '*.cc' '*.hpp')
   endif()
 
-  create_targets(
+  create_clang_format_targets(
       TOP_LEVEL ${top_level_project}
       ALL_COMMAND git ls-files ${patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
       DIFF_COMMAND git diff --diff-filter=ACMRTUXB --name-only master -- ${patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
