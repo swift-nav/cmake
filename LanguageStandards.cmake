@@ -11,7 +11,7 @@
 # Usage: set a target to conform to company standard
 #
 #   add_executable(target_name main.cpp)
-#   starling_set_language_standards(target_name)
+#   swift_set_language_standards(target_name)
 #
 # Usage: specify your own standards (C++17 and C98) on multiple targets
 #
@@ -19,13 +19,13 @@
 #   add_executable(executable_target main.cpp)
 #   target_link_libraries(executable_target PRIVATE library_target)
 #
-#   starling_set_language_standards(executable_target library_target
+#   swift_set_language_standards(executable_target library_target
 #     C 99
 #     CXX 17
 #   )
 #
 
-function(starling_set_language_standards)
+function(swift_set_language_standards)
     set(argOption "")
     set(argSingle "C" "CXX")
     set(argMulti "")
