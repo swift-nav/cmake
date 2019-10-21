@@ -107,6 +107,9 @@ include(LanguageStandards)
 include(CodeCoverage)
 
 option(AUTORUN_TESTS "" ON)
+if(AUTORUN_TESTS)
+  set(autorun ALL)
+endif()
 
 if(NOT TARGET build-all-tests)
   add_custom_target(build-all-tests)
@@ -117,11 +120,11 @@ if(NOT TARGET do-all-tests)
 endif()
 
 if(NOT TARGET build-post-build-tests)
-  add_custom_target(build-post-build-tests ALL)
+  add_custom_target(build-post-build-tests ${autorun})
 endif()
 
 if(NOT TARGET do-post-build-tests)
-  add_custom_target(do-post-build-tests ALL)
+  add_custom_target(do-post-build-tests ${autorun})
 endif()
 
 function(swift_add_test_runner target)
@@ -150,17 +153,10 @@ function(swift_add_test_runner target)
   endif()
 
   if(x_POST_BUILD)
-    if(AUTORUN_TESTS)
-      add_custom_target(post-build-${target}
-          COMMAND ${x_COMMAND}
-          COMMENT "Running post build ${x_COMMENT}"
-          )
-    else()
-      add_custom_target(post-build-${target}
-        COMMAND true
-        COMMENT "Skipping post build ${x_COMMENT}"
+    add_custom_target(post-build-${target}
+        COMMAND ${x_COMMAND}
+        COMMENT "Running post build ${x_COMMENT}"
         )
-    endif()
     add_dependencies(do-post-build-tests post-build-${target})
     add_dependencies(post-build-${target} build-post-build-tests)
     if(x_DEPENDS)
@@ -218,19 +214,11 @@ function(swift_add_test target)
   add_dependencies(do-all-tests do-${target})
 
   if(x_POST_BUILD)
-    if(AUTORUN_TESTS)
-      add_custom_target(
-          post-build-${target}
-          COMMAND ${target}
-          COMMENT "Running post build ${x_COMMENT}"
-          )
-    else()
-      add_custom_target(
+    add_custom_target(
         post-build-${target}
-        COMMAND true
-        COMMENT "Skipping post build ${x_COMMENT}"
+        COMMAND ${target}
+        COMMENT "Running post build ${x_COMMENT}"
         )
-    endif()
     add_dependencies(do-post-build-tests post-build-${target})
     add_dependencies(build-post-build-tests ${target})
     add_dependencies(post-build-${target} build-post-build-tests)
