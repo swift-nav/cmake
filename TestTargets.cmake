@@ -106,7 +106,7 @@
 include(LanguageStandards)
 include(CodeCoverage)
 
-option(AUTORUN_TESTS "" ON)
+option(AUTORUN_TESTS "Automatically run post-build tests as part of 'all' target" ON)
 if(AUTORUN_TESTS)
   set(autorun ALL)
 endif()
