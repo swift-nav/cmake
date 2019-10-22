@@ -16,6 +16,7 @@
 #      ...link libraries
 #    INCLUDE
 #      ...extra include directories
+#    WORKING_DIRECTORY <path>
 #    )
 #
 # This will create 2 cmake targets
@@ -24,7 +25,10 @@
 # - do-test-suite-name - A custom target which will execute the above target
 #
 #
-# LINK and INCLUDE are optional parameters. 
+# LINK, INCLUDE, and WORKING_DIRECTORY are optional parameters. 
+#
+# If WORKING_DIRECTORY is not specified the tests will be run in 
+# ${CMAKE_CURRENT_BINARY_DIR}
 #
 # All tests will have their language standards set to the swift default by
 # using the LanguageStandards module, and have code coverage enabled
@@ -47,12 +51,16 @@
 # but not built from source
 #
 # swift_add_test_runner(test-suite-name
-#    COMMAND <shell-command-to-run-test>
+#    COMMAND <testing command> <arguments>
+#    WORKING_DIRECTORY <path>
 #    DEPENDS <optional list of cmake targets on which this test depend>
 #    )
 #
 # This will create just a single target:
 # - do-test-suite-name - Execute the given command
+#
+# WORKING_DIRECTORY and DEPENDS are optional arguments. WORKING_DIRECTORY defaults
+# to ${CMAKE_CURRENT_BINARY_DIR}
 #
 # Both functions can take an optional argument COMMENT which will print out a 
 # nicer status message when the test is run
@@ -107,6 +115,8 @@ include(LanguageStandards)
 include(CodeCoverage)
 
 option(AUTORUN_TESTS "Automatically run post-build tests as part of 'all' target" ON)
+
+macro(swift_create_test_targets)
 if(AUTORUN_TESTS)
   set(autorun ALL)
 endif()
@@ -126,25 +136,33 @@ endif()
 if(NOT TARGET do-post-build-tests)
   add_custom_target(do-post-build-tests ${autorun})
 endif()
+endmacro()
 
 function(swift_add_test_runner target)
   set(argOption "POST_BUILD")
-  set(argSingle "COMMENT")
+  set(argSingle "COMMENT" "WORKING_DIRECTORY")
   set(argMulti "COMMAND" "DEPENDS")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
   if(x_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "swift_add_test unparsed arguments - ${x_UNPARSED_ARGUMENTS}")
+    message(FATAL_ERROR "swift_add_test_runner unparsed arguments - ${x_UNPARSED_ARGUMENTS}")
   endif()
+
+  swift_create_test_targets()
 
   if(NOT x_COMMENT)
     set(x_COMMENT "test ${target}")
   endif()
 
+  if(x_WORKING_DIRECTORY)
+    set(wd WORKING_DIRECTORY ${x_WORKING_DIRECTORY})
+  endif()
+
   add_custom_target(
       do-${target}
       COMMAND ${x_COMMAND}
+      ${wd}
       COMMENT "Running ${x_COMMENT}"
       )
   add_dependencies(do-all-tests do-${target})
@@ -155,6 +173,7 @@ function(swift_add_test_runner target)
   if(x_POST_BUILD)
     add_custom_target(post-build-${target}
         COMMAND ${x_COMMAND}
+        ${wd}
         COMMENT "Running post build ${x_COMMENT}"
         )
     add_dependencies(do-post-build-tests post-build-${target})
@@ -168,7 +187,7 @@ endfunction()
 
 function(swift_add_test target)
   set(argOption "PARALLEL" "POST_BUILD")
-  set(argSingle "COMMENT")
+  set(argSingle "COMMENT" "WORKING_DIRECTORY")
   set(argMulti "SRCS" "LINK" "INCLUDE")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
@@ -177,12 +196,18 @@ function(swift_add_test target)
     message(FATAL_ERROR "swift_add_test unparsed arguments - ${x_UNPARSED_ARGUMENTS}")
   endif()
 
+  swift_create_test_targets()
+
   if(NOT x_SRCS)
     message(FATAL_ERROR "swift_add_test must be passed at least one source file")
   endif()
 
   if(NOT x_COMMENT)
     set(x_COMMENT "test ${target}")
+  endif()
+
+  if(x_WORKING_DIRECTORY)
+    set(wd WORKING_DIRECTORY ${x_WORKING_DIRECTORY})
   endif()
 
   add_executable(${target} EXCLUDE_FROM_ALL ${x_SRCS})
@@ -197,6 +222,7 @@ function(swift_add_test target)
   add_custom_target(
       do-${target}
       COMMAND ${target}
+      ${wd}
       COMMENT "Running ${x_COMMENT}"
       )
   add_dependencies(do-${target} ${target})
@@ -205,6 +231,7 @@ function(swift_add_test target)
   if(x_PARALLEL)
     add_custom_target(parallel-${target}
         COMMAND ${PROJECT_SOURCE_DIR}/third_party/gtest-parallel/gtest-parallel $<TARGET_FILE:${target}>
+        ${wd}
         COMMENT "Running ${x_COMMENT} in parallel"
         )
     add_dependencies(parallel-${target} ${target})
@@ -217,6 +244,7 @@ function(swift_add_test target)
     add_custom_target(
         post-build-${target}
         COMMAND ${target}
+        ${wd}
         COMMENT "Running post build ${x_COMMENT}"
         )
     add_dependencies(do-post-build-tests post-build-${target})
