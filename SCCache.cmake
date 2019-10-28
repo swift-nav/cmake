@@ -1,0 +1,12 @@
+option(SWIFT_ENABLE_SCCACHE "Use sccache to speed up compilation process" OFF)
+
+if(SWIFT_ENABLE_SCCACHE)
+  find_program(SCCACHE_PATH sccache)
+  if(SCCACHE_PATH)
+    message(STATUS "Using sccache at ${SCCACHE_PATH}")
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${SCCACHE_PATH})
+    set_property(GLOBAL PROPERTY RULE_LAUNCH_LINK ${SCCACHE_PATH})
+  else()
+    message(STATUS "Could not find sccache")
+  endif()
+endif()
