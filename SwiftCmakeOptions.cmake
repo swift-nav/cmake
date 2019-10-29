@@ -123,7 +123,7 @@ function(verify_test_dependencies)
       find_package(${P})
       # Annoyingly, different test packages have different ways of reporting they were found
       set(found FALSE)
-      if(${P} STREQUAL "Check" AND CHECK_FOUND)
+      if(${P} STREQUAL "Check" AND TARGET check)
         set(found TRUE)
       elseif(${P} STREQUAL "Googletest" AND TARGET gtest)
         set(found TRUE)
