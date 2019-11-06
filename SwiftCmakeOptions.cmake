@@ -117,13 +117,14 @@
 function(verify_test_dependencies)
   cmake_parse_arguments(x "" "" "TEST_PACKAGES" ${ARGN})
 
+  message(FATAL_ERROR "Shouldn't be here")
   set(dependencies_available ON PARENT_SCOPE)
   if(x_TEST_PACKAGES)
     foreach(P ${x_TEST_PACKAGES})
       find_package(${P})
       # Annoyingly, different test packages have different ways of reporting they were found
       set(found FALSE)
-      if(${P} STREQUAL "Check" AND TARGET check)
+      if(${P} STREQUAL "Check" AND TARGET Check::check)
         set(found TRUE)
       elseif(${P} STREQUAL "Googletest" AND TARGET gtest)
         set(found TRUE)
