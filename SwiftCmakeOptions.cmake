@@ -117,7 +117,6 @@
 function(verify_test_dependencies)
   cmake_parse_arguments(x "" "" "TEST_PACKAGES" ${ARGN})
 
-  message(FATAL_ERROR "Shouldn't be here")
   set(dependencies_available ON PARENT_SCOPE)
   if(x_TEST_PACKAGES)
     foreach(P ${x_TEST_PACKAGES})
