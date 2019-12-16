@@ -286,7 +286,7 @@ function(GenericFindDependency)
 
   if(TARGET ${x_TARGET})
     # Target already defined, no need to do anything more
-    message("---> target: ${x_TARGET}  cur list dir: ${CMAKE_CURRENT_LIST_DIR}  src dir: ${CMAKE_SOURCE_DIR}  cur src dir: {CMAKE_CURRENT_SOURCE_DIR}")
+    message("---> target: ${x_TARGET}  cur list dir: ${CMAKE_CURRENT_LIST_DIR}  src dir: ${CMAKE_SOURCE_DIR}  cur src dir: ${CMAKE_CURRENT_SOURCE_DIR}")
     return()
   endif()
 
