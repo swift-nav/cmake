@@ -111,7 +111,17 @@ function(search_dependency_source)
         unset(ARGV${i})
       endforeach()
       unset(ARGN)
-      add_subdirectory(${P})
+      execute_process(
+        COMMAND git rev-parse HEAD
+        WORKING_DIRECTORY ${P}
+        OUTPUT_VARIABLE GIT_COMMIT
+        )
+      if(NOT TARGET ${x_TARGET})
+        file(${OUTFLAG} ${CMAKE_BINARY_DIR}/${x_TARGET}.manifest "target: ${x_TARGET} commit: ${GIT_COMMIT} path: ${P} added\n")
+        add_subdirectory(${P})
+      else ()
+        file(${OUTFLAG} ${CMAKE_BINARY_DIR}/${x_TARGET}.manifest "target: ${x_TARGET} commit: ${GIT_COMMIT} path: ${P} NOT added\n")
+      endif()
   
       if(NOT TARGET ${x_TARGET})
         message(WARNING "Source code in ${P} did not declare target ${x_TARGET} as was expected")
@@ -274,6 +284,12 @@ function(mark_target_as_system_includes TARGET)
 endfunction()
 
 function(GenericFindDependency)
+  if (${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
+    set(OUTFLAG WRITE)
+  else()
+    set(OUTFLAG APPEND)
+  endif()
+
   set(argOptions "REQUIRED" "SYSTEM_INCLUDES")
   set(argSingleArguments "TARGET" "PREFER" "SOURCE_DIR" "SYSTEM_HEADER_FILE" "SYSTEM_LIB_NAMES")
   set(argMultiArguments "EXCLUDE")
@@ -282,12 +298,6 @@ function(GenericFindDependency)
 
   if(x_UNPARSED_ARGUMENTS)
     message(FATAL_ERROR "Unexpected unparsed arguments ${x_UNPARSED_ARGUMENTS}")
-  endif()
-
-  if(TARGET ${x_TARGET})
-    # Target already defined, no need to do anything more
-    message("---> target: ${x_TARGET}  cur list dir: ${CMAKE_CURRENT_LIST_DIR}  src dir: ${CMAKE_SOURCE_DIR}  cur src dir: ${CMAKE_CURRENT_SOURCE_DIR}")
-    return()
   endif()
 
   # Generate a list of locations to search for the dependency in order of preference
@@ -312,6 +322,11 @@ function(GenericFindDependency)
         break()
       endif()
     else()
+      # we need to check this here because we want to check the source
+      # submodules for consistency
+      if(TARGET ${x_TARGET})
+        return()
+      endif()
       # Try looking for a header file and library in the system paths
 
       if(NOT x_SYSTEM_HEADER_FILE)
