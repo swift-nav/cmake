@@ -69,7 +69,7 @@ function(search_dependency_source)
 
   foreach(P ${x_SOURCE_SEARCH_PATHS})
     if(EXISTS "${P}/CMakeLists.txt")
-      message(STATUS "Found ${x_TARGET} source code in ${P}")
+      message(STATUS "******************* Found ${x_TARGET} source code in ${P}")
       # Function arguments are automatically parsed out in to numbered variables
       # ARG#, and a complete argument list is stored in ARGN. Variables are passed
       # down the function call stack until they are overwritten. This allows a 
