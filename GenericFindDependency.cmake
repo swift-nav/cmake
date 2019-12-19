@@ -117,8 +117,10 @@ function(search_dependency_source)
         COMMAND git rev-parse HEAD
         WORKING_DIRECTORY ${P}
         OUTPUT_VARIABLE GIT_COMMIT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
         )
       file(WRITE ${CMAKE_BINARY_DIR}/submodule-checks/${x_TARGET}.used "${GIT_COMMIT} ${P}\n")
+      message("########### wrote file ${CMAKE_BINARY_DIR}/submodule-checks/${x_TARGET}.used")
   
       if(NOT TARGET ${x_TARGET})
         message(WARNING "Source code in ${P} did not declare target ${x_TARGET} as was expected")
