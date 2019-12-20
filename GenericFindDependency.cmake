@@ -69,7 +69,7 @@ function(search_dependency_source)
 
   foreach(P ${x_SOURCE_SEARCH_PATHS})
     if(EXISTS "${P}/CMakeLists.txt")
-      message(STATUS "******************* Found ${x_TARGET} source code in ${P}")
+      message(STATUS "Found ${x_TARGET} source code in ${P}")
       # Function arguments are automatically parsed out in to numbered variables
       # ARG#, and a complete argument list is stored in ARGN. Variables are passed
       # down the function call stack until they are overwritten. This allows a 
@@ -120,7 +120,6 @@ function(search_dependency_source)
         OUTPUT_STRIP_TRAILING_WHITESPACE
         )
       file(WRITE ${CMAKE_BINARY_DIR}/submodule-checks/${x_TARGET}.used "${GIT_COMMIT} ${P}\n")
-      message("########### wrote file ${CMAKE_BINARY_DIR}/submodule-checks/${x_TARGET}.used")
   
       if(NOT TARGET ${x_TARGET})
         message(WARNING "Source code in ${P} did not declare target ${x_TARGET} as was expected")
