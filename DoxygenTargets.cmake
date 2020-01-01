@@ -1,3 +1,55 @@
+#
+# OVERVIEW
+#
+# Provides functions that help generate Doxygen documentation for your project.
+#
+# The following functions are exposed for users to use:
+#
+#   swift_add_doxygen(target
+#     [CONFIGURE_FILE file]
+#     [OUTPUT_DIRECTORY directory]
+#     [SOURCE_DIRECTORIES directories...]
+#   )
+#
+# GENERATING DOCUMENTATION
+#
+# In order to create a cmake target that generates doxygen documentation, simply
+# invoke the "swift_add_doxygen" function with a desired name for your target.
+# The function offer the following options:
+#
+#   CONFIGURE_FILE: specify a Doxygen configuration file here, if one isn't
+#   provided, the default values will be ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in.
+#   The function will run the configuration file through cmake's "configure_file"
+#   command, so any cmake variables can be injected into the file. There are a
+#   few special variables available for use outside what is already available
+#   within the user's scope.
+#
+#     DOXYGEN_CONFIGURE_FILE: path specified within the CONFIGURE_FILE option
+#     DOXYGEN_OUTPUT_DIRECTORY: path specified within the OUTPUT_DIRECTORY option
+#     DOXYGEN_SOURCE_DIRECTORIES: paths specified within the SOURCE_DIRECTORIES option
+#
+#   Please note that whenever you wish to use the above variables within the
+#   Doxygen configuration file, make sure they are surrounded by quotes, so for
+#   example to specify the Doxygen value INPUT, you should do the following:
+#
+#     INPUT = "@DOXYGEN_SOURCE_DIRECTORIES@"
+#
+#   You could also use the ${VARIABLE} as well to specify variables, but would
+#   suggest you use @VARIABLE@.
+#
+#   OUTPUT_DIRECTORY: specify the location where doxygen outputs are to be
+#   generated. This variable will be exposed as DOXYGEN_OUTPUT_DIRECTORY and
+#   should be assigned to the doxygen configuration file's OUTPUT_DIRECTORY
+#   value for it to be useful. Default value is set to
+#   "${CMAKE_CURRENT_BINARY_DIR}".
+#
+#   SOURCE_DIRECTORIES: specifies the directories which doxygen will look
+#   through to extract the documentation from. This variable will be exposed
+#   as DOXYGEN_SOURCE_DIRECTORIES and should be assigned to the doxygen
+#   configuration file's INPUT variable for it to be useful. Default value is
+#   set to "${CMAKE_CURRENT_SOURCE_DIR}".
+#
+
 function(swift_add_doxygen target)
   find_package(Doxygen)
 
@@ -17,19 +69,19 @@ function(swift_add_doxygen target)
   endif()
 
   set(DOXYGEN_CONFIGURE_FILE ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile.in)
-  set(DOXYGEN_SOURCE_DIRECTORIES ${PROJECT_SOURCE_DIR})
   set(DOXYGEN_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
+  set(DOXYGEN_SOURCE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
 
   if(x_CONFIGURE_FILE)
     set(DOXYGEN_CONFIGURE_FILE ${x_CONFIGURE_FILE})
   endif()
 
-  if(x_SOURCE_DIRECTORIES)
-    set(DOXYGEN_SOURCE_DIRECTORIES ${x_SOURCE_DIRECTORIES})
-  endif()
-
   if(x_OUTPUT_DIRECTORY)
     set(DOXYGEN_OUTPUT_DIRECTORY ${x_OUTPUT_DIRECTORY})
+  endif()
+
+  if(x_SOURCE_DIRECTORIES)
+    set(DOXYGEN_SOURCE_DIRECTORIES ${x_SOURCE_DIRECTORIES})
   endif()
 
   string(REPLACE ";" "\" \"" DOXYGEN_SOURCE_DIRECTORIES "${DOXYGEN_SOURCE_DIRECTORIES}")
