@@ -111,7 +111,15 @@ function(search_dependency_source)
         unset(ARGV${i})
       endforeach()
       unset(ARGN)
+
       add_subdirectory(${P})
+      execute_process(
+        COMMAND git rev-parse HEAD
+        WORKING_DIRECTORY ${P}
+        OUTPUT_VARIABLE GIT_COMMIT
+        OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+      file(WRITE ${CMAKE_BINARY_DIR}/submodule-checks/${x_TARGET}.used "${GIT_COMMIT} ${P}\n")
   
       if(NOT TARGET ${x_TARGET})
         message(WARNING "Source code in ${P} did not declare target ${x_TARGET} as was expected")
