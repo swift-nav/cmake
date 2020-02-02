@@ -272,12 +272,12 @@ endmacro()
 #
 # Should only be called from GenericFindDependency
 #
-function(mark_target_as_system_includes TARGET)
-  get_target_property(directories ${x_TARGET} INTERFACE_INCLUDE_DIRECTORIES)
+function(mark_target_as_system_includes TGT)
+  get_target_property(directories ${TGT} INTERFACE_INCLUDE_DIRECTORIES)
   if(directories)
-    message(STATUS "Marking ${x_TARGET} include directories as system")
-    set_target_properties(${x_TARGET} PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
-    target_include_directories(${x_TARGET} SYSTEM INTERFACE "${directories}")
+    message(STATUS "Marking ${TGT} include directories as system")
+    set_target_properties(${TGT} PROPERTIES INTERFACE_INCLUDE_DIRECTORIES "")
+    target_include_directories(${TGT} SYSTEM INTERFACE "${directories}")
   endif()
 endfunction()
 
