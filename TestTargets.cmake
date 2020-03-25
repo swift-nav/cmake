@@ -226,7 +226,7 @@ function(swift_add_test target)
       COMMENT "Running ${x_COMMENT}"
       )
   add_dependencies(do-${target} ${target})
-  target_code_coverage(${target} AUTO ALL)
+  #target_code_coverage(${target} AUTO ALL)
 
   if(x_PARALLEL)
     add_custom_target(parallel-${target}
