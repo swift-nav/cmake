@@ -1,2 +1,3 @@
 # cmake
-Swift's commonly used CMake modules
+
+Commonly used CMake modules in Swift. Submodule this repo to make use of them.
