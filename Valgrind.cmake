@@ -34,8 +34,8 @@ macro(_valgrind_setup target)
 endmacro()
 
 function(swift_add_valgrind_memcheck target)
-  set(argOption "")
-  set(argSingle "")
+  set(argOption "TRACE_CHILDREN" "CHILD_SILENT_AFTER_FORK" "SHOW_REACHABLE" "TRACK_ORIGINS" "UNDEF_VALUE_ERRORS")
+  set(argSingle "LEAK_CHECK")
   set(argMulti "")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
@@ -45,9 +45,43 @@ function(swift_add_valgrind_memcheck target)
   endif()
 
   _valgrind_setup(${target})
+  unset(MEMCHECK_OPTIONS)
 
+  if (x_TRACE_CHILDREN)
+    list(APPEND MEMCHECK_OPTIONS "--trace-children=yes")
+  endif()
+
+  if (x_CHILD_SILENT_AFTER_FORK)
+    list(APPEND MEMCHECK_OPTIONS "--child-silent-after-fork=yes")
+  endif()
+
+  if (x_SHOW_REACHABLE)
+    list(APPEND MEMCHECK_OPTIONS "--show-reachable=yes")
+  endif()
+
+  if (x_TRACK_ORIGINS)
+    list(APPEND MEMCHECK_OPTIONS "--track-origins=yes")
+  endif()
+
+  if (x_UNDEF_VALUE_ERRORS)
+    list(APPEND MEMCHECK_OPTIONS "--undef-value-errors=yes")
+  endif()
+
+  if (x_LEAK_CHECK)
+    if (${x_LEAK_CHECK} STREQUAL "yes")
+      list(APPEND MEMCHECK_OPTIONS "--leak-check=yes")
+    elseif (${x_LEAK_CHECK} STREQUAL "no")
+      list(APPEND MEMCHECK_OPTIONS "--leak-check=no")
+    elseif (${x_LEAK_CHECK} STREQUAL "full")
+      list(APPEND MEMCHECK_OPTIONS "--leak-check=full")
+    elseif (${x_LEAK_CHECK} STREQUAL "summary")
+      list(APPEND MEMCHECK_OPTIONS "--leak-check=summary")
+    endif()
+  endif()
+
+  message(STATUS "MEMCHECK_OPTIONS: " ${MEMCHECK_OPTIONS})
   add_custom_target(${target}-memcheck
-    COMMAND ${VALGRIND_EXECUTABLE} --tool=memcheck $<TARGET_FILE:${target}>
+    COMMAND ${VALGRIND_EXECUTABLE} --tool=memcheck ${MEMCHECK_OPTIONS} --xml=yes --xml-file=valgrind-report-${target}.xml $<TARGET_FILE:${target}>
     COMMENT "Valgrind Memcheck is being applied to \"${target}\""
     DEPENDS ${target}
   )
