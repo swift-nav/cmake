@@ -80,7 +80,6 @@ function(swift_add_valgrind_memcheck target)
   endif()
 
   set(valgrind-reports-dir ${CMAKE_CURRENT_BINARY_DIR}/valgrind-reports)
-  message(STATUS "MEMCHECK_OPTIONS: " ${MEMCHECK_OPTIONS})
   add_custom_target(${target}-memcheck
     COMMAND ${CMAKE_COMMAND} -E make_directory ${valgrind-reports-dir}
     COMMAND ${CMAKE_COMMAND} -E chdir ${valgrind-reports-dir} ${VALGRIND_EXECUTABLE} --tool=memcheck ${MEMCHECK_OPTIONS} --xml=yes --xml-file=${target}.xml $<TARGET_FILE:${target}>
