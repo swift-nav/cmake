@@ -347,7 +347,9 @@ function(GenericFindDependency)
   # Final validation that the target was properly created from some source
   if(TARGET ${x_TARGET})
     if(x_SYSTEM_INCLUDES)
-      mark_target_as_system_includes(${x_TARGET})
+      if(NOT CMAKE_CROSSCOMPILING OR THIRD_PARTY_INCLUDES_AS_SYSTEM)
+        mark_target_as_system_includes(${x_TARGET})
+      endif()
     endif()
   else()
     # Target not found in any location
