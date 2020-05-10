@@ -17,7 +17,10 @@ macro(_valgrind_setup target)
   endif()
 
   if (CMAKE_CROSSCOMPILING)
-    message(WARNING "Valgrind request is being ignored due to cross compiling")
+    return()
+  endif()
+
+  if (NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
     return()
   endif()
 
@@ -105,7 +108,7 @@ function(swift_add_valgrind_callgrind target)
     set(target_name ${x_NAME})
   endif()
 
-  set(working_directory ${CMAKE_CURRENT_BINARY_DIR}/${target_name})
+  set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
   if (x_WORKING_DIRECTORY)
     set(working_directory ${working_directory})
   endif()
@@ -122,9 +125,9 @@ function(swift_add_valgrind_callgrind target)
 
   add_custom_target(${target_name}
     COMMENT "Valgrind Callgrind is being applied to \"${target}\""
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${working_directory}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${working_directory}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${working_directory} ${VALGRIND_EXECUTABLE} --tool=callgrind ${callgrind_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${working_directory}/${target_name}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${working_directory}/${target_name}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${working_directory}/${target_name} ${VALGRIND_EXECUTABLE} --tool=callgrind ${callgrind_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
     DEPENDS ${target}
   )
   add_dependencies(do-all-valgrind-tests ${target_name})
