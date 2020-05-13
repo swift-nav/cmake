@@ -74,18 +74,26 @@
 # load the files with the `KCacheGrind` program to easily navigate the data.
 #
 
+find_package(Valgrind)
+
+if (NOT Valgrind_FOUND)
+  message(WARNING "Unable to create Valgrind checks due to missing program")
+endif ()
+
 macro(_valgrind_setup target)
   if (NOT TARGET ${target})
     message(FATAL_ERROR "Specified target \"${target}\" does not exist")
-    return()
   endif()
 
   get_target_property(_target_type ${target} TYPE)
 
   if (NOT _target_type STREQUAL "EXECUTABLE")
     message(FATAL_ERROR "Specified target \"${target}\" must be an executable type")
-    return()
   endif()
+
+  if (NOT Valgrind_FOUND)
+    return()
+  endif ()
 
   if (CMAKE_CROSSCOMPILING)
     return()
@@ -94,13 +102,6 @@ macro(_valgrind_setup target)
   if (NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
     return()
   endif()
-
-  find_package(Valgrind)
-
-  if (NOT VALGRIND_FOUND)
-    message(WARNING "Unable to generate valgrind checks for target \"${target}\" due to missing valgrind package")
-    return()
-  endif ()
 
   if (NOT TARGET do-all-valgrind)
     add_custom_target(do-all-valgrind)
@@ -156,7 +157,7 @@ function(swift_add_valgrind_memcheck target)
   set(valgrind-reports-dir ${CMAKE_CURRENT_BINARY_DIR}/valgrind-reports)
   add_custom_target(${target}-memcheck
     COMMAND ${CMAKE_COMMAND} -E make_directory ${valgrind-reports-dir}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${valgrind-reports-dir} ${VALGRIND_EXECUTABLE} --tool=memcheck ${MEMCHECK_OPTIONS} --xml=yes --xml-file=${target}.xml $<TARGET_FILE:${target}>
+    COMMAND ${CMAKE_COMMAND} -E chdir ${valgrind-reports-dir} ${Valgrind_EXECUTABLE} --tool=memcheck ${MEMCHECK_OPTIONS} --xml=yes --xml-file=${target}.xml $<TARGET_FILE:${target}>
     COMMENT "Valgrind Memcheck is being applied to \"${target}\""
     DEPENDS ${target}
   )
@@ -203,7 +204,7 @@ function(swift_add_valgrind_callgrind target)
     COMMENT "Valgrind Callgrind is running for \"${target}\" (output: \"${working_directory}/${target_name}/\")"
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${working_directory}/${target_name}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${working_directory}/${target_name}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${working_directory}/${target_name} ${VALGRIND_EXECUTABLE} --tool=callgrind ${callgrind_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${working_directory}/${target_name} ${Valgrind_EXECUTABLE} --tool=callgrind ${callgrind_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
     DEPENDS ${target}
   )
 

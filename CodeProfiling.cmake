@@ -114,6 +114,12 @@ if (PROFILING)
   endif()
 endif()
 
+find_package(GProf)
+
+if (NOT GProf_FOUND)
+  message(WARNING "GProf program is required to generate code profiling report")
+endif()
+
 function(target_code_profiling target)
   if (NOT TARGET ${target})
     message(FATAL_ERROR "Specified target \"${target}\" does not exist")
@@ -173,14 +179,8 @@ function(swift_add_code_profiling target)
   endif()
 
   unset(post_commands)
-  if (x_GENERATE_REPORT)
-    find_package(GProf)
-
-    if (GProf_FOUND)
-      list(APPEND post_commands COMMAND find ${working_directory}/${target_name} -regex ".+/gmon\\.[0-9]+$" -exec sh -c "${GProf_EXECUTABLE} $<TARGET_FILE:${target}> $0 > $0.txt" {} +)
-    else()
-      message(WARNING "GProf program is required to generate code profiling report")
-    endif()
+  if (GProf_FOUND AND x_GENERATE_REPORT)
+    list(APPEND post_commands COMMAND find ${working_directory}/${target_name} -regex ".+/gmon\\.[0-9]+$" -exec sh -c "${GProf_EXECUTABLE} $<TARGET_FILE:${target}> $0 > $0.txt" {} +)
   endif()
 
   add_custom_target(${target_name}

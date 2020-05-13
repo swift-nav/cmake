@@ -1,13 +1,11 @@
-if (NOT VALGRIND_FOUND)
+if (NOT Valgrind_FOUND)
 
-  find_program(VALGRIND_EXECUTABLE valgrind)
-  set(VALGRIND_EXECUTABLE ${VALGRIND_EXECUTABLE} CACHE STRING "")
+  find_program(Valgrind_EXECUTABLE valgrind)
 
-# handle the QUIETLY and REQUIRED arguments and set VALGRIND_FOUND to TRUE if
-# all listed variables are TRUE
   include(FindPackageHandleStandardArgs)
-  find_package_handle_standard_args(Valgrind DEFAULT_MSG VALGRIND_EXECUTABLE)
+  find_package_handle_standard_args(Valgrind DEFAULT_MSG Valgrind_EXECUTABLE)
 
-  mark_as_advanced(VALGRIND_FOUND VALGRIND_EXECUTABLE)
+  set(Valgrind_FOUND ${Valgrind_FOUND} CACHE BOOL "Flag whether Valgrind package was found")
+  mark_as_advanced(Valgrind_FOUND Valgrind_EXECUTABLE)
 
-endif (NOT VALGRIND_FOUND)
+endif ()
