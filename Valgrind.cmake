@@ -1,53 +1,59 @@
 #
-# OVERVIEW
+### OVERVIEW
 #
-# This module will introduce various function which will create cmake targets
-# that run their specified target executable targets through various Valgrind
-# tools.
+# This module introduces various functions where each correspond to a Valgrind tool.
+# These functions create cmake targets that run their specified target executable applying
+# the selected tool.
 #
-# USAGE
+# AVAILABLE TOOLS:
+# callgrind - records the call history among functions in a program's run as a call-graph
+# memcheck  - memory error detector
+# massif    - measures how much heap memory your program uses
+#
+### USAGE
 #
 #   swift_add_valgrind_callgrind(<target>
-#     [TRACE_CHILDREN]
+#     [callgrind options]
 #     [NAME target_name]
 #     [WORKING_DIRECTORY working_directory]
 #     [PROGRAM_ARGS arg1 arg2 ...]
 #   )
 #
-# Call this function to create a new cmake target which will run the executable
+# Call this function to create a new cmake target which runs the executable
 # created by the specified `target` argument through Valgrind's Callgrind tool.
-# For instance if there was a cmake target called `unit-tests` and I invoked the
-# function as `swift_add_valgrind_callgrind(unit-tests)`, it would produce the
-# following cmake targets:
+# Example: a cmake target is called `unit-tests` and is invoked by the callgrind
+# function `swift_add_valgrind_callgrind(unit-tests)`, resulting in the following
+# cmake targets:
 #
 #   - unit-tests-valgrind-callgrind
 #   - do-all-valgrind-callgrind
 #   - do-all-valgrind
 #
-# The first target will run the `unit-tests` target, and generates the
-# callgrind's results to the `${CMAKE_CURRENT_BINARY_DIR}/unit-tests-valgrind-callgrind`
-# folder. The results will consisted of `callgrind.log*` files and
-# `callgrind.out.*`. The numbers that you see corresponds to the process ID of
-# the running program, if you see multiple PIDs, that's because the original
-# target spawned off child processes and you've se the `TRACE_CHILDREN` option,
+# The first target runs the `unit-tests` target, and generates the
+# callgrind's results to folder `${CMAKE_CURRENT_BINARY_DIR}/valgrind-callgrind-reports`.
+# The results consist of `unit-tests.log*` files and
+# `unit-tests.out.*`. The number suffix corresponds to the process ID
+# of the running program. A result with multiple PIDs is due to the original
+# target spawned off child processes and the option `TRACE_CHILDREN` has been selected,
 # otherwise it wouldn't report on the spawned children. Rerunning this target
-# will mean that any prior results will be cleared out.
+# erases any prior results.
 #
 # The next two targets are handy targets that exists to help call on the various
-# registered valgrind tests. The `do-all-valgrind-callgrind` will invoke all
-# targets that have called on the `swift_add_valgrind_callgrind` function,
-# `do-all-valgrind` invokes all targets that have called on any of the functions
+# registered valgrind tests.
+# The `do-all-valgrind-callgrind` invokes all targets that have called on the
+# `swift_add_valgrind_callgrind` function.
+# The `do-all-valgrind` invokes all targets that have called on any of the functions
 # mentioned within this documentation.
 #
-# There are a few options that are available to the funciton. TRACE_CHILDREN as
-# you might have seens before, invokes the callgrind tool even on spawned
-# children, normally ignores the spawned processes.
+### VALGRIND OPTIONS available for all functions:
 #
-# The NAME option is there to specify the name of the new target created, this
-# is quite useful if you'd like to create multiple callgrind targets from a
-# single cmake target executable. Continuing on with our `unit-tests` example,
-# if the target was a Googletest executable, and we wanted to break the tests
-# cases across different suites, we could do something like the following:
+# NAME specifies the name of the new target created. This is quite useful if you'd like to
+# create multiple valgrind-tool targets from a single cmake target executable.
+# Example: Continuing on with the `unit-tests` example above, if the target is a
+# Googletest executable, and it's desirable to break the test cases across different suites,
+# it's possible to create two targets (not including `do-all-code-profiling` in this
+# number) `suite-1-profiles` and `suite-2-profiles`, each calling the
+# `unit-tests` executable with different program arguments:
 #
 #   swift_add_code_profiling(unit-tests
 #     NAME suite-1-profiles
@@ -59,18 +65,57 @@
 #     PROGRAM_ARGS --gtest_filter=Suite2.*
 #   )
 #
-# This would create two targets (not including `do-all-code-profiling` in this
-# number) `suite-1-profiles` and `suite-2-profiles`, each calling the
-# `unit-tests` executable with different program arguments.
+# WORKING_DIRECTORY enables a user to change the output directory from the default folder
+# `${CMAKE_CURRENT_BINARY_DIR}`.
+# Example: Setting this option for target `suite-2-profiles` to `/tmp`, outputs the profiling
+# results to `/tmp/valgrind-callgrind-reports/suite-2-profiles*`.
+# 
+# TRACE_CHILDREN invokes the Valgrind tools even on spawned children,
+# normally ignores the spawned processes.
 #
-# The last option WORKING_DIRECTORY is simply there to redirect the output
-# results to a different folder. By default that folder is
-# `${CMAKE_CURRENT_BINARY_DIR}`, if we set that option for `suite-2-profiles` to
-# `/tmp`, it would output the profiling results to `/tmp/suite-2-profiles`.
+# CHILD_SILENT_AFTER_FORK instructs Valgrind to hide any debugging or logging output for
+# a child process resulting from a fork call. This can make the output less confusing
+# (although more misleading) when dealing with processes that create children.
 #
-# NOTES
+### MALLOC()-RELATED OPTIONS:
+# For tools that use their own version of malloc (e.g. Memcheck, Massif, Helgrind, DRD).
 #
-# The `callgrind.out.*` files are not human readable, as such one might want to
+# XTREE_MEMORY produces an execution tree detailing which piece of code is responsible for
+# heap memory usage. Argument `full` gives 6 different measurements, the current number of
+# allocated bytes and blocks (same values as for allocs), the total number of allocated bytes
+# and blocks, the total number of freed bytes and blocks.
+#
+### MEMCHECK SPECIFIC OPTIONS:
+#
+# LEAK_CHECK searches for memory leaks when the application finishes.
+# If set to summary, it says how many leaks occurred.
+# If set to full or yes, each individual leak will be shown in detail and/or counted as an
+# error, as specified by the options --show-leak-kinds.
+#
+# SHOW_REACHABLE is equivalent to --show-leak-kinds=all whichs specifies the complete set
+# (showing all leak kinds).
+#
+# TRACK_ORIGINS controls whether Memcheck tracks the origin of uninitialised values.
+#
+# UNDEF_VALUE_ERRORS controls whether Memcheck reports uses of undefined value errors.
+#
+### MASSIF SPECIFIC OPTIONS:
+#
+# STACKS specifies whether stack profiling should be done. This option slows Massif down
+# greatly.
+#
+# PAGES_AS_HEAP tells Massif to profile memory at the page level rather than at the malloc'd
+# block level.
+#
+# TIME_UNIT offers three settings:
+# Instructions executed `i`, which is good for most cases.
+# Time `ms`, which is sometimes useful.
+# Bytes allocated/deallocated on the heap and/or stack `B`, which is useful for very
+# short-run programs and for testing purposes.
+#
+### NOTES
+#
+# The callgrind `unit-tests.out.*` files are not human readable, as such one might want to
 # load the files with the `KCacheGrind` program to easily navigate the data.
 #
 
@@ -80,7 +125,7 @@ if (NOT Valgrind_FOUND)
   message(WARNING "Unable to create Valgrind checks due to missing program")
 endif ()
 
-macro(_valgrind_setup target)
+macro(_valgrind_executable_setup target)
   if (NOT TARGET ${target})
     message(FATAL_ERROR "Specified target \"${target}\" does not exist")
   endif()
@@ -108,10 +153,10 @@ macro(_valgrind_setup target)
   endif()
 endmacro()
 
-function(swift_add_valgrind_memcheck target)
-  set(argOption "TRACE_CHILDREN" "CHILD_SILENT_AFTER_FORK" "SHOW_REACHABLE" "TRACK_ORIGINS" "UNDEF_VALUE_ERRORS")
-  set(argSingle "LEAK_CHECK")
-  set(argMulti "")
+macro(_valgrind_tools_setup target tool)
+  set(argOption "")
+  set(argSingle NAME WORKING_DIRECTORY)
+  set(argMulti PROGRAM_ARGS)
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
@@ -119,46 +164,64 @@ function(swift_add_valgrind_memcheck target)
     message(FATAL_ERROR "Unparsed arguments ${x_UNPARSED_ARGUMENTS}")
   endif()
 
-  _valgrind_setup(${target})
-  unset(MEMCHECK_OPTIONS)
+  set(target_name ${target}-${tool})
+  if (x_NAME)
+    set(target_name ${x_NAME})
+  endif()
 
+  set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
+  if (x_WORKING_DIRECTORY)
+    set(working_directory ${x_WORKING_DIRECTORY})
+  endif()
+  set(valgrind-reports-dir ${working_directory}/${tool}-reports)
+endmacro()
+
+function(swift_add_valgrind_memcheck target)
+  set(argOption TRACE_CHILDREN CHILD_SILENT_AFTER_FORK SHOW_REACHABLE TRACK_ORIGINS UNDEF_VALUE_ERRORS)
+  set(argSingle LEAK_CHECK)
+  set(argMulti "")
+
+  cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
+
+  _valgrind_executable_setup(${target})
+  _valgrind_tools_setup(${target} valgrind-memcheck ${x_UNPARSED_ARGUMENTS})
+
+  unset(valgrind_tool_options)
   if (x_TRACE_CHILDREN)
-    list(APPEND MEMCHECK_OPTIONS "--trace-children=yes")
+    list(APPEND valgrind_tool_options --trace-children=yes)
   endif()
 
   if (x_CHILD_SILENT_AFTER_FORK)
-    list(APPEND MEMCHECK_OPTIONS "--child-silent-after-fork=yes")
+    list(APPEND valgrind_tool_options --child-silent-after-fork=yes)
   endif()
 
   if (x_SHOW_REACHABLE)
-    list(APPEND MEMCHECK_OPTIONS "--show-reachable=yes")
+    list(APPEND valgrind_tool_options --show-reachable=yes)
   endif()
 
   if (x_TRACK_ORIGINS)
-    list(APPEND MEMCHECK_OPTIONS "--track-origins=yes")
+    list(APPEND valgrind_tool_options --track-origins=yes)
   endif()
 
   if (x_UNDEF_VALUE_ERRORS)
-    list(APPEND MEMCHECK_OPTIONS "--undef-value-errors=yes")
+    list(APPEND valgrind_tool_options --undef-value-errors=yes)
   endif()
 
   if (x_LEAK_CHECK)
     if (${x_LEAK_CHECK} STREQUAL "yes")
-      list(APPEND MEMCHECK_OPTIONS "--leak-check=yes")
-    elseif (${x_LEAK_CHECK} STREQUAL "no")
-      list(APPEND MEMCHECK_OPTIONS "--leak-check=no")
+      list(APPEND valgrind_tool_options --leak-check=yes)
     elseif (${x_LEAK_CHECK} STREQUAL "full")
-      list(APPEND MEMCHECK_OPTIONS "--leak-check=full")
+      list(APPEND valgrind_tool_options --leak-check=full)
     elseif (${x_LEAK_CHECK} STREQUAL "summary")
-      list(APPEND MEMCHECK_OPTIONS "--leak-check=summary")
+      list(APPEND valgrind_tool_options --leak-check=summary)
     endif()
   endif()
 
-  set(valgrind-reports-dir ${CMAKE_CURRENT_BINARY_DIR}/valgrind-reports)
-  add_custom_target(${target}-memcheck
+  add_custom_target(${target_name}
+    COMMENT "Valgrind Memcheck is running for \"${target}\" (output: \"${valgrind-reports-dir}/\")"
+    COMMAND ${CMAKE_COMMAND} -E remove ${valgrind-reports-dir}/${target}*
     COMMAND ${CMAKE_COMMAND} -E make_directory ${valgrind-reports-dir}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${valgrind-reports-dir} ${Valgrind_EXECUTABLE} --tool=memcheck ${MEMCHECK_OPTIONS} --xml=yes --xml-file=${target}.xml $<TARGET_FILE:${target}>
-    COMMENT "Valgrind Memcheck is being applied to \"${target}\""
+    COMMAND ${CMAKE_COMMAND} -E chdir ${valgrind-reports-dir} ${Valgrind_EXECUTABLE} --tool=memcheck ${valgrind_tool_options} --xml=yes --xml-file=${target}.xml $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
     DEPENDS ${target}
   )
 
@@ -171,40 +234,29 @@ endfunction()
 
 function(swift_add_valgrind_callgrind target)
   set(argOption TRACE_CHILDREN)
-  set(argSingle NAME WORKING_DIRECTORY)
-  set(argMulti PROGRAM_ARGS)
+  set(argSingle "")
+  set(argMulti "")
 
-  cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
+  cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
 
-  if (x_UNPARSED_ARGUMENTS)
-    message(FATAL_ERROR "Unparsed arguments ${x_UNPARSED_ARGUMENTS}")
-  endif()
+  _valgrind_executable_setup(${target})
+  _valgrind_tools_setup(${target} valgrind-callgrind ${x_UNPARSED_ARGUMENTS})
 
-  _valgrind_setup(${target})
-
-  set(target_name ${target}-valgrind-callgrind)
-  if (x_NAME)
-    set(target_name ${x_NAME})
-  endif()
-
-  set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
-  if (x_WORKING_DIRECTORY)
-    set(working_directory ${x_WORKING_DIRECTORY})
-  endif()
-
-  unset(callgrind_options)
+  unset(valgrind_tool_options)
   if (x_TRACE_CHILDREN)
-    list(APPEND callgrind_options --trace-children=yes)
-    list(APPEND callgrind_options --log-file=callgrind.log.%p)
+    list(APPEND valgrind_tool_options --trace-children=yes)
+    list(APPEND valgrind_tool_options --log-file=${target}.log.%p)
+    list(APPEND valgrind_tool_options --callgrind-out-file=${target}.out.%p)
   else()
-    list(APPEND callgrind_options --log-file=callgrind.log)
+    list(APPEND valgrind_tool_options --log-file=${target}.log)
+    list(APPEND valgrind_tool_options --callgrind-out-file=${target}.out)
   endif()
 
   add_custom_target(${target_name}
-    COMMENT "Valgrind Callgrind is running for \"${target}\" (output: \"${working_directory}/${target_name}/\")"
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${working_directory}/${target_name}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${working_directory}/${target_name}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${working_directory}/${target_name} ${Valgrind_EXECUTABLE} --tool=callgrind ${callgrind_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+    COMMENT "Valgrind Callgrind is running for \"${target}\" (output: \"${valgrind-reports-dir}/\")"
+    COMMAND ${CMAKE_COMMAND} -E remove ${valgrind-reports-dir}/${target}*
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${valgrind-reports-dir}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${valgrind-reports-dir} ${Valgrind_EXECUTABLE} --tool=callgrind ${valgrind_tool_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
     DEPENDS ${target}
   )
 
@@ -214,3 +266,61 @@ function(swift_add_valgrind_callgrind target)
   add_dependencies(do-all-valgrind-callgrind ${target_name})
   add_dependencies(do-all-valgrind do-all-valgrind-callgrind)
 endfunction()
+
+function(swift_add_valgrind_massif target)
+  set(argOption TRACE_CHILDREN STACKS PAGES_AS_HEAP XTREE_MEMORY)
+  set(argSingle TIME_UNIT)
+  set(argMulti "")
+
+  cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
+
+  _valgrind_executable_setup(${target})
+  _valgrind_tools_setup(${target} valgrind-massif ${x_UNPARSED_ARGUMENTS})
+
+  unset(valgrind_tool_options)
+  if (x_TRACE_CHILDREN)
+    list(APPEND valgrind_tool_options --trace-children=yes)
+    list(APPEND valgrind_tool_options --log-file=${target}.log.%p)
+    list(APPEND valgrind_tool_options --massif-out-file=${target}.out.%p)
+  else()
+    list(APPEND valgrind_tool_options --log-file=${target}.log)
+    list(APPEND valgrind_tool_options --massif-out-file=${target}.out)
+  endif()
+
+  if (x_STACKS)
+    list(APPEND valgrind_tool_options --stacks=yes)
+  endif()
+
+  if (x_PAGES_AS_HEAP)
+    list(APPEND valgrind_tool_options --pages-as-heap=yes)
+  endif()
+
+  if (x_XTREE_MEMORY)
+    list(APPEND valgrind_tool_options --xtree-memory=full)
+    list(APPEND valgrind_tool_options --xtree-memory-file=${target}.kcg.%p)
+  endif()
+
+  if (x_TIME_UNIT)
+    if (${x_TIME_UNIT} STREQUAL "i")
+      list(APPEND valgrind_tool_options --time-unit=i)
+    elseif (${x_TIME_UNIT} STREQUAL "ms")
+      list(APPEND valgrind_tool_options --time-unit=ms)
+    elseif (${x_TIME_UNIT} STREQUAL "B")
+      list(APPEND valgrind_tool_options --time-unit=B)
+    endif()
+  endif()
+
+  add_custom_target(${target_name}
+    COMMENT "Valgrind Massif is running for \"${target}\" (output: \"${valgrind-reports-dir}/\")"
+    COMMAND ${CMAKE_COMMAND} -E remove ${valgrind-reports-dir}/${target}*
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${valgrind-reports-dir}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${valgrind-reports-dir} ${Valgrind_EXECUTABLE} --tool=massif ${valgrind_tool_options} $<TARGET_FILE:${target}>
+    DEPENDS ${target}
+  )
+
+  if (NOT TARGET do-all-valgrind-massif)
+    add_custom_target(do-all-valgrind-massif)
+  endif()
+  add_dependencies(do-all-valgrind-massif ${target_name})
+  add_dependencies(do-all-valgrind do-all-valgrind-massif)
+ endfunction()
