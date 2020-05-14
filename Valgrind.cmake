@@ -75,6 +75,11 @@
 # TRACE_CHILDREN invokes the Valgrind tools even on spawned children, normally
 # ignores the spawned processes.
 #
+# CHILD_SILENT_AFTER_FORK instructs Valgrind to hide any debugging or logging
+# output for a child process resulting from a fork call. This can make the
+# output less confusing (although more misleading) when dealing with processes
+# that create children.
+#
 ### MALLOC()-RELATED OPTIONS:
 # For tools that use their own version of malloc (e.g. Memcheck, Massif,
 # Helgrind, DRD).
@@ -86,11 +91,6 @@
 # of freed bytes and blocks.
 #
 ### MEMCHECK SPECIFIC OPTIONS:
-#
-# CHILD_SILENT_AFTER_FORK instructs Valgrind to hide any debugging or logging
-# output for a child process resulting from a fork call. This can make the
-# output less confusing (although more misleading) when dealing with processes
-# that create children.
 #
 # LEAK_CHECK searches for memory leaks when the application finishes.
 #
@@ -163,7 +163,7 @@ macro(_valgrind_basic_setup _target)
 endmacro()
 
 macro(_valgrind_arguments_setup _target _tool_name _toolOptions _toolSingle _toolMulti _ARGN)
-  set(_commonOptions TRACE_CHILDREN)
+  set(_commonOptions CHILD_SILENT_AFTER_FORK TRACE_CHILDREN)
   set(_commonSingle NAME WORKING_DIRECTORY)
   set(_commonMulti PROGRAM_ARGS)
 
@@ -190,6 +190,10 @@ macro(_valgrind_arguments_setup _target _tool_name _toolOptions _toolSingle _too
   endif()
 
   unset(valgrind_tool_options)
+  if (x_CHILD_SILENT_AFTER_FORK)
+    list(APPEND valgrind_tool_options --child-silent-after-fork=yes)
+  endif()
+
   if (x_TRACE_CHILDREN)
     list(APPEND valgrind_tool_options --trace-children=yes)
     list(APPEND valgrind_tool_options --log-file=${target}.log.%p)
@@ -201,7 +205,7 @@ macro(_valgrind_arguments_setup _target _tool_name _toolOptions _toolSingle _too
 endmacro()
 
 function(swift_add_valgrind_memcheck target)
-  set(argOption CHILD_SILENT_AFTER_FORK SHOW_REACHABLE TRACK_ORIGINS UNDEF_VALUE_ERRORS)
+  set(argOption SHOW_REACHABLE TRACK_ORIGINS UNDEF_VALUE_ERRORS)
   set(argSingle LEAK_CHECK)
   set(argMulti "")
 
@@ -209,10 +213,6 @@ function(swift_add_valgrind_memcheck target)
   _valgrind_basic_setup(${target})
 
   list(APPEND valgrind_tool_options --xml=yes --xml-file=report.xml)
-
-  if (x_CHILD_SILENT_AFTER_FORK)
-    list(APPEND valgrind_tool_options --child-silent-after-fork=yes)
-  endif()
 
   if (x_SHOW_REACHABLE)
     list(APPEND valgrind_tool_options --show-reachable=yes)
