@@ -21,7 +21,7 @@
 #
 # These functions create new cmake targets which runs the `target`'s executable
 # binary through Valgrind's tool. Invoking the `swift_add_valgrind_callgrind(unit-tests)`,
-# will result in the following new cmake targets:
+# results in the following new cmake targets:
 #
 #   - valgrind-callgrind-unit-tests
 #   - do-all-valgrind-callgrind
@@ -211,7 +211,11 @@ function(swift_add_valgrind_memcheck target)
   _valgrind_arguments_setup(${target} memcheck "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
   _valgrind_basic_setup(${target})
 
-  list(APPEND valgrind_tool_options --xml=yes --xml-file=report.xml)
+  if (x_TRACE_CHILDREN)
+    list(APPEND valgrind_tool_options --xml=yes --xml-file=${target}.xml.%p)
+  else()
+    list(APPEND valgrind_tool_options --xml=yes --xml-file=${target}.xml)
+  endif()
 
   if (x_SHOW_REACHABLE)
     list(APPEND valgrind_tool_options --show-reachable=yes)
