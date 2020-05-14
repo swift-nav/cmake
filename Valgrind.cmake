@@ -17,12 +17,11 @@
 #   )
 #
 # In this signature, the asterisk is a wildcard for any of the above available
-# tools, so to call on the `massif` tool, use `swift_add_valgrind_massif`.
+# tools, so to call on the `callgrind` tool, use `swift_add_valgrind_callgrind`.
 #
 # These functions create new cmake targets which runs the `target`'s executable
-# binary through Valgrind's tool. If we had a cmake target called `unit-tests`,
-# and invoke the `swift_add_valgrind_callgrind(unit-tests)`, it would result in
-# the following new cmake targets:
+# binary through Valgrind's tool. Invoking the `swift_add_valgrind_callgrind(unit-tests)`,
+# will result in the following new cmake targets:
 #
 #   - valgrind-callgrind-unit-tests
 #   - do-all-valgrind-callgrind
@@ -64,7 +63,7 @@
 #     PROGRAM_ARGS --gtest_filter=Suite2.*
 #   )
 #
-# This would create `valgrind-callgrind-suite-1` and `valgrind-callgrind-suite-2`,
+# This creates `valgrind-callgrind-suite-1` and `valgrind-callgrind-suite-2`,
 # each calling the `unit-tests` executable with different program arguments.
 #
 # WORKING_DIRECTORY enables a user to change the output directory for the tools
