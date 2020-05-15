@@ -1,20 +1,20 @@
 #
 # OVERVIEW
 #
-# There are various technical approaches to implement profiling for an program,
-# some emulate an environment and run the program on it and collect data (ex:
+# There are various technical approaches to implement profiling for any program,
+# some emulate an environment, run the program on it and collect data (ex:
 # Valgrind), others invoke kernel level system calls to inspect the events from
 # a running program (ex: perf or dtrace). With this module, we will focus on
 # what we will call "Code Profiling", which is the technique of introducing code
-# during the compilation/linking that helps aggregate details about the running
-# which are than recorded during the programs shutdown phase. Currently only GCC
-# compilers are supported within this module.
+# during the compilation/linking that helps aggregate details about a running
+# program and dumped out to a file during the programs shutdown phase. Currently
+# only GCC compilers are supported within this module.
 #
 # To enable any code profiling instrumentation/targets, the cmake option
-# "PROFILING" needs to be set to "ON". Code that is to be profiled needs to be
-# setup with the `target_code_profiling` function, without it, later on when
-# the profile results come out, it won't be able to report on various statistics
-# which are useful for profiling for that library/executable.
+# "CODE_PROFILING" needs to be set to "ON". Code that is to be profiled needs to
+# be setup with the `target_code_profiling` function, without it, later on when
+# the profile results come out, it won't be able to report on those library
+# and/or executable functions.
 #
 # USAGE:
 #
@@ -25,10 +25,10 @@
 # target.
 #
 #   swift_add_code_profiling(<target>
-#     [GENERATE_REPORT]
-#     [NAME target_name]
+#     [NAME name]
 #     [WORKING_DIRECTORY working_directory]
 #     [PROGRAM_ARGS arg1 arg2 ...]
+#     [GENERATE_REPORT]
 #   )
 #
 # Call this function to create a new cmake target which will invoke the
@@ -37,12 +37,12 @@
 # `swift_add_code_profiling(unit-tests)`, it would produce the following cmake
 # targets:
 #
-#   - unit-tests-code-profiling
+#   - code-profiling-unit-tests
 #   - do-all-code-profiling
 #
 # The first target will run the `unit-tests` target, and generates the profile
-# results to the `${CMAKE_CURRENT_BINARY_DIR}/unit-tests-code-profiling` folder.
-# The results will consisted of gmon.* files. The numbers that you see
+# results to the `${CMAKE_CURRENT_BINARY_DIR}/code-profiling-reports/unit-tests`
+# folder. The results will consisted of gmon.* files. The numbers that you see
 # correspond to the process ID of the running program, if you see multiple
 # files, that's because the original target spawned off child processes.
 # Rerunning this target will mean that any prior results will be cleared out.
@@ -62,41 +62,41 @@
 #
 #   gprof <executable> <gmon file>
 #
-# The reason why this is not done by default is because the executable entry
-# needs to match the process ID's executable file. If in our example
-# `unit-tests` spawned off processes that call the `dr-runner` executable, the
-# result folder would contain a number of gmon files, and one would have to know
-# which PID corresponds to the `unit-tests` executable and which one corresponds
-# to the `dr-runnner` executables. Running the `gprof` on an incorrect
-# executable will generated incorrect results and will not error out. As such,
-# enabling GENERATE_REPORT would mean that the target would run the gprof
-# on each gmon file, assuming that it was called by the `unit-tests` executable,
-# outputting the results to a gmon.*.txt file.
+# The reason why this is not done by default is because the `executable`
+# parameter needs to match the executable that launched process ID specified by
+# gmon file. If in our example `unit-tests` spawned off processes that called
+# the `dr-runner` executable, the results folder would contain a number of gmon
+# files. One would have to know which gmon file corresponds to the `unit-tests`
+# executable and which one corresponds to the `dr-runnner` executables. Running
+# the `gprof` on an incorrect executable will generated incorrect results and
+# will not error out. As such, when one enables GENERATE_REPORT, the function
+# will run the `gprof` on each `gmon.*` file, assuming that it was called by
+# the `unit-tests` executable, outputting the results to a `gmon.*.txt` file.
 #
-# The NAME option is there to specify the name of the new target created, this
-# is quite useful if you'd like to create multiple profiling targets from a
-# single cmake target executable. Continuing on with our `unit-tests` example,
-# if the target was a Googletest executable, and we wanted to break the tests
-# cases across different suites, we could do something like the following:
+# The NAME option is there to specify the name used for the new target, this is
+# quite useful if you'd like to create multiple profiling targets from a single
+# cmake target executable. Continuing on with our `unit-tests` example, if the
+# target was a Googletest executable, and we wanted to break the tests cases
+# across different suites, we could do something like the following:
 #
 #   swift_add_code_profiling(unit-tests
-#     NAME suite-1-profiles
+#     NAME suite-1
 #     PROGRAM_ARGS --gtest_filter=Suite1.*
 #   )
 #
 #   swift_add_code_profiling(unit-tests
-#     NAME suite-2-profiles
+#     NAME suite-2
 #     PROGRAM_ARGS --gtest_filter=Suite2.*
 #   )
 #
 # This would create two targets (not including `do-all-code-profiling` in this
-# number) `suite-1-profiles` and `suite-2-profiles`, each calling the
+# list) `code-profiling-suite-1` and `code-profiling-suite-2`, each calling the
 # `unit-tests` executable with different program arguments.
 #
 # The last option WORKING_DIRECTORY is simply there to redirect the output
 # results to a different folder. By default that folder is
-# `${CMAKE_CURRENT_BINARY_DIR}`, if we set that option for `suite-2-profiles` to
-# `/tmp`, it would output the profiling results to `/tmp/suite-2-profiles`.
+# `${CMAKE_CURRENT_BINARY_DIR}`, if we set that option for `suite-2` to `/tmp`,
+# it would output the profiling results to `/tmp/code-profiling-reports/suite-2`.
 #
 # NOTES
 #
@@ -106,11 +106,11 @@
 # environment, it has the possibility of crashing.
 #
 
-option(PROFILING "Builds targets with profiling instrumentation. Currently only works with GCC Compilers" OFF)
+option(CODE_PROFILING "Builds targets with profiling instrumentation. Currently only works with GCC Compilers" OFF)
 
-if (PROFILING)
+if (CODE_PROFILING)
   if(NOT CMAKE_COMPILER_IS_GNUCXX)
-    message(FATAL_ERROR "Coce profiling support is currently only available for GCC compiler")
+    message(FATAL_ERROR "Code profiling support is currently only available for GCC compiler")
   endif()
 endif()
 
@@ -125,7 +125,7 @@ function(target_code_profiling target)
     message(FATAL_ERROR "Specified target \"${target}\" does not exist")
   endif()
 
-  if (NOT PROFILING)
+  if (NOT CODE_PROFILING)
     return()
   endif()
 
@@ -154,7 +154,7 @@ function(swift_add_code_profiling target)
     message(FATAL_ERROR "Specified target \"${target}\" must be an executable type to register for code profiling")
   endif()
 
-  if (NOT PROFILING)
+  if (NOT CODE_PROFILING)
     return()
   endif()
 
@@ -168,9 +168,11 @@ function(swift_add_code_profiling target)
 
   target_code_profiling(${target})
 
-  set(target_name ${target}-code-profiling)
+  set(target_name code-profiling-${target})
+  set(report_folder ${target})
   if (x_NAME)
-    set(target_name ${x_NAME})
+    set(target_name code-profiling-${x_NAME})
+    set(report_folder ${x_NAME})
   endif()
 
   set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
@@ -178,16 +180,18 @@ function(swift_add_code_profiling target)
     set(working_directory ${x_WORKING_DIRECTORY})
   endif()
 
+  set(reports_directory ${working_directory}/code-profiling-reports)
+
   unset(post_commands)
   if (GProf_FOUND AND x_GENERATE_REPORT)
-    list(APPEND post_commands COMMAND find ${working_directory}/${target_name} -regex ".+/gmon\\.[0-9]+$" -exec sh -c "${GProf_EXECUTABLE} $<TARGET_FILE:${target}> $0 > $0.txt" {} +)
+    list(APPEND post_commands COMMAND find ${reports_directory}/${report_folder} -regex ".+/gmon\\.[0-9]+$" -exec sh -c "${GProf_EXECUTABLE} $<TARGET_FILE:${target}> $0 > $0.txt" {} +)
   endif()
 
   add_custom_target(${target_name}
-    COMMENT "Code profiling is running for \"${target}\" (output: \"${working_directory}/${target_name}/\")"
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${working_directory}/${target_name}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${working_directory}/${target_name}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${working_directory}/${target_name} ${CMAKE_COMMAND} -E env GMON_OUT_PREFIX=gmon $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+    COMMENT "Code profiling is running for \"${target}\" (output: \"${reports_directory}/${report_folder}\")"
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}/${report_folder}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}/${report_folder}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory}/${report_folder} ${CMAKE_COMMAND} -E env GMON_OUT_PREFIX=gmon $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
     ${post_commands}
     DEPENDS ${target}
     VERBATIM
