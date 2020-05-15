@@ -44,6 +44,7 @@
 #   * NAME
 #   * WORKSPACE
 #   * TRACE_CHILDREN
+#   * SILENT_CHILD_AFTER_FORK
 #
 # NAME specifies the name to use for the new target created. This is quite
 # useful if you'd like to create multiple valgrind-tool targets from a single
