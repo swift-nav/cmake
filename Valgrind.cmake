@@ -44,7 +44,7 @@
 #   * NAME
 #   * WORKSPACE
 #   * TRACE_CHILDREN
-#   * SILENT_CHILD_AFTER_FORK
+#   * CHILD_SILENT_AFTER_FORK
 #
 # NAME specifies the name to use for the new target created. This is quite
 # useful if you'd like to create multiple valgrind-tool targets from a single
@@ -71,7 +71,7 @@
 # from the default folder `${CMAKE_CURRENT_BINARY_DIR}`. Setting this option for
 # target `valgrind-callgrind-suite-2` to `/tmp`, outputs the results
 # `/tmp/valgrind-reports/suite-2`.
-# 
+#
 # TRACE_CHILDREN invokes the Valgrind tools even on spawned children, normally
 # ignores the spawned processes.
 #
@@ -121,6 +121,10 @@
 #   * Time `ms`, which is sometimes useful.
 #   * Bytes allocated/deallocated on the heap and/or stack `B`, which is useful
 #     for very short-run programs and for testing purposes.
+#
+# THRESHOLD the significance threshold for heap allocations, as a percentage of
+# total memory size. Allocation tree entries that account for less than this
+# will be aggregated.
 #
 ### NOTES
 #
@@ -280,7 +284,7 @@ endfunction()
 
 function(swift_add_valgrind_massif target)
   set(argOption STACKS PAGES_AS_HEAP XTREE_MEMORY)
-  set(argSingle TIME_UNIT)
+  set(argSingle THRESHOLD TIME_UNIT)
   set(argMulti "")
 
   _valgrind_arguments_setup(${target} massif "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
@@ -303,6 +307,10 @@ function(swift_add_valgrind_massif target)
   if (x_XTREE_MEMORY)
     list(APPEND valgrind_tool_options --xtree-memory=full)
     list(APPEND valgrind_tool_options --xtree-memory-file=${target}.kcg.%p)
+  endif()
+
+  if (x_THRESHOLD)
+    list(APPEND valgrind_tool_options "--threshold=${x_THRESHOLD}")
   endif()
 
   if (x_TIME_UNIT)
