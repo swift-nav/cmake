@@ -134,7 +134,8 @@ if(CODE_COVERAGE AND NOT CODE_COVERAGE_ADDED)
                       COMMAND rm -f
                               ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/profraw.list)
 
-  elseif(CMAKE_COMPILER_IS_GNUCXX)
+  elseif("${CMAKE_C_COMPILER_ID}" MATCHES "GNU"
+         OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     # Messages
     message(STATUS "Building with lcov Code Coverage Tools")
 
@@ -218,7 +219,8 @@ function(target_code_coverage TARGET_NAME)
       set_property(TARGET ${TARGET_NAME}
                    APPEND_STRING
                    PROPERTY LINK_FLAGS "-fcoverage-mapping ")
-    elseif(CMAKE_COMPILER_IS_GNUCXX)
+    elseif("${CMAKE_C_COMPILER_ID}" MATCHES "GNU"
+           OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
       target_compile_options(${TARGET_NAME}
                              PRIVATE -fprofile-arcs -ftest-coverage)
       target_link_libraries(${TARGET_NAME} PRIVATE gcov)
@@ -273,7 +275,8 @@ function(target_code_coverage TARGET_NAME)
                   -format="html" ${EXCLUDE_REGEX}
           DEPENDS ccov-processing-${TARGET_NAME})
 
-      elseif(CMAKE_COMPILER_IS_GNUCXX)
+      elseif("${CMAKE_C_COMPILER_ID}" MATCHES "GNU"
+             OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
         set(COVERAGE_INFO
             "${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/${TARGET_NAME}.info")
 
@@ -330,7 +333,8 @@ function(target_code_coverage TARGET_NAME)
         endif()
         add_dependencies(ccov ccov-${TARGET_NAME})
 
-        if(NOT CMAKE_COMPILER_IS_GNUCXX)
+        if(NOT ("${CMAKE_C_COMPILER_ID}" MATCHES "GNU"
+               OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU"))
           if(NOT TARGET ccov-report)
             add_custom_target(ccov-report)
           endif()
@@ -362,7 +366,8 @@ function(add_code_coverage)
     add_compile_options(-fprofile-instr-generate -fcoverage-mapping)
     set(CMAKE_EXE_LINKER_FLAGS
         "${CMAKE_EXE_LINKER_FLAGS} -fprofile-instr-generate -fcoverage-mapping")
-  elseif(CMAKE_COMPILER_IS_GNUCXX)
+  elseif("${CMAKE_C_COMPILER_ID}" MATCHES "GNU"
+         OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
     add_compile_options(-fprofile-arcs -ftest-coverage)
     link_libraries(gcov)
   endif()
@@ -439,7 +444,8 @@ function(add_code_coverage_all_targets)
           -format="text" ${EXCLUDE_REGEX} > ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/coverage.txt
         DEPENDS ccov-all-processing)
 
-    elseif(CMAKE_COMPILER_IS_GNUCXX)
+    elseif("${CMAKE_C_COMPILER_ID}" MATCHES "GNU"
+           OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "GNU")
       # Targets
       set(COVERAGE_INFO "${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/all-merged.info")
 
