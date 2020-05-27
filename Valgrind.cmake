@@ -92,7 +92,8 @@
 #
 ### MEMCHECK SPECIFIC OPTIONS:
 #
-# LEAK_CHECK searches for memory leaks when the application finishes.
+# LEAK_CHECK=<no|summary|yes|full> [default: summary], searches for memory leaks
+# when the application finishes.
 #
 #   * If set to `summary`, it says how many leaks occurred.
 #   * If set to `full` or `yes`, each individual leak will be shown in detail
@@ -109,22 +110,36 @@
 #
 ### MASSIF SPECIFIC OPTIONS:
 #
+# DEPTH=<number> [default: 30], maximum depth of the allocation trees recorded
+# for detailed snapshots.
+#
+# DETAILED_FREQUENCY=<number> [default: 10], frequency of detailed snapshots.
+# With value of `1`, every snapshot is detailed.
+#
+# MAX_SNAPSHOTS=<number> [default: 100], the maximum number of snapshots
+# recorded.
+#
+# PEAK_INACCURACY=<float> [default: 1.0], Massif does not necessarily record
+# the actual global memory allocation peak; by default it records a peak only
+# when the global memory allocation size exceeds the previous peak by at least
+# 1.0%. Setting this value to `0.0` gives the true value of the peak.
+#
 # STACKS specifies whether stack profiling should be done. This option slows
 # Massif down greatly.
 #
 # PAGES_AS_HEAP tells Massif to profile memory at the page level rather than at
 # the malloc'd  block level.
 #
-# TIME_UNIT offers three settings:
+# TIME_UNIT=<i|ms|B>, offers three settings:
 #
 #   * Instructions executed `i`, which is good for most cases.
 #   * Time `ms`, which is sometimes useful.
 #   * Bytes allocated/deallocated on the heap and/or stack `B`, which is useful
 #     for very short-run programs and for testing purposes.
 #
-# THRESHOLD the significance threshold for heap allocations, as a percentage of
-# total memory size. Allocation tree entries that account for less than this
-# will be aggregated.
+# THRESHOLD=<float> [default: 1.0], the significance threshold for heap
+# allocations, as a percentage of total memory size. Allocation tree entries
+# that account for less than this will be aggregated.
 #
 ### NOTES
 #
@@ -284,7 +299,7 @@ endfunction()
 
 function(swift_add_valgrind_massif target)
   set(argOption STACKS PAGES_AS_HEAP XTREE_MEMORY)
-  set(argSingle THRESHOLD TIME_UNIT)
+  set(argSingle DEPTH DETAILED_FREQUENCY MAX_SNAPSHOTS PEAK_INACCURACY THRESHOLD TIME_UNIT)
   set(argMulti "")
 
   _valgrind_arguments_setup(${target} massif "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
@@ -307,6 +322,22 @@ function(swift_add_valgrind_massif target)
   if (x_XTREE_MEMORY)
     list(APPEND valgrind_tool_options --xtree-memory=full)
     list(APPEND valgrind_tool_options --xtree-memory-file=${target}.kcg.%p)
+  endif()
+
+  if (x_DEPTH)
+    list(APPEND valgrind_tool_options "--depth=${x_DEPTH}")
+  endif()
+
+  if (x_DETAILED_FREQUENCY)
+    list(APPEND valgrind_tool_options "--detailed-freq=${x_DETAILED_FREQUENCY}")
+  endif()
+
+  if (x_MAX_SNAPSHOTS)
+    list(APPEND valgrind_tool_options "--max-snapshots=${x_MAX_SNAPSHOTS}")
+  endif()
+
+  if (x_PEAK_INACCURACY)
+    list(APPEND valgrind_tool_options "--peak-inaccuracy=${x_PEAK_INACCURACY}")
   endif()
 
   if (x_THRESHOLD)
