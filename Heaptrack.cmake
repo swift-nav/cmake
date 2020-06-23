@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.14.0)
+cmake_minimum_required(VERSION 3.11.0)
 
 set(resource_name heaptrack)
 set(github_repo https://github.com/KDE/heaptrack.git)
@@ -9,4 +9,8 @@ FetchContent_Declare(
   GIT_REPOSITORY ${github_repo}
   GIT_TAG        origin/master
 )
-FetchContent_MakeAvailable(${resource_name})
+FetchContent_GetProperties(${resource_name})
+if(NOT ${resource_name}_POPULATED)
+  FetchContent_Populate(${resource_name})
+  add_subdirectory(${${resource_name}_SOURCE_DIR} ${${resource_name}_BINARY_DIR})
+endif()
