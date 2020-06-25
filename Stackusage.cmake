@@ -7,17 +7,12 @@
 # USAGE
 #
 #   swift_add_stackusage(<target>
-#     [OPTIONS]
 #     [WORKING_DIRECTORY working_directory]
 #     [PROGRAM_ARGS arg1 arg2 ...]
 #   )
 #
 # Call this function to create a new cmake target which runs the `target`'s
 # executable binary with stackusage applied.
-#
-# STACKUSAGE OPTIONS
-#
-#   * DEBUG: Debug mode, running program through debugger
 #
 # WORKING_DIRECTORY
 # This variable enables a user to change the output directory for the tools
@@ -65,7 +60,7 @@ endmacro()
 function(swift_add_${resource_name} target)
   eval_target(${target})
   
-  set(argOption DEBUG)
+  set(argOption "")
   set(argSingle WORKING_DIRECTORY)
   set(argMulti PROGRAM_ARGS)
 
@@ -83,18 +78,14 @@ function(swift_add_${resource_name} target)
   set(reports_directory ${working_directory}/${resource_name}-reports)
   set(output_file ${target_name}.txt)
 
-  unset(resource_options)
-  if (x_DEBUG)
-    list(APPEND resource_options -d)
-  endif()
-  
-  #list(APPEND resource_options -o ${reports_directory}/${output_file})
+  unset(resource_options)  
+  list(APPEND resource_options -o ${reports_directory}/${output_file})
 
   add_custom_target(${target_name}
     COMMENT "${resource_name} is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} $<TARGET_FILE:${resource_name}> ${resource_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${${resource_name}_BINARY_DIR}/${resource_name} ${resource_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
     DEPENDS ${target}
   )
 endfunction()

@@ -17,7 +17,7 @@
 # WORKING_DIRECTORY
 # This variable enables a user to change the output directory for the tools
 # from the default folder `${CMAKE_CURRENT_BINARY_DIR}`. Setting this option for
-# target `starling-binary` to `/tmp`, outputs the results into
+# target `starling-binary` to `/tmp`, outputs the results
 # `/tmp/heaptrack-reports/
 #
 # NOTE 
@@ -81,7 +81,7 @@ function(swift_add_${resource_name} target)
     COMMENT "${resource_name} is running on ${target}\ (output: \"${reports_directory}\")"
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} $<TARGET_FILE:${resource_name}> $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${${resource_name}_BINARY_DIR}/bin/${resource_name} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
     DEPENDS ${target}
   )
 endfunction()
