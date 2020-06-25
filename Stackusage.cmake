@@ -83,6 +83,8 @@ function(swift_add_${resource_name} target)
 
   add_custom_target(${target_name}
     COMMENT "${resource_name} is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
+    COMMAND make
+    WORKING_DIRECTORY ${${resource_name}_BINARY_DIR}
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
     COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${${resource_name}_BINARY_DIR}/${resource_name} ${resource_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
