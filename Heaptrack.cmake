@@ -27,19 +27,19 @@
 
 cmake_minimum_required(VERSION 3.11.0)
 
-set(resource_name heaptrack)
-set(github_repo https://github.com/KDE/heaptrack.git)
-
 include(FetchContent)
 FetchContent_Declare(
-  ${resource_name}
-  GIT_REPOSITORY ${github_repo}
+  heaptrack
+  GIT_REPOSITORY https://github.com/KDE/heaptrack.git
   GIT_TAG        origin/master
 )
-FetchContent_GetProperties(${resource_name})
-if(NOT ${resource_name}_POPULATED)
-  FetchContent_Populate(${resource_name})
-  add_subdirectory(${${resource_name}_SOURCE_DIR} ${${resource_name}_BINARY_DIR})
+FetchContent_GetProperties(heaptrack)
+if(NOT heaptrack_POPULATED)
+  FetchContent_Populate(heaptrack)
+  set(current_build_test_state ${BUILD_TESTING})
+  set(BUILD_TESTING OFF)
+  add_subdirectory(${heaptrack_SOURCE_DIR} ${heaptrack_BINARY_DIR})
+  set(BUILD_TESTING ${current_build_test_state})
 endif()
 
 macro(eval_target target)
@@ -49,7 +49,7 @@ macro(eval_target target)
 
   get_target_property(target_type ${target} TYPE)
   if (NOT target_type STREQUAL EXECUTABLE)
-    message(FATAL_ERROR "Specified target \"${target}\" must be an executable type to register for profiling with \"${resource_name }\"")
+    message(FATAL_ERROR "Specified target \"${target}\" must be an executable type to register for profiling with heaptrack")
   endif()
 
   if (NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
@@ -57,7 +57,7 @@ macro(eval_target target)
   endif()
 endmacro()
 
-function(swift_add_${resource_name} target)
+function(swift_add_heaptrack target)
   eval_target(${target})
   
   set(argOption "")
@@ -70,20 +70,20 @@ function(swift_add_${resource_name} target)
     message(FATAL_ERROR "Unparsed arguments ${x_UNPARSED_ARGUMENTS}")
   endif()
 
-  set(target_name ${resource_name}-${target})
+  set(target_name heaptrack-${target})
   set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
   if (x_WORKING_DIRECTORY)
     set(working_directory ${x_WORKING_DIRECTORY})
   endif()
-  set(reports_directory ${working_directory}/${resource_name}-reports)
+  set(reports_directory ${working_directory}/heaptrack-reports)
 
   add_custom_target(${target_name}
-    COMMENT "${resource_name} is running on ${target}\ (output: \"${reports_directory}\")"
-    COMMAND make
-    WORKING_DIRECTORY ${${resource_name}_BINARY_DIR}
+    COMMENT "heaptrack is running on ${target}\ (output: \"${reports_directory}\")"
+    COMMAND $(MAKE)
+    WORKING_DIRECTORY ${heaptrack_BINARY_DIR}
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${${resource_name}_BINARY_DIR}/bin/${resource_name} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${heaptrack_BINARY_DIR}/bin/heaptrack $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
     DEPENDS ${target}
   )
 endfunction()

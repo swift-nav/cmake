@@ -39,19 +39,16 @@
 
 cmake_minimum_required(VERSION 3.11.0)
 
-set(resource_name bloaty)
-set(github_repo https://github.com/google/bloaty.git)
-
 include(FetchContent)
 FetchContent_Declare(
-  ${resource_name}
-  GIT_REPOSITORY ${github_repo}
+  bloaty
+  GIT_REPOSITORY https://github.com/google/bloaty.git
   GIT_TAG        origin/master
 )
-FetchContent_GetProperties(${resource_name})
-if(NOT ${resource_name}_POPULATED)
-  FetchContent_Populate(${resource_name})
-  add_subdirectory(${${resource_name}_SOURCE_DIR} ${${resource_name}_BINARY_DIR})
+FetchContent_GetProperties(bloaty)
+if(NOT bloaty_POPULATED)
+  FetchContent_Populate(bloaty)
+  add_subdirectory(${bloaty_SOURCE_DIR} ${bloaty_BINARY_DIR})
 endif()
 
 macro(eval_target target)
@@ -61,7 +58,7 @@ macro(eval_target target)
 
   get_target_property(target_type ${target} TYPE)
   if (NOT target_type STREQUAL EXECUTABLE)
-    message(FATAL_ERROR "Specified target \"${target}\" must be an executable type to register for profiling with \"${resource_name }\"")
+    message(FATAL_ERROR "Specified target \"${target}\" must be an executable type to register for profiling with bloaty")
   endif()
 
   if (NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
@@ -69,7 +66,7 @@ macro(eval_target target)
   endif()
 endmacro()
 
-function(swift_add_${resource_name} target)
+function(swift_add_bloaty target)
   eval_target(${target})
   
   set(argOption SEGMENTS SECTIONS SYMBOLS COMPILEUNITS)
@@ -82,12 +79,12 @@ function(swift_add_${resource_name} target)
     message(FATAL_ERROR "Unparsed arguments ${x_UNPARSED_ARGUMENTS}")
   endif()
 
-  set(target_name ${resource_name}-${target})
+  set(target_name bloaty-${target})
   set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
   if (x_WORKING_DIRECTORY)
     set(working_directory ${x_WORKING_DIRECTORY})
   endif()
-  set(reports_directory ${working_directory}/${resource_name}-reports)
+  set(reports_directory ${working_directory}/bloaty-reports)
   set(output_file ${target_name}.txt)
 
   unset(resource_options)
@@ -117,11 +114,11 @@ function(swift_add_${resource_name} target)
   endif()
 
   add_custom_target(${target_name}
-    COMMENT "${resource_name} is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
+    COMMENT "bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"${resource_name} with options: ${resource_options}\" > ${reports_directory}/${output_file}
-    COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:${resource_name}> ${resource_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS} >> ${reports_directory}/${output_file}
+    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"bloaty with options: ${resource_options}\" > ${reports_directory}/${output_file}
+    COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:bloaty> ${resource_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS} >> ${reports_directory}/${output_file}
     DEPENDS ${target}
   )
 endfunction()
