@@ -37,18 +37,20 @@
 # `/tmp/bloaty-reports/
 #
 
-cmake_minimum_required(VERSION 3.11.0)
+find_package(Bloaty)
 
-include(FetchContent)
-FetchContent_Declare(
-  bloaty
-  GIT_REPOSITORY https://github.com/google/bloaty.git
-  GIT_TAG        origin/master
-)
-FetchContent_GetProperties(bloaty)
-if(NOT bloaty_POPULATED)
-  FetchContent_Populate(bloaty)
-  add_subdirectory(${bloaty_SOURCE_DIR} ${bloaty_BINARY_DIR})
+if (NOT Bloaty_FOUND)
+  message(STATUS "Bloaty is not installed on system, will fetch content from source")
+
+  cmake_minimum_required(VERSION 3.14.0)
+  include(FetchContent)
+
+  FetchContent_Declare(
+    bloaty
+    GIT_REPOSITORY https://github.com/google/bloaty.git
+    GIT_TAG        origin/master
+  )
+  FetchContent_MakeAvailable(bloaty)
 endif()
 
 macro(eval_target target)
