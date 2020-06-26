@@ -25,18 +25,20 @@
 # Target needs to be run with a config-file
 #
 
-cmake_minimum_required(VERSION 3.11.0)
+find_package(Stackusage)
 
-include(FetchContent)
-FetchContent_Declare(
-  stackusage
-  GIT_REPOSITORY https://github.com/d99kris/stackusage.git
-  GIT_TAG        origin/master
-)
-FetchContent_GetProperties(stackusage)
-if(NOT stackusage_POPULATED)
-  FetchContent_Populate(stackusage)
-  add_subdirectory(${stackusage_SOURCE_DIR} ${stackusage_BINARY_DIR})
+if (NOT Stackusage_FOUND)
+  message(STATUS "Stackusage is not installed on system, will fetch content from source")
+
+  cmake_minimum_required(VERSION 3.14.0)
+  include(FetchContent)
+
+  FetchContent_Declare(
+    stackusage
+    GIT_REPOSITORY https://github.com/d99kris/stackusage.git
+    GIT_TAG        origin/master
+  )
+  FetchContent_MakeAvailable(stackusage)
 endif()
 
 macro(eval_target target)
@@ -77,14 +79,24 @@ function(swift_add_stackusage target)
 
   unset(resource_options)  
   list(APPEND resource_options -o ${reports_directory}/${output_file})
-
-  add_custom_target(${target_name}
-    COMMENT "stackusage is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
-    COMMAND $(MAKE)
-    WORKING_DIRECTORY ${stackusage_BINARY_DIR}
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${stackusage_BINARY_DIR}/stackusage ${resource_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
-    DEPENDS ${target}
-  )
+  
+  if (NOT Stackusage_FOUND)
+    add_custom_target(${target_name}
+      COMMENT "stackusage is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
+      COMMAND $(MAKE)
+      WORKING_DIRECTORY ${stackusage_BINARY_DIR}
+      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${stackusage_BINARY_DIR}/stackusage ${resource_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+      DEPENDS ${target}
+    )
+  else()
+    add_custom_target(${target_name}
+      COMMENT "stackusage is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
+      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${Stackusage_EXECUTABLE} ${resource_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+      DEPENDS ${target}
+    )
+  endif()
 endfunction()

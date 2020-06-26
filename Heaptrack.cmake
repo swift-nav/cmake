@@ -25,21 +25,27 @@
 # Target needs to be run with a config-file
 #
 
-cmake_minimum_required(VERSION 3.11.0)
+find_package(Heaptrack)
 
-include(FetchContent)
-FetchContent_Declare(
-  heaptrack
-  GIT_REPOSITORY https://github.com/KDE/heaptrack.git
-  GIT_TAG        origin/master
-)
-FetchContent_GetProperties(heaptrack)
-if(NOT heaptrack_POPULATED)
-  FetchContent_Populate(heaptrack)
-  set(current_build_test_state ${BUILD_TESTING})
-  set(BUILD_TESTING OFF)
-  add_subdirectory(${heaptrack_SOURCE_DIR} ${heaptrack_BINARY_DIR})
-  set(BUILD_TESTING ${current_build_test_state})
+if (NOT Heaptrack_FOUND)
+  message(STATUS "Heaptrack is not installed on system, will fetch content from source")
+
+  cmake_minimum_required(VERSION 3.11.0)
+  include(FetchContent)
+
+  FetchContent_Declare(
+    heaptrack
+    GIT_REPOSITORY https://github.com/KDE/heaptrack.git
+    GIT_TAG        origin/master
+  )
+  FetchContent_GetProperties(heaptrack)
+  if(NOT heaptrack_POPULATED)
+    FetchContent_Populate(heaptrack)
+    set(current_build_test_state ${BUILD_TESTING})
+    set(BUILD_TESTING OFF)
+    add_subdirectory(${heaptrack_SOURCE_DIR} ${heaptrack_BINARY_DIR})
+    set(BUILD_TESTING ${current_build_test_state}) 
+  endif()
 endif()
 
 macro(eval_target target)
@@ -77,13 +83,23 @@ function(swift_add_heaptrack target)
   endif()
   set(reports_directory ${working_directory}/heaptrack-reports)
 
-  add_custom_target(${target_name}
-    COMMENT "heaptrack is running on ${target}\ (output: \"${reports_directory}\")"
-    COMMAND $(MAKE)
-    WORKING_DIRECTORY ${heaptrack_BINARY_DIR}
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${heaptrack_BINARY_DIR}/bin/heaptrack $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
-    DEPENDS ${target}
-  )
+  if (NOT Heaptrack_FOUND)
+    add_custom_target(${target_name}
+      COMMENT "heaptrack is running on ${target}\ (output: \"${reports_directory}\")"
+      COMMAND $(MAKE)
+      WORKING_DIRECTORY ${heaptrack_BINARY_DIR}
+      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${heaptrack_BINARY_DIR}/bin/heaptrack $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+      DEPENDS ${target}
+    )
+  else()
+    add_custom_target(${target_name}
+      COMMENT "heaptrack is running on ${target}\ (output: \"${reports_directory}\")"
+      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${Heaptrack_EXECUTABLE} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+      DEPENDS ${target}
+    )
+  endif()
 endfunction()
