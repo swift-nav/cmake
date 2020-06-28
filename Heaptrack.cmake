@@ -22,12 +22,20 @@
 #
 # NOTE 
 #
-# Target needs to be run with a config-file
+# * Target needs to be run with a config-file.
+# * A cmake option is available to control whether targets should be built, 
+# with the name ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING.
+#
+# Running
+#
+# cmake -D<project>_ENABLE_MEMORY_PROFILING=ON ..
+#
+# will explicitly enable these targets from the command line at configure time
 #
 
 find_package(Heaptrack)
 
-if (NOT Heaptrack_FOUND)
+if (NOT Heaptrack_FOUND AND ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
   message(STATUS "Heaptrack is not installed on system, will fetch content from source")
 
   cmake_minimum_required(VERSION 3.11.0)
@@ -64,6 +72,10 @@ macro(eval_target target)
 endmacro()
 
 function(swift_add_heaptrack target)
+  if (NOT ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
+    return()
+  endif()
+  
   eval_target(${target})
   
   set(argOption "")

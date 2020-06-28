@@ -36,10 +36,22 @@
 # target `starling-binary` to `/tmp`, outputs the results into
 # `/tmp/bloaty-reports/
 #
+# NOTE
+# * A cmake option is available to control whether targets should be built, 
+# with the name ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING.
+#
+# Running
+#
+# cmake -D<project>_ENABLE_MEMORY_PROFILING=ON ..
+#
+# will explicitly enable these targets from the command line at configure time
+#
+
+option(${PROJECT_NAME}_ENABLE_MEMORY_PROFILING "Builds targets with memory profiling" OFF)
 
 find_package(Bloaty)
 
-if (NOT Bloaty_FOUND)
+if (NOT Bloaty_FOUND AND ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
   message(STATUS "Bloaty is not installed on system, will fetch content from source")
 
   cmake_minimum_required(VERSION 3.14.0)
@@ -69,6 +81,10 @@ macro(eval_target target)
 endmacro()
 
 function(swift_add_bloaty target)
+  if (NOT ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
+    return()
+  endif()
+
   eval_target(${target})
   
   set(argOption SEGMENTS SECTIONS SYMBOLS COMPILEUNITS)
