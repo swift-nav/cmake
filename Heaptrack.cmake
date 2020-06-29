@@ -17,8 +17,12 @@
 # WORKING_DIRECTORY
 # This variable enables a user to change the output directory for the tools
 # from the default folder `${CMAKE_CURRENT_BINARY_DIR}`. Setting this option for
-# target `starling-binary` to `/tmp`, outputs the results
+# target `starling-debug-binary` to `/tmp`, outputs the results
 # `/tmp/heaptrack-reports/
+#
+# PROGRAM_ARGS
+# This variable specifies target arguments. Example, using a yaml-config
+# with "--config example.yaml"
 #
 # NOTE 
 #
@@ -44,7 +48,8 @@ if (NOT Heaptrack_FOUND AND ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
   FetchContent_Declare(
     heaptrack
     GIT_REPOSITORY https://github.com/KDE/heaptrack.git
-    GIT_TAG        origin/master
+    GIT_TAG        v1.1.0
+    GIT_SHALLOW    TRUE
   )
   FetchContent_GetProperties(heaptrack)
   if(NOT heaptrack_POPULATED)
@@ -56,7 +61,7 @@ if (NOT Heaptrack_FOUND AND ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
   endif()
 endif()
 
-macro(eval_target target)
+macro(eval_heaptrack_target target)
   if (NOT TARGET ${target})
     message(FATAL_ERROR "Specified target \"${target}\" does not exist")
   endif()
@@ -69,14 +74,18 @@ macro(eval_target target)
   if (NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
     return()
   endif()
-endmacro()
 
-function(swift_add_heaptrack target)
+  if (CMAKE_CROSSCOMPILING)
+    return()
+  endif()
+
   if (NOT ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
     return()
   endif()
-  
-  eval_target(${target})
+endmacro()
+
+function(swift_add_heaptrack target)
+  eval_heaptrack_target(${target})
   
   set(argOption "")
   set(argSingle WORKING_DIRECTORY)

@@ -17,8 +17,12 @@
 # WORKING_DIRECTORY
 # This variable enables a user to change the output directory for the tools
 # from the default folder `${CMAKE_CURRENT_BINARY_DIR}`. Setting this option for
-# target `starling-binary` to `/tmp`, outputs the results
+# target `starling-debug-binary` to `/tmp`, outputs the results
 # `/tmp/stackusage-reports/
+#
+# PROGRAM_ARGS
+# This variable specifies target arguments. Example, using a yaml-config
+# with "--config example.yaml"
 #
 # NOTE 
 #
@@ -44,12 +48,13 @@ if (NOT Stackusage_FOUND AND ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
   FetchContent_Declare(
     stackusage
     GIT_REPOSITORY https://github.com/d99kris/stackusage.git
-    GIT_TAG        origin/master
+    GIT_TAG        v1.11
+    GIT_SHALLOW    TRUE
   )
   FetchContent_MakeAvailable(stackusage)
 endif()
 
-macro(eval_target target)
+macro(eval_stackusage_target target)
   if (NOT TARGET ${target})
     message(FATAL_ERROR "Specified target \"${target}\" does not exist")
   endif()
@@ -62,14 +67,18 @@ macro(eval_target target)
   if (NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
     return()
   endif()
-endmacro()
 
-function(swift_add_stackusage target)
-  if (NOT ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
+  if (CMAKE_CROSSCOMPILING)
     return()
   endif()
 
-  eval_target(${target})
+  if (NOT ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
+    return()
+  endif()
+endmacro()
+
+function(swift_add_stackusage target)
+  eval_stackusage_target(${target})
   
   set(argOption "")
   set(argSingle WORKING_DIRECTORY)

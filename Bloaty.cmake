@@ -9,7 +9,6 @@
 #   swift_add_bloaty(<target>
 #     [OPTIONS]
 #     [WORKING_DIRECTORY working_directory]
-#     [PROGRAM_ARGS arg1 arg2 ...]
 #   )
 #
 # Call this function to create a new cmake target which runs the `target`'s
@@ -33,7 +32,7 @@
 # WORKING_DIRECTORY
 # This variable enables a user to change the output directory for the tools
 # from the default folder `${CMAKE_CURRENT_BINARY_DIR}`. Setting this option for
-# target `starling-binary` to `/tmp`, outputs the results into
+# target `starling-debug-binary` to `/tmp`, outputs the results into
 # `/tmp/bloaty-reports/
 #
 # NOTE
@@ -60,12 +59,13 @@ if (NOT Bloaty_FOUND AND ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
   FetchContent_Declare(
     bloaty
     GIT_REPOSITORY https://github.com/google/bloaty.git
-    GIT_TAG        origin/master
+    GIT_TAG        v1.1
+    GIT_SHALLOW    TRUE
   )
   FetchContent_MakeAvailable(bloaty)
 endif()
 
-macro(eval_target target)
+macro(eval_bloaty_target target)
   if (NOT TARGET ${target})
     message(FATAL_ERROR "Specified target \"${target}\" does not exist")
   endif()
@@ -78,18 +78,18 @@ macro(eval_target target)
   if (NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
     return()
   endif()
-endmacro()
 
-function(swift_add_bloaty target)
   if (NOT ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
     return()
   endif()
+endmacro()
 
-  eval_target(${target})
+function(swift_add_bloaty target)
+  eval_bloaty_target(${target})
   
   set(argOption SEGMENTS SECTIONS SYMBOLS COMPILEUNITS)
   set(argSingle SORT WORKING_DIRECTORY)
-  set(argMulti PROGRAM_ARGS)
+  set(argMulti "")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
@@ -136,7 +136,7 @@ function(swift_add_bloaty target)
     COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
     COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
     COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"bloaty with options: ${resource_options}\" > ${reports_directory}/${output_file}
-    COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:bloaty> ${resource_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS} >> ${reports_directory}/${output_file}
+    COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:bloaty> ${resource_options} $<TARGET_FILE:${target}> >> ${reports_directory}/${output_file}
     DEPENDS ${target}
   )
 endfunction()
