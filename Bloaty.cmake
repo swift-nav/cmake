@@ -30,9 +30,9 @@
 #       both - Default, sorts by max(vm, file).
 #
 # WORKING_DIRECTORY
-# This variable enables a user to change the output directory for the tools
-# from the default folder `${CMAKE_CURRENT_BINARY_DIR}`. Setting this option for
-# target `starling-debug-binary` to `/tmp`, outputs the results into
+# This variable changes the output directory for the tool
+# from the default folder `${CMAKE_CURRENT_BINARY_DIR}` to the given argument.
+# Example, using argument `/tmp`, outputs the results to
 # `/tmp/bloaty-reports/
 #
 # NOTE
@@ -131,12 +131,23 @@ function(swift_add_bloaty target)
     list(APPEND resource_options -s ${x_SORT})
   endif()
 
-  add_custom_target(${target_name}
-    COMMENT "bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"bloaty with options: ${resource_options}\" > ${reports_directory}/${output_file}
-    COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:bloaty> ${resource_options} $<TARGET_FILE:${target}> >> ${reports_directory}/${output_file}
-    DEPENDS ${target}
-  )
+  if (NOT Bloaty_FOUND)
+    add_custom_target(${target_name}
+      COMMENT "bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
+      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"bloaty with options: ${resource_options}\" > ${reports_directory}/${output_file}
+      COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:bloaty> ${resource_options} $<TARGET_FILE:${target}> >> ${reports_directory}/${output_file}
+      DEPENDS ${target}
+    )
+  else()
+    add_custom_target(${target_name}
+      COMMENT "bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
+      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
+      COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"bloaty with options: ${resource_options}\" > ${reports_directory}/${output_file}
+      COMMAND ${CMAKE_COMMAND} -E env ${Bloaty_EXECUTABLE} ${resource_options} $<TARGET_FILE:${target}> >> ${reports_directory}/${output_file}
+      DEPENDS ${target}
+    )
+  endif()
 endfunction()

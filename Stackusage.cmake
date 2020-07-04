@@ -15,9 +15,9 @@
 # executable binary with stackusage applied.
 #
 # WORKING_DIRECTORY
-# This variable enables a user to change the output directory for the tools
-# from the default folder `${CMAKE_CURRENT_BINARY_DIR}`. Setting this option for
-# target `starling-debug-binary` to `/tmp`, outputs the results
+# This variable changes the output directory for the tool
+# from the default folder `${CMAKE_CURRENT_BINARY_DIR}` to the given argument.
+# Example, using argument `/tmp`, outputs the results to
 # `/tmp/stackusage-reports/
 #
 # PROGRAM_ARGS
