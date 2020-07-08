@@ -21,7 +21,7 @@
 #
 # cmake -DSWIFT_PREFERRED_DEPENDENCY_SOURCE=system <path>
 #
-# will try to use depenedencies from the system libraries rather than bundled
+# will try to use dependencies from the system libraries rather than bundled
 # source code.
 #
 # If the dependency is picked up from the system libraries this function will
@@ -37,12 +37,14 @@
 #
 # The target name can be controlled by the option "TARGET". When using 
 # bundled source code this is used to verify the target was created properly
-# after calling add_subdirectory
+# after calling add_subdirectory. If the add_subdirectory exposes a number of
+# other targets, you can use the "ADDITIONAL_TARGETS" option to list them, this
+# function will apply the "SYSTEM_INCLUDES" option to each of the targets.
 #
 # Passing the option SYSTEM_INCLUDES will rewrite the target include directories
 # so that they are marked as system headers. This will usually be passed to
 # the compiler as an command line option as decided by cmake. Be careful with
-# this option, it will supress warning which might otherwise be helpful.
+# this option, it will suppress warning which might otherwise be helpful.
 #
 # The option REQUIRED can be passed which will cause this function to fail
 # if the dependency was not found for any reason.
@@ -267,12 +269,43 @@ endmacro()
 
 #
 # Helper function to mark the specified target's include directories as system. This is
-# then passed to the compiler which will surpress warnings generated from any header file
+# then passed to the compiler which will suppress warnings generated from any header file
 # included by this path. Use with care
 #
 # Should only be called from GenericFindDependency
 #
 function(mark_target_as_system_includes TGT)
+  #
+  # We will determine if a target is to be set as a system target based on if
+  # THIRD_PARTY_INCLUDES_AS_SYSTEM is explicitly set, otherwise the decision is
+  # delegated to whether or not the SYSTEM_INCLUDES option was specified via
+  # GenericFindDependency. The term "explicitly" is used since in cmake, an
+  # undefined variable is interpreted as false, which is undesirable effect in
+  # this case as we intend to use tri-state property of a variable (undefined/true/false).
+  #
+  if (DEFINED THIRD_PARTY_INCLUDES_AS_SYSTEM)
+    if (THIRD_PARTY_INCLUDES_AS_SYSTEM)
+      set (mark_as_system true)
+    else()
+      set (mark_as_system false)
+    endif()
+  else()
+    if (x_SYSTEM_INCLUDES)
+      set (mark_as_system true)
+    else()
+      set (mark_as_system false)
+    endif()
+  endif()
+
+  if (NOT mark_as_system)
+    return()
+  endif()
+
+  get_target_property(aliased_target ${TGT} ALIASED_TARGET)
+  if (aliased_target)
+    set (TGT ${aliased_target})
+  endif()
+
   get_target_property(directories ${TGT} INTERFACE_INCLUDE_DIRECTORIES)
   if(directories)
     message(STATUS "Marking ${TGT} include directories as system")
@@ -284,7 +317,7 @@ endfunction()
 function(GenericFindDependency)
   set(argOptions "REQUIRED" "SYSTEM_INCLUDES")
   set(argSingleArguments "TARGET" "PREFER" "SOURCE_DIR" "SYSTEM_HEADER_FILE" "SYSTEM_LIB_NAMES")
-  set(argMultiArguments "EXCLUDE")
+  set(argMultiArguments "ADDITIONAL_TARGETS" "EXCLUDE")
 
   cmake_parse_arguments(x "${argOptions}" "${argSingleArguments}" "${argMultiArguments}" ${ARGN})
 
@@ -346,11 +379,7 @@ function(GenericFindDependency)
 
   # Final validation that the target was properly created from some source
   if(TARGET ${x_TARGET})
-    if(x_SYSTEM_INCLUDES)
-      if(NOT CMAKE_CROSSCOMPILING OR THIRD_PARTY_INCLUDES_AS_SYSTEM)
-        mark_target_as_system_includes(${x_TARGET})
-      endif()
-    endif()
+    mark_target_as_system_includes(${x_TARGET})
   else()
     # Target not found in any location
     if(x_REQUIRED OR ${CMAKE_FIND_PACKAGE_NAME}_FIND_REQUIRED)
@@ -359,5 +388,11 @@ function(GenericFindDependency)
       message(WARNING "Could not find dependency ${x_TARGET} in any available location")
     endif()
   endif()
+
+  # If the primary target exposes additional targets, mark them as system
+  # targets in accordance to how the primary target was marked
+  foreach(additional_target IN LISTS x_ADDITIONAL_TARGETS)
+    mark_target_as_system_includes(${additional_target})
+  endforeach()
 endfunction()
     
