@@ -13,7 +13,8 @@
 #   )
 #
 # Call this function to create a new cmake target which runs the `target`'s
-# executable binary with heaptrack applied.
+# executable binary with heaptrack applied. All created cmake targets can be
+# invoked by calling the common target 'do-all-heaptrack'.
 #
 # NAME
 # This variable makes it possible to choose a custom name for the target, which
@@ -134,4 +135,9 @@ function(swift_add_heaptrack target)
       DEPENDS ${target}
     )
   endif()
+
+  if (NOT TARGET do-all-heaptrack)
+    add_custom_target(do-all-heaptrack)
+  endif()
+  add_dependencies(do-all-heaptrack ${target_name})
 endfunction()

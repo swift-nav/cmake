@@ -12,7 +12,8 @@
 #   )
 #
 # Call this function to create a new cmake target which runs the `target`'s
-# executable binary with bloaty applied.
+# executable binary with bloaty applied. All created cmake targets can be
+# invoked by calling the common target 'do-all-bloaty'.
 #
 # BLOATY OPTIONS
 #
@@ -159,4 +160,9 @@ function(swift_add_bloaty target)
       DEPENDS ${target}
     )
   endif()
+
+  if (NOT TARGET do-all-bloaty)
+    add_custom_target(do-all-bloaty)
+  endif()
+  add_dependencies(do-all-bloaty ${target_name})
 endfunction()

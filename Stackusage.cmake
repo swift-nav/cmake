@@ -13,7 +13,8 @@
 #   )
 #
 # Call this function to create a new cmake target which runs the `target`'s
-# executable binary with stackusage applied.
+# executable binary with stackusage applied. All created cmake targets can be
+# invoked by calling the common target 'do-all-stackusage'.
 #
 # NAME
 # This variable makes it possible to choose a custom name for the target, which
@@ -131,4 +132,9 @@ function(swift_add_stackusage target)
       DEPENDS ${target}
     )
   endif()
+
+  if (NOT TARGET do-all-stackusage)
+    add_custom_target(do-all-stackusage)
+  endif()
+  add_dependencies(do-all-stackusage ${target_name})
 endfunction()
