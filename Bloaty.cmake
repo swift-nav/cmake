@@ -22,6 +22,10 @@
 #   * SYMBOLS:      Outputs individual functions or variables.
 #   * COMPILEUNITS: Outputs what compile unit (and corresponding source file)
 #                   each bit of the binary came from.
+#
+#   * NUM: Set how many rows to show per level before collapsing into '[other]'.
+#          Set to '0' for unlimited, default: '20'.
+#
 #   * SORT:
 #       vm   - Sort the vm size column from largest to smallest and tells you
 #              how much space the binary will take when loaded into memory.
@@ -36,6 +40,7 @@
 # `/tmp/bloaty-reports/
 #
 # NOTE
+#
 # * A cmake option is available to control whether targets should be built, 
 # with the name ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING.
 #
@@ -88,7 +93,7 @@ function(swift_add_bloaty target)
   eval_bloaty_target(${target})
   
   set(argOption SEGMENTS SECTIONS SYMBOLS COMPILEUNITS)
-  set(argSingle SORT WORKING_DIRECTORY)
+  set(argSingle NUM SORT WORKING_DIRECTORY)
   set(argMulti "")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
@@ -125,6 +130,10 @@ function(swift_add_bloaty target)
   if (DEFINED resource_options)
     string(REPLACE ";" "," resource_options "${resource_options}")
     list(PREPEND resource_options -d)
+  endif()
+
+  if (DEFINED x_NUM)
+    list(APPEND resource_options -n ${x_NUM})
   endif()
 
   if (x_SORT)
