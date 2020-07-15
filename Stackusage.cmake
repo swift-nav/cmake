@@ -7,12 +7,17 @@
 # USAGE
 #
 #   swift_add_stackusage(<target>
+#     [NAME name]
 #     [WORKING_DIRECTORY working_directory]
 #     [PROGRAM_ARGS arg1 arg2 ...]
 #   )
 #
 # Call this function to create a new cmake target which runs the `target`'s
 # executable binary with stackusage applied.
+#
+# NAME
+# This variable makes it possible to choose a custom name for the target, which
+# is useful in situations using Google Test.
 #
 # WORKING_DIRECTORY
 # This variable changes the output directory for the tool
@@ -36,6 +41,8 @@
 #
 # will explicitly enable these targets from the command line at configure time
 #
+
+option(${PROJECT_NAME}_ENABLE_MEMORY_PROFILING "Builds targets with memory profiling" OFF)
 
 find_package(Stackusage)
 
@@ -81,7 +88,7 @@ function(swift_add_stackusage target)
   eval_stackusage_target(${target})
   
   set(argOption "")
-  set(argSingle WORKING_DIRECTORY)
+  set(argSingle NAME WORKING_DIRECTORY)
   set(argMulti PROGRAM_ARGS)
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
@@ -91,6 +98,10 @@ function(swift_add_stackusage target)
   endif()
 
   set(target_name stackusage-${target})
+  if (x_NAME)
+    set(target_name stackusage-${x_NAME})
+  endif()
+
   set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
   if (x_WORKING_DIRECTORY)
     set(working_directory ${x_WORKING_DIRECTORY})
