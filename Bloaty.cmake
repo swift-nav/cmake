@@ -130,7 +130,7 @@ function(swift_add_bloaty target)
 
   if (DEFINED resource_options)
     string(REPLACE ";" "," resource_options "${resource_options}")
-    list(PREPEND resource_options -d)
+    set(resource_options -d ${resource_options})
   endif()
 
   if (DEFINED x_NUM)
