@@ -35,10 +35,9 @@
 #       both - Default, sorts by max(vm, file).
 #
 # WORKING_DIRECTORY
-# This variable changes the output directory for the tool
-# from the default folder `${CMAKE_CURRENT_BINARY_DIR}` to the given argument.
-# Example, using argument `/tmp`, outputs the results to
-# `/tmp/bloaty-reports/
+# This variable changes the output directory for the tool from the default folder
+# `${CMAKE_BINARY_DIR}/profiling/bloaty-reports` to the given argument.
+# Example, using argument `/tmp`, outputs the results to `/tmp/bloaty-reports/
 #
 # NOTE
 #
@@ -104,7 +103,7 @@ function(swift_add_bloaty target)
   endif()
 
   set(target_name bloaty-${target})
-  set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
+  set(working_directory ${CMAKE_BINARY_DIR}/profiling)
   if (x_WORKING_DIRECTORY)
     set(working_directory ${x_WORKING_DIRECTORY})
   endif()
@@ -144,7 +143,6 @@ function(swift_add_bloaty target)
   if (NOT Bloaty_FOUND)
     add_custom_target(${target_name}
       COMMENT "bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
-      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"bloaty with options: ${resource_options}\" > ${reports_directory}/${output_file}
       COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:bloaty> ${resource_options} $<TARGET_FILE:${target}> >> ${reports_directory}/${output_file}
@@ -153,7 +151,6 @@ function(swift_add_bloaty target)
   else()
     add_custom_target(${target_name}
       COMMENT "bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
-      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"bloaty with options: ${resource_options}\" > ${reports_directory}/${output_file}
       COMMAND ${CMAKE_COMMAND} -E env ${Bloaty_EXECUTABLE} ${resource_options} $<TARGET_FILE:${target}> >> ${reports_directory}/${output_file}

@@ -21,10 +21,9 @@
 # is useful in situations using Google Test.
 #
 # WORKING_DIRECTORY
-# This variable changes the output directory for the tool
-# from the default folder `${CMAKE_CURRENT_BINARY_DIR}` to the given argument.
-# Example, using argument `/tmp`, outputs the results to
-# `/tmp/stackusage-reports/
+# This variable changes the output directory for the tool from the default folder
+# `${CMAKE_BINARY_DIR}/profiling/stackusage-reports` to the given argument.
+# Example, using argument `/tmp`, outputs the results to `/tmp/stackusage-reports/
 #
 # PROGRAM_ARGS
 # This variable specifies target arguments. Example, using a yaml-config
@@ -103,7 +102,7 @@ function(swift_add_stackusage target)
     set(target_name stackusage-${x_NAME})
   endif()
 
-  set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
+  set(working_directory ${CMAKE_BINARY_DIR}/profiling)
   if (x_WORKING_DIRECTORY)
     set(working_directory ${x_WORKING_DIRECTORY})
   endif()
@@ -118,7 +117,6 @@ function(swift_add_stackusage target)
       COMMENT "stackusage is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
       COMMAND $(MAKE)
       WORKING_DIRECTORY ${stackusage_BINARY_DIR}
-      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${stackusage_BINARY_DIR}/stackusage ${resource_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
       DEPENDS ${target}
@@ -126,7 +124,6 @@ function(swift_add_stackusage target)
   else()
     add_custom_target(${target_name}
       COMMENT "stackusage is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
-      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${Stackusage_EXECUTABLE} ${resource_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
       DEPENDS ${target}

@@ -21,10 +21,9 @@
 # is useful in situations using Google Test.
 #
 # WORKING_DIRECTORY
-# This variable changes the output directory for the tool
-# from the default folder `${CMAKE_CURRENT_BINARY_DIR}` to the given argument.
-# Example, using argument `/tmp`, outputs the results to
-# `/tmp/heaptrack-reports/
+# This variable changes the output directory for the tool from the default folder
+# `${CMAKE_BINARY_DIR}/profiling/heaptrack-reports` to the given argument.
+# Example, using argument `/tmp`, outputs the results to `/tmp/heaptrack-reports/
 #
 # PROGRAM_ARGS
 # This variable specifies target arguments. Example, using a yaml-config
@@ -110,7 +109,7 @@ function(swift_add_heaptrack target)
     set(target_name heaptrack-${x_NAME})
   endif()
 
-  set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
+  set(working_directory ${CMAKE_BINARY_DIR}/profiling)
   if (x_WORKING_DIRECTORY)
     set(working_directory ${x_WORKING_DIRECTORY})
   endif()
@@ -121,7 +120,6 @@ function(swift_add_heaptrack target)
       COMMENT "heaptrack is running on ${target}\ (output: \"${reports_directory}\")"
       COMMAND $(MAKE)
       WORKING_DIRECTORY ${heaptrack_BINARY_DIR}
-      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${heaptrack_BINARY_DIR}/bin/heaptrack $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
       DEPENDS ${target}
@@ -129,7 +127,6 @@ function(swift_add_heaptrack target)
   else()
     add_custom_target(${target_name}
       COMMENT "heaptrack is running on ${target}\ (output: \"${reports_directory}\")"
-      COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${Heaptrack_EXECUTABLE} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
       DEPENDS ${target}
