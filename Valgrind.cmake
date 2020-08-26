@@ -1,7 +1,8 @@
 #
-### OVERVIEW
+# OVERVIEW
 #
-# This module introduces various functions, each corresponds to a Valgrind tool.
+# This module introduces various Valgrind tools, which are used for profiling
+# purposes.
 #
 # AVAILABLE TOOLS:
 #   memcheck  - memory error detector
@@ -9,7 +10,7 @@
 #   callgrind - records the call history among functions in a program's run as a
 #               call-graph
 #
-### USAGE
+# USAGE
 #
 #   swift_add_valgrind_*(<target>
 #     [... list of common options ...]
@@ -28,7 +29,7 @@
 #   - do-all-valgrind
 #
 # The first target runs the `unit-tests` target, and generates the callgrind's
-# results to `${CMAKE_CURRENT_BINARY_DIR}/valgrind-reports/callgrind-unit-tests`.
+# results to `${CMAKE_BINARY_DIR}/profiling/valgrind-reports/callgrind-unit-tests`.
 #
 # The next two targets are handy targets that exists to help call on the various
 # registered valgrind tests. The `do-all-valgrind-callgrind` invokes all targets
@@ -42,7 +43,8 @@
 # `swift_add_valgrind_*` functions:
 #
 #   * NAME
-#   * WORKSPACE
+#   * WORKING_DIRECTORY
+#   * PROGRAM_ARGS
 #   * TRACE_CHILDREN
 #   * CHILD_SILENT_AFTER_FORK
 #
@@ -68,9 +70,11 @@
 # each calling the `unit-tests` executable with different program arguments.
 #
 # WORKING_DIRECTORY enables a user to change the output directory for the tools
-# from the default folder `${CMAKE_CURRENT_BINARY_DIR}`. Setting this option for
-# target `valgrind-callgrind-suite-2` to `/tmp`, outputs the results
-# `/tmp/valgrind-reports/suite-2`.
+# from the default folder `${CMAKE_BINARY_DIR}/profiling/valgrind-reports`.
+# Example, using argument `/tmp`, outputs the results to `/tmp/valgrind-reports/.
+#
+# PROGRAM_ARGS specifies target arguments. Example, using a yaml configuration
+# with "--config example.yaml"
 #
 # TRACE_CHILDREN invokes the Valgrind tools even on spawned children, normally
 # ignores the spawned processes.
@@ -81,6 +85,7 @@
 # that create children.
 #
 ### MALLOC()-RELATED OPTIONS:
+#
 # For tools that use their own version of malloc (e.g. Memcheck, Massif,
 # Helgrind, DRD).
 #
@@ -143,15 +148,26 @@
 #
 ### NOTES
 #
-# The callgrind `*.out.*` files are not human readable, as such one might want
+# * The callgrind `*.out.*` files are not human readable, as such one might want
 # to load the files with the `KCacheGrind` program to easily navigate the data.
 #
+# * A cmake option is available to control whether targets should be built,
+# with the name ${PROJECT_NAME}_ENABLE_PROFILING.
+#
+# Running
+#
+# cmake -D<project>_ENABLE_PROFILING=ON ..
+#
+# will explicitly enable these targets from the command line at configure time
+#
+
+option(${PROJECT_NAME}_ENABLE_PROFILING "Build targets with profiling applied" OFF)
 
 find_package(Valgrind)
 
-if (NOT Valgrind_FOUND)
+if (NOT Valgrind_FOUND AND ${PROJECT_NAME}_ENABLE_PROFILING)
   message(WARNING "Unable to create Valgrind targets due to missing program")
-endif ()
+endif()
 
 macro(_valgrind_basic_setup _target)
   if (NOT TARGET ${_target})
@@ -159,22 +175,19 @@ macro(_valgrind_basic_setup _target)
   endif()
 
   get_target_property(_target_type ${_target} TYPE)
-
   if (NOT _target_type STREQUAL EXECUTABLE)
-    message(FATAL_ERROR "Specified target \"${_target}\" must be an executable type")
+    message(FATAL_ERROR "Specified target \"${_target}\" must be an executable type to register for profiling with Valgrind")
   endif()
 
-  if (NOT Valgrind_FOUND)
-    return()
-  endif ()
-
-  if (CMAKE_CROSSCOMPILING)
-    return()
-  endif()
-
-  if (NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
+  if (NOT (Valgrind_FOUND AND
+           ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME} AND
+           ${PROJECT_NAME}_ENABLE_PROFILING)
+      OR CMAKE_CROSSCOMPILING)
     return()
   endif()
+
+  target_compile_options(${_target} PRIVATE -g)
+  target_link_libraries(${_target} PRIVATE -g)
 
   if (NOT TARGET do-all-valgrind)
     add_custom_target(do-all-valgrind)
@@ -203,10 +216,11 @@ macro(_valgrind_arguments_setup _target _tool_name _toolOptions _toolSingle _too
     set(report_folder ${_tool_name}-${x_NAME})
   endif()
 
-  set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
+  set(working_directory ${CMAKE_BINARY_DIR}/profiling)
   if (x_WORKING_DIRECTORY)
     set(working_directory ${x_WORKING_DIRECTORY})
   endif()
+  set(reports_directory ${working_directory}/valgrind-reports)
 
   unset(valgrind_tool_options)
   if (x_CHILD_SILENT_AFTER_FORK)
@@ -219,8 +233,6 @@ macro(_valgrind_arguments_setup _target _tool_name _toolOptions _toolSingle _too
   else()
     list(APPEND valgrind_tool_options --log-file=${target}.log)
   endif()
-
-  set(reports_directory ${working_directory}/valgrind-reports)
 endmacro()
 
 function(swift_add_valgrind_memcheck target)

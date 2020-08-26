@@ -13,8 +13,8 @@
 #   )
 #
 # Call this function to create a new cmake target which runs the `target`'s
-# executable binary with heaptrack applied. All created cmake targets can be
-# invoked by calling the common target 'do-all-heaptrack'.
+# executable binary with heaptrack applied. All targets created with
+# `swift_add_heaptrack` can be invoked by calling the common target 'do-all-heaptrack'.
 #
 # NAME
 # This variable makes it possible to choose a custom name for the target, which
@@ -29,24 +29,24 @@
 # This variable specifies target arguments. Example, using a yaml-config
 # with "--config example.yaml"
 #
-# NOTE 
+# NOTE
 #
 # * Target needs to be run with a config-file.
-# * A cmake option is available to control whether targets should be built, 
-# with the name ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING.
+# * A cmake option is available to control whether targets should be built,
+# with the name ${PROJECT_NAME}_ENABLE_PROFILING.
 #
 # Running
 #
-# cmake -D<project>_ENABLE_MEMORY_PROFILING=ON ..
+# cmake -D<project>_ENABLE_PROFILING=ON ..
 #
 # will explicitly enable these targets from the command line at configure time
 #
 
-option(${PROJECT_NAME}_ENABLE_MEMORY_PROFILING "Builds targets with memory profiling" OFF)
+option(${PROJECT_NAME}_ENABLE_PROFILING "Builds targets with profiling applied" OFF)
 
 find_package(Heaptrack)
 
-if (NOT Heaptrack_FOUND AND ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
+if (NOT Heaptrack_FOUND AND ${PROJECT_NAME}_ENABLE_PROFILING)
   message(STATUS "Heaptrack is not installed on system, will fetch content from source")
 
   cmake_minimum_required(VERSION 3.11.0)
@@ -64,7 +64,7 @@ if (NOT Heaptrack_FOUND AND ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
     set(current_build_test_state ${BUILD_TESTING})
     set(BUILD_TESTING OFF)
     add_subdirectory(${heaptrack_SOURCE_DIR} ${heaptrack_BINARY_DIR})
-    set(BUILD_TESTING ${current_build_test_state}) 
+    set(BUILD_TESTING ${current_build_test_state})
   endif()
 endif()
 
@@ -75,19 +75,18 @@ macro(eval_heaptrack_target target)
 
   get_target_property(target_type ${target} TYPE)
   if (NOT target_type STREQUAL EXECUTABLE)
-    message(FATAL_ERROR "Specified target \"${target}\" must be an executable type to register for profiling with heaptrack")
+    message(FATAL_ERROR "Specified target \"${target}\" must be an executable type to register for profiling with Heaptrack")
   endif()
 
-  if (NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
+  if (NOT (Heaptrack_FOUND AND
+           ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME} AND
+           ${PROJECT_NAME}_ENABLE_PROFILING)
+      OR CMAKE_CROSSCOMPILING)
     return()
   endif()
 
-  if (CMAKE_CROSSCOMPILING)
-    return()
-  endif()
-
-  if (NOT ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
-    return()
+  if (NOT TARGET do-all-memory-profiling)
+    add_custom_target(do-all-memory-profiling)
   endif()
 endmacro()
 
@@ -117,7 +116,7 @@ function(swift_add_heaptrack target)
 
   if (NOT Heaptrack_FOUND)
     add_custom_target(${target_name}
-      COMMENT "heaptrack is running on ${target}\ (output: \"${reports_directory}\")"
+      COMMENT "Heaptrack is running on ${target}\ (output: \"${reports_directory}\")"
       COMMAND $(MAKE)
       WORKING_DIRECTORY ${heaptrack_BINARY_DIR}
       COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
@@ -126,7 +125,7 @@ function(swift_add_heaptrack target)
     )
   else()
     add_custom_target(${target_name}
-      COMMENT "heaptrack is running on ${target}\ (output: \"${reports_directory}\")"
+      COMMENT "Heaptrack is running on ${target}\ (output: \"${reports_directory}\")"
       COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} ${Heaptrack_EXECUTABLE} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
       DEPENDS ${target}
@@ -136,5 +135,7 @@ function(swift_add_heaptrack target)
   if (NOT TARGET do-all-heaptrack)
     add_custom_target(do-all-heaptrack)
   endif()
+
   add_dependencies(do-all-heaptrack ${target_name})
+  add_dependencies(do-all-memory-profiling do-all-heaptrack)
 endfunction()

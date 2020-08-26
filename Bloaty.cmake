@@ -12,27 +12,27 @@
 #   )
 #
 # Call this function to create a new cmake target which runs the `target`'s
-# executable binary with bloaty applied. All created cmake targets can be
-# invoked by calling the common target 'do-all-bloaty'.
+# executable binary with bloaty applied. All targets created with
+# `swift_add_bloaty` can be invoked by calling the common target 'do-all-bloaty'.
 #
 # BLOATY OPTIONS
 #
-#   * SEGMENTS:     Outputs what the run-time loader uses to determine what
-#                   parts of the binary needs to be loaded/mapped into memory.
-#   * SECTIONS:     Outputs the binary in finer details structured in different sections.
-#   * SYMBOLS:      Outputs individual functions or variables.
-#   * COMPILEUNITS: Outputs what compile unit (and corresponding source file)
-#                   each bit of the binary came from.
+#  * SEGMENTS:     Outputs what the run-time loader uses to determine what
+#                  parts of the binary needs to be loaded/mapped into memory.
+#  * SECTIONS:     Outputs the binary in finer details structured in different sections.
+#  * SYMBOLS:      Outputs individual functions or variables.
+#  * COMPILEUNITS: Outputs what compile unit (and corresponding source file)
+#                  each bit of the binary came from.
 #
-#   * NUM: Set how many rows to show per level before collapsing into '[other]'.
-#          Set to '0' for unlimited, default: '20'.
+#  * NUM: Set how many rows to show per level before collapsing into '[other]'.
+#         Set to '0' for unlimited, default: '20'.
 #
-#   * SORT:
-#       vm   - Sort the vm size column from largest to smallest and tells you
-#              how much space the binary will take when loaded into memory.
-#       file - Sort the file size column from largest to smallest and tells you
-#              how much space the binary is taking on disk.
-#       both - Default, sorts by max(vm, file).
+#  * SORT:
+#      vm   - Sort the vm size column from largest to smallest and tells you
+#             how much space the binary will take when loaded into memory.
+#      file - Sort the file size column from largest to smallest and tells you
+#             how much space the binary is taking on disk.
+#      both - Default, sorts by max(vm, file).
 #
 # WORKING_DIRECTORY
 # This variable changes the output directory for the tool from the default folder
@@ -41,21 +41,21 @@
 #
 # NOTE
 #
-# * A cmake option is available to control whether targets should be built, 
-# with the name ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING.
+# * A cmake option is available to control whether targets should be built,
+# with the name ${PROJECT_NAME}_ENABLE_PROFILING.
 #
 # Running
 #
-# cmake -D<project>_ENABLE_MEMORY_PROFILING=ON ..
+# cmake -D<project>_ENABLE_PROFILING=ON ..
 #
 # will explicitly enable these targets from the command line at configure time
 #
 
-option(${PROJECT_NAME}_ENABLE_MEMORY_PROFILING "Builds targets with memory profiling" OFF)
+option(${PROJECT_NAME}_ENABLE_PROFILING "Builds targets profiling applied" OFF)
 
 find_package(Bloaty)
 
-if (NOT Bloaty_FOUND AND ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
+if (NOT Bloaty_FOUND AND ${PROJECT_NAME}_ENABLE_PROFILING)
   message(STATUS "Bloaty is not installed on system, will fetch content from source")
 
   cmake_minimum_required(VERSION 3.14.0)
@@ -77,15 +77,17 @@ macro(eval_bloaty_target target)
 
   get_target_property(target_type ${target} TYPE)
   if (NOT target_type STREQUAL EXECUTABLE)
-    message(FATAL_ERROR "Specified target \"${target}\" must be an executable type to register for profiling with bloaty")
+    message(FATAL_ERROR "Specified target \"${target}\" must be an executable type to register for profiling with Bloaty")
   endif()
 
-  if (NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
+  if (NOT (Bloaty_FOUND AND
+           ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME} AND
+           ${PROJECT_NAME}_ENABLE_PROFILING))
     return()
   endif()
 
-  if (NOT ${PROJECT_NAME}_ENABLE_MEMORY_PROFILING)
-    return()
+  if (NOT TARGET do-all-memory-profiling)
+    add_custom_target(do-all-memory-profiling)
   endif()
 endmacro()
 
@@ -142,7 +144,7 @@ function(swift_add_bloaty target)
 
   if (NOT Bloaty_FOUND)
     add_custom_target(${target_name}
-      COMMENT "bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
+      COMMENT "Bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
       COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"bloaty with options: ${resource_options}\" > ${reports_directory}/${output_file}
       COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:bloaty> ${resource_options} $<TARGET_FILE:${target}> >> ${reports_directory}/${output_file}
@@ -150,7 +152,7 @@ function(swift_add_bloaty target)
     )
   else()
     add_custom_target(${target_name}
-      COMMENT "bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
+      COMMENT "Bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
       COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
       COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"bloaty with options: ${resource_options}\" > ${reports_directory}/${output_file}
       COMMAND ${CMAKE_COMMAND} -E env ${Bloaty_EXECUTABLE} ${resource_options} $<TARGET_FILE:${target}> >> ${reports_directory}/${output_file}
@@ -161,5 +163,7 @@ function(swift_add_bloaty target)
   if (NOT TARGET do-all-bloaty)
     add_custom_target(do-all-bloaty)
   endif()
+
   add_dependencies(do-all-bloaty ${target_name})
+  add_dependencies(do-all-memory-profiling do-all-bloaty)
 endfunction()
