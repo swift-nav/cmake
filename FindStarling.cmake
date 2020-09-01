@@ -12,6 +12,5 @@ GenericFindDependency(
     pvt-engine
     pvt-common
     starling-util
-  SOURCE_DIR starling
   SYSTEM_HEADER_FILE "pvt_driver/runner/pvt_runner.h"
 )
