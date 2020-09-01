@@ -9,6 +9,7 @@
 #   swift_add_bloaty(<target>
 #     [OPTIONS]
 #     [WORKING_DIRECTORY working_directory]
+#     [REPORT_DIRECTORY report_directory]
 #   )
 #
 # Call this function to create a new cmake target which runs the `target`'s
@@ -35,9 +36,14 @@
 #      both - Default, sorts by max(vm, file).
 #
 # WORKING_DIRECTORY
+# This variable changes the execution directory for the tool from the default
+# folder `${CMAKE_CURRENT_BINARY_DIR}` to the given argument. For instance, if
+# a user wants to utilize files located in a specific folder.
+#
+# REPORT_DIRECTORY
 # This variable changes the output directory for the tool from the default folder
 # `${CMAKE_BINARY_DIR}/profiling/bloaty-reports` to the given argument.
-# Example, using argument `/tmp`, outputs the results to `/tmp/bloaty-reports/
+# Example, using argument `/tmp`, outputs the result to `/tmp`.
 #
 # NOTE
 #
@@ -48,10 +54,10 @@
 #
 # cmake -D<project>_ENABLE_PROFILING=ON ..
 #
-# will explicitly enable these targets from the command line at configure time
+# will explicitly enable these targets from the command line at configure time.
 #
 
-option(${PROJECT_NAME}_ENABLE_PROFILING "Builds targets profiling applied" OFF)
+option(${PROJECT_NAME}_ENABLE_PROFILING "Builds targets with profiling applied" OFF)
 
 find_package(Bloaty)
 
@@ -80,8 +86,7 @@ macro(eval_bloaty_target target)
     message(FATAL_ERROR "Specified target \"${target}\" must be an executable type to register for profiling with Bloaty")
   endif()
 
-  if (NOT (Bloaty_FOUND AND
-           ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME} AND
+  if (NOT (${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME} AND
            ${PROJECT_NAME}_ENABLE_PROFILING))
     return()
   endif()
@@ -95,7 +100,7 @@ function(swift_add_bloaty target)
   eval_bloaty_target(${target})
   
   set(argOption SEGMENTS SECTIONS SYMBOLS COMPILEUNITS)
-  set(argSingle NUM SORT WORKING_DIRECTORY)
+  set(argSingle NUM SORT WORKING_DIRECTORY REPORT_DIRECTORY)
   set(argMulti "")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
@@ -105,12 +110,17 @@ function(swift_add_bloaty target)
   endif()
 
   set(target_name bloaty-${target})
-  set(working_directory ${CMAKE_BINARY_DIR}/profiling)
+  set(output_file ${target_name}.txt)
+
+  set(working_directory ${CMAKE_CURRENT_BINARY_DIR})
   if (x_WORKING_DIRECTORY)
     set(working_directory ${x_WORKING_DIRECTORY})
   endif()
-  set(reports_directory ${working_directory}/bloaty-reports)
-  set(output_file ${target_name}.txt)
+
+  set(report_directory ${CMAKE_BINARY_DIR}/profiling/bloaty-reports)
+  if (x_REPORT_DIRECTORY)
+    set(report_directory ${x_REPORT_DIRECTORY})
+  endif()
 
   unset(resource_options)
   if (x_SEGMENTS)
@@ -144,18 +154,21 @@ function(swift_add_bloaty target)
 
   if (NOT Bloaty_FOUND)
     add_custom_target(${target_name}
-      COMMENT "Bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
-      COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"bloaty with options: ${resource_options}\" > ${reports_directory}/${output_file}
-      COMMAND ${CMAKE_COMMAND} -E env $<TARGET_FILE:bloaty> ${resource_options} $<TARGET_FILE:${target}> >> ${reports_directory}/${output_file}
+      COMMAND $(MAKE) --directory=${bloaty_BINARY_DIR}
+      COMMENT "Bloaty is running on ${target}\ (output: \"${report_directory}/${output_file}\")"
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${report_directory}
+      COMMAND ${CMAKE_COMMAND} -E echo \"bloaty with options: ${resource_options}\" > ${report_directory}/${output_file}
+      COMMAND ${bloaty_BINARY_DIR}/bloaty ${resource_options} $<TARGET_FILE:${target}> >> ${report_directory}/${output_file}
+      WORKING_DIRECTORY ${working_directory}
       DEPENDS ${target}
     )
   else()
     add_custom_target(${target_name}
-      COMMENT "Bloaty is running on ${target}\ (output: \"${reports_directory}/${output_file}\")"
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}
-      COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory} echo \"bloaty with options: ${resource_options}\" > ${reports_directory}/${output_file}
-      COMMAND ${CMAKE_COMMAND} -E env ${Bloaty_EXECUTABLE} ${resource_options} $<TARGET_FILE:${target}> >> ${reports_directory}/${output_file}
+      COMMENT "Bloaty is running on ${target}\ (output: \"${report_directory}/${output_file}\")"
+      COMMAND ${CMAKE_COMMAND} -E make_directory ${report_directory}
+      COMMAND ${CMAKE_COMMAND} -E echo \"bloaty with options: ${resource_options}\" > ${report_directory}/${output_file}
+      COMMAND ${Bloaty_EXECUTABLE} ${resource_options} $<TARGET_FILE:${target}> >> ${report_directory}/${output_file}
+      WORKING_DIRECTORY ${working_directory}
       DEPENDS ${target}
     )
   endif()
