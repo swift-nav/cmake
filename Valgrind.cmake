@@ -1,7 +1,8 @@
 #
-### OVERVIEW
+# OVERVIEW
 #
-# This module introduces various functions, each corresponds to a Valgrind tool.
+# This module introduces various Valgrind tools, which are used for profiling
+# purposes.
 #
 # AVAILABLE TOOLS:
 #   memcheck  - memory error detector
@@ -9,7 +10,7 @@
 #   callgrind - records the call history among functions in a program's run as a
 #               call-graph
 #
-### USAGE
+# USAGE
 #
 #   swift_add_valgrind_*(<target>
 #     [... list of common options ...]
@@ -28,7 +29,8 @@
 #   - do-all-valgrind
 #
 # The first target runs the `unit-tests` target, and generates the callgrind's
-# results to `${CMAKE_CURRENT_BINARY_DIR}/valgrind-reports/callgrind-unit-tests`.
+# results to the default folder
+#`${CMAKE_BINARY_DIR}/profiling/valgrind-reports/callgrind-unit-tests`.
 #
 # The next two targets are handy targets that exists to help call on the various
 # registered valgrind tests. The `do-all-valgrind-callgrind` invokes all targets
@@ -42,7 +44,9 @@
 # `swift_add_valgrind_*` functions:
 #
 #   * NAME
-#   * WORKSPACE
+#   * WORKING_DIRECTORY
+#   * REPORT_DIRECTORY
+#   * PROGRAM_ARGS
 #   * TRACE_CHILDREN
 #   * CHILD_SILENT_AFTER_FORK
 #
@@ -67,10 +71,16 @@
 # This creates `valgrind-callgrind-suite-1` and `valgrind-callgrind-suite-2`,
 # each calling the `unit-tests` executable with different program arguments.
 #
-# WORKING_DIRECTORY enables a user to change the output directory for the tools
-# from the default folder `${CMAKE_CURRENT_BINARY_DIR}`. Setting this option for
-# target `valgrind-callgrind-suite-2` to `/tmp`, outputs the results
-# `/tmp/valgrind-reports/suite-2`.
+# WORKING_DIRECTORY enables a user to change the execution directory for the tool
+# from the default folder `${CMAKE_CURRENT_BINARY_DIR}` to the given argument.
+# For instance, if a user wants to utilize files located in a specific folder.
+#
+# REPORT_DIRECTORY enables a user to change the output directory for the tool
+# from the default folder `${CMAKE_BINARY_DIR}/profiling/valgrind-reports`.
+# Example, using argument `/tmp`, outputs the results to `/tmp`.
+#
+# PROGRAM_ARGS specifies target arguments. Example, using a yaml configuration
+# with "--config example.yaml".
 #
 # TRACE_CHILDREN invokes the Valgrind tools even on spawned children, normally
 # ignores the spawned processes.
@@ -81,6 +91,7 @@
 # that create children.
 #
 ### MALLOC()-RELATED OPTIONS:
+#
 # For tools that use their own version of malloc (e.g. Memcheck, Massif,
 # Helgrind, DRD).
 #
@@ -143,15 +154,26 @@
 #
 ### NOTES
 #
-# The callgrind `*.out.*` files are not human readable, as such one might want
+# * The callgrind `*.out.*` files are not human readable, as such one might want
 # to load the files with the `KCacheGrind` program to easily navigate the data.
 #
+# * A cmake option is available to control whether targets should be built,
+# with the name ${PROJECT_NAME}_ENABLE_PROFILING.
+#
+# Running
+#
+# cmake -D<project>_ENABLE_PROFILING=ON ..
+#
+# will explicitly enable these targets from the command line at configure time.
+#
+
+option(${PROJECT_NAME}_ENABLE_PROFILING "Builds targets with profiling applied" OFF)
 
 find_package(Valgrind)
 
-if (NOT Valgrind_FOUND)
+if (NOT Valgrind_FOUND AND ${PROJECT_NAME}_ENABLE_PROFILING)
   message(WARNING "Unable to create Valgrind targets due to missing program")
-endif ()
+endif()
 
 macro(_valgrind_basic_setup _target)
   if (NOT TARGET ${_target})
@@ -159,20 +181,19 @@ macro(_valgrind_basic_setup _target)
   endif()
 
   get_target_property(_target_type ${_target} TYPE)
-
   if (NOT _target_type STREQUAL EXECUTABLE)
-    message(FATAL_ERROR "Specified target \"${_target}\" must be an executable type")
+    message(FATAL_ERROR "Specified target \"${_target}\" must be an executable type to register for profiling with Valgrind")
   endif()
 
-  if (NOT Valgrind_FOUND)
-    return()
-  endif ()
-
-  if (CMAKE_CROSSCOMPILING)
-    return()
+  if (NOT (${CMAKE_BUILD_TYPE} STREQUAL "Debug" OR
+           ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo"))
+    message(WARNING "Use Debug or RelWithDebInfo as cmake build type to get debug info from Valgrind")
   endif()
 
-  if (NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
+  if (NOT (Valgrind_FOUND AND
+           ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME} AND
+           ${PROJECT_NAME}_ENABLE_PROFILING)
+      OR CMAKE_CROSSCOMPILING)
     return()
   endif()
 
@@ -183,7 +204,7 @@ endmacro()
 
 macro(_valgrind_arguments_setup _target _tool_name _toolOptions _toolSingle _toolMulti _ARGN)
   set(_commonOptions CHILD_SILENT_AFTER_FORK TRACE_CHILDREN)
-  set(_commonSingle NAME WORKING_DIRECTORY)
+  set(_commonSingle NAME WORKING_DIRECTORY REPORT_DIRECTORY)
   set(_commonMulti PROGRAM_ARGS)
 
   set(_argOption ${_commonOptions} ${_toolOptions})
@@ -197,7 +218,7 @@ macro(_valgrind_arguments_setup _target _tool_name _toolOptions _toolSingle _too
   endif()
 
   set(target_name valgrind-${_tool_name}-${_target})
-  set(report_folder ${_tool_name}-${target})
+  set(report_folder ${_tool_name}-${_target})
   if (x_NAME)
     set(target_name valgrind-${_tool_name}-${x_NAME})
     set(report_folder ${_tool_name}-${x_NAME})
@@ -208,6 +229,13 @@ macro(_valgrind_arguments_setup _target _tool_name _toolOptions _toolSingle _too
     set(working_directory ${x_WORKING_DIRECTORY})
   endif()
 
+  set(report_directory ${CMAKE_BINARY_DIR}/profiling/valgrind-reports)
+  if (x_REPORT_DIRECTORY)
+    set(report_directory ${x_REPORT_DIRECTORY})
+  endif()
+
+  set(output_file ${report_directory}/${report_folder}/${target_name})
+
   unset(valgrind_tool_options)
   if (x_CHILD_SILENT_AFTER_FORK)
     list(APPEND valgrind_tool_options --child-silent-after-fork=yes)
@@ -215,12 +243,26 @@ macro(_valgrind_arguments_setup _target _tool_name _toolOptions _toolSingle _too
 
   if (x_TRACE_CHILDREN)
     list(APPEND valgrind_tool_options --trace-children=yes)
-    list(APPEND valgrind_tool_options --log-file=${target}.log.%p)
+    list(APPEND valgrind_tool_options --log-file=${output_file}.log.%p)
   else()
-    list(APPEND valgrind_tool_options --log-file=${target}.log)
+    list(APPEND valgrind_tool_options --log-file=${output_file}.log)
   endif()
+endmacro()
 
-  set(reports_directory ${working_directory}/valgrind-reports)
+macro(setup_custom_target valgrind_tool target_name)
+  add_custom_target(${target_name}
+    COMMENT "Valgrind ${valgrind_tool} is running for \"${target}\" (output: \"${report_directory}/${report_folder}\")"
+    COMMAND ${CMAKE_COMMAND} -E remove_directory ${report_directory}/${report_folder}
+    COMMAND ${CMAKE_COMMAND} -E make_directory ${report_directory}/${report_folder}
+    COMMAND ${Valgrind_EXECUTABLE} ${valgrind_tool_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
+    WORKING_DIRECTORY ${working_directory}
+    DEPENDS ${target}
+  )
+  if (NOT TARGET do-all-valgrind-${valgrind_tool})
+    add_custom_target(do-all-valgrind-${valgrind_tool})
+  endif()
+  add_dependencies(do-all-valgrind-${valgrind_tool} ${target_name})
+  add_dependencies(do-all-valgrind do-all-valgrind-${valgrind_tool})
 endmacro()
 
 function(swift_add_valgrind_memcheck target)
@@ -228,13 +270,16 @@ function(swift_add_valgrind_memcheck target)
   set(argSingle LEAK_CHECK)
   set(argMulti "")
 
-  _valgrind_arguments_setup(${target} memcheck "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
+  set(valgrind_tool memcheck)
   _valgrind_basic_setup(${target})
+  _valgrind_arguments_setup(${target} ${valgrind_tool} "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
+
+  list(APPEND valgrind_tool_options --tool=${valgrind_tool})
 
   if (x_TRACE_CHILDREN)
-    list(APPEND valgrind_tool_options --xml=yes --xml-file=${target}.xml.%p)
+    list(APPEND valgrind_tool_options --xml=yes --xml-file=${output_file}.xml.%p)
   else()
-    list(APPEND valgrind_tool_options --xml=yes --xml-file=${target}.xml)
+    list(APPEND valgrind_tool_options --xml=yes --xml-file=${output_file}.xml)
   endif()
 
   if (x_SHOW_REACHABLE)
@@ -253,19 +298,7 @@ function(swift_add_valgrind_memcheck target)
     list(APPEND valgrind_tool_options "--leak-check=${x_LEAK_CHECK}")
   endif()
 
-  add_custom_target(${target_name}
-    COMMENT "Valgrind Memcheck is running for \"${target}\" (output: \"${reports_directory}/${report_folder}\")"
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}/${report_folder}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}/${report_folder}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory}/${report_folder} ${Valgrind_EXECUTABLE} --tool=memcheck ${valgrind_tool_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
-    DEPENDS ${target}
-  )
-
-  if (NOT TARGET do-all-valgrind-memcheck)
-    add_custom_target(do-all-valgrind-memcheck)
-  endif()
-  add_dependencies(do-all-valgrind-memcheck ${target_name})
-  add_dependencies(do-all-valgrind do-all-valgrind-memcheck)
+  setup_custom_target(${valgrind_tool} ${target_name})
 endfunction()
 
 function(swift_add_valgrind_callgrind target)
@@ -273,28 +306,19 @@ function(swift_add_valgrind_callgrind target)
   set(argSingle "")
   set(argMulti "")
 
-  _valgrind_arguments_setup(${target} callgrind "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
+  set(valgrind_tool callgrind)
   _valgrind_basic_setup(${target})
+  _valgrind_arguments_setup(${target} ${valgrind_tool} "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
+
+  list(APPEND valgrind_tool_options --tool=${valgrind_tool})
 
   if (x_TRACE_CHILDREN)
-    list(APPEND valgrind_tool_options --callgrind-out-file=${target}.out.%p)
+    list(APPEND valgrind_tool_options --callgrind-out-file=${output_file}.out.%p)
   else()
-    list(APPEND valgrind_tool_options --callgrind-out-file=${target}.out)
+    list(APPEND valgrind_tool_options --callgrind-out-file=${output_file}.out)
   endif()
 
-  add_custom_target(${target_name}
-    COMMENT "Valgrind Callgrind is running for \"${target}\" (output: \"${reports_directory}/${report_folder}\")"
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}/${report_folder}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}/${report_folder}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory}/${report_folder} ${Valgrind_EXECUTABLE} --tool=callgrind ${valgrind_tool_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
-    DEPENDS ${target}
-  )
-
-  if (NOT TARGET do-all-valgrind-callgrind)
-    add_custom_target(do-all-valgrind-callgrind)
-  endif()
-  add_dependencies(do-all-valgrind-callgrind ${target_name})
-  add_dependencies(do-all-valgrind do-all-valgrind-callgrind)
+  setup_custom_target(${valgrind_tool} ${target_name})
 endfunction()
 
 function(swift_add_valgrind_massif target)
@@ -302,13 +326,16 @@ function(swift_add_valgrind_massif target)
   set(argSingle DEPTH DETAILED_FREQUENCY MAX_SNAPSHOTS PEAK_INACCURACY THRESHOLD TIME_UNIT)
   set(argMulti "")
 
-  _valgrind_arguments_setup(${target} massif "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
+  set(valgrind_tool massif)
   _valgrind_basic_setup(${target})
+  _valgrind_arguments_setup(${target} ${valgrind_tool} "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
+
+  list(APPEND valgrind_tool_options --tool=${valgrind_tool})
 
   if (x_TRACE_CHILDREN)
-    list(APPEND valgrind_tool_options --massif-out-file=${target}.out.%p)
+    list(APPEND valgrind_tool_options --massif-out-file=${output_file}.out.%p)
   else()
-    list(APPEND valgrind_tool_options --massif-out-file=${target}.out)
+    list(APPEND valgrind_tool_options --massif-out-file=${output_file}.out)
   endif()
 
   if (x_STACKS)
@@ -321,7 +348,7 @@ function(swift_add_valgrind_massif target)
 
   if (x_XTREE_MEMORY)
     list(APPEND valgrind_tool_options --xtree-memory=full)
-    list(APPEND valgrind_tool_options --xtree-memory-file=${target}.kcg.%p)
+    list(APPEND valgrind_tool_options --xtree-memory-file=${output_file}.kcg.%p)
   endif()
 
   if (x_DEPTH)
@@ -348,17 +375,5 @@ function(swift_add_valgrind_massif target)
     list(APPEND valgrind_tool_options "--time-unit=${x_TIME_UNIT}")
   endif()
 
-  add_custom_target(${target_name}
-    COMMENT "Valgrind Massif is running for \"${target}\" (output: \"${reports_directory}/${report_folder}\")"
-    COMMAND ${CMAKE_COMMAND} -E remove_directory ${reports_directory}/${report_folder}
-    COMMAND ${CMAKE_COMMAND} -E make_directory ${reports_directory}/${report_folder}
-    COMMAND ${CMAKE_COMMAND} -E chdir ${reports_directory}/${report_folder} ${Valgrind_EXECUTABLE} --tool=massif ${valgrind_tool_options} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
-    DEPENDS ${target}
-  )
-
-  if (NOT TARGET do-all-valgrind-massif)
-    add_custom_target(do-all-valgrind-massif)
-  endif()
-  add_dependencies(do-all-valgrind-massif ${target_name})
-  add_dependencies(do-all-valgrind do-all-valgrind-massif)
+  setup_custom_target(${valgrind_tool} ${target_name})
  endfunction()
