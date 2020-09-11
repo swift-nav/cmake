@@ -121,21 +121,21 @@ function(swift_add_heaptrack target)
       COMMAND $(MAKE) --directory=${heaptrack_BINARY_DIR}
       COMMENT "Heaptrack is running on ${target}\ (output: \"${report_directory}\")"
       COMMAND ${CMAKE_COMMAND} -E make_directory ${report_directory}
-      COMMAND ${heaptrack_BINARY_DIR}/bin/heaptrack $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
-      COMMAND mv ${working_directory}/heaptrack* ${report_directory}
-      WORKING_DIRECTORY ${working_directory}
+      COMMAND ${CMAKE_COMMAND} -E chdir ${working_directory} ${heaptrack_BINARY_DIR}/bin/heaptrack $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
       DEPENDS ${target}
     )
   else()
     add_custom_target(${target_name}
       COMMENT "Heaptrack is running on ${target}\ (output: \"${report_directory}\")"
       COMMAND ${CMAKE_COMMAND} -E make_directory ${report_directory}
-      COMMAND ${Heaptrack_EXECUTABLE} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
-      COMMAND mv ${working_directory}/heaptrack* ${report_directory}
-      WORKING_DIRECTORY ${working_directory}
+      COMMAND ${CMAKE_COMMAND} -E chdir ${working_directory} ${Heaptrack_EXECUTABLE} $<TARGET_FILE:${target}> ${x_PROGRAM_ARGS}
       DEPENDS ${target}
     )
   endif()
+
+  add_custom_command(TARGET ${target_name} POST_BUILD
+    COMMAND ${CMAKE_COMMAND} -E rename ${working_directory}/heaptrack* ${report_directory}/${target_name}.gz
+  )
 
   if (NOT TARGET do-all-heaptrack)
     add_custom_target(do-all-heaptrack)
