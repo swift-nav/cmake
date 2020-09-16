@@ -121,10 +121,12 @@
 #
 # GENERATE_JUNIT_REPORT converts the xml file output to a Junit xml file
 # format that can be picked up by CI tools such as Jenkins to display test
-# results. It can be used alone or with the additional argument `skip_tests`.
-# If the argument `skip_tests` is added such as:
-# `GENERATE_JUNIT_REPORT skip_tests`
-# reported errors will be suppressed.
+# results. 
+#
+# JUNIT_OPTIONS=<skip_test> can be used in addition to `GENERATE_JUNIT_REPORT`
+# if a failing test should be skipped. Errors reported by valgrind memcheck
+# is then converted in the junit xml file to a skipped message, and will not
+# cause a fail in a CI tools pipeline.
 #
 ### MASSIF SPECIFIC OPTIONS:
 #
@@ -273,8 +275,8 @@ macro(setup_custom_target valgrind_tool target_name)
 endmacro()
 
 function(swift_add_valgrind_memcheck target)
-  set(argOption SHOW_REACHABLE TRACK_ORIGINS UNDEF_VALUE_ERRORS)
-  set(argSingle LEAK_CHECK GENERATE_JUNIT_REPORT)
+  set(argOption SHOW_REACHABLE TRACK_ORIGINS UNDEF_VALUE_ERRORS GENERATE_JUNIT_REPORT)
+  set(argSingle LEAK_CHECK JUNIT_OPTIONS)
   set(argMulti "")
 
   set(valgrind_tool memcheck)
@@ -307,15 +309,9 @@ function(swift_add_valgrind_memcheck target)
 
   setup_custom_target(${valgrind_tool} ${target_name})
 
-  if (x_KEYWORDS_MISSING_VALUES) 
-    if (${x_KEYWORDS_MISSING_VALUES} STREQUAL GENERATE_JUNIT_REPORT)
-      set(x_GENERATE_JUNIT_REPORT TRUE)
-    endif()
-  endif()
-
   if (x_GENERATE_JUNIT_REPORT)
     set(xml_dir ${report_directory}/junit-xml)
-    set(options --${x_GENERATE_JUNIT_REPORT})
+    set(options --${x_JUNIT_OPTIONS})
     add_custom_command(TARGET ${target_name} POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E make_directory ${xml_dir}
       COMMAND ${CMAKE_COMMAND} -Dinput_directory=${report_directory}/${report_folder} 
