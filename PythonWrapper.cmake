@@ -13,9 +13,7 @@
 #                          -DInput_directory=${Input_directory}
 #                          -DOutput_directory=${Output_directory}
 #                          -DScript_options=${Script_options}
-#                          -DLabel=${Label}
-#                          -DWrapper_settings=${Wrapper_settings}
-#                          -P <path_to_module>/PythonRunner.cmake
+#                          -P <path_to_module>/PythonWrapper.cmake
 #
 # GLOBAL VARIABLES
 #  -DScript:           Set this variable to the name of the python file to be
@@ -24,14 +22,8 @@
 #  -DOutput_directory: This variable sets the output directory.
 #  -DScript_options:   Use this variable to forward specific options to the
 #                      python script.
-#  -DLabel:            Use this variable to set a specific name or label.
-#                      For example to apply specific messages after the
-#                      executed process.
-#  -Wrapper_settings:  Use this variable to customize the behavior after the
-#                      executed process.
 #
 execute_process(
     COMMAND python ${Script} ${Input_directory} ${Output_directory} ${Script_options}
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/scripts
-    OUTPUT_VARIABLE result
 )

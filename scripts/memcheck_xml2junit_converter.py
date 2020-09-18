@@ -46,7 +46,7 @@ except:
 
 skip_test = False
 if len(sys.argv) >= 4:
-  skip_test = (sys.argv[3] == "--skip_tests")
+  skip_test = (sys.argv[3] == "skip_tests")
 
 for subdir, dirs, files in os.walk(working_directory):
   if os.path.basename(subdir) == os.path.basename(report_directory):

@@ -311,13 +311,12 @@ function(swift_add_valgrind_memcheck target)
 
   if (x_GENERATE_JUNIT_REPORT)
     set(xml_dir ${report_directory}/junit-xml)
-    set(junit_options --${x_JUNIT_OPTIONS})
     add_custom_command(TARGET ${target_name} POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E make_directory ${xml_dir}
       COMMAND ${CMAKE_COMMAND} -DScript=memcheck_xml2junit_converter.py
                                -DInput_directory=${report_directory}/${report_folder}
                                -DOutput_directory=${xml_dir}
-                               -DScript_options=${junit_options}
+                               -DScript_options=${x_JUNIT_OPTIONS}
                                -P ${CMAKE_SOURCE_DIR}/cmake/common/PythonWrapper.cmake
     )
   endif()
