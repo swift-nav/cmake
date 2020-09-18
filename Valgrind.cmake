@@ -276,8 +276,8 @@ endmacro()
 
 function(swift_add_valgrind_memcheck target)
   set(argOption SHOW_REACHABLE TRACK_ORIGINS UNDEF_VALUE_ERRORS GENERATE_JUNIT_REPORT)
-  set(argSingle LEAK_CHECK JUNIT_OPTIONS)
-  set(argMulti "")
+  set(argSingle LEAK_CHECK)
+  set(argMulti JUNIT_OPTIONS)
 
   set(valgrind_tool memcheck)
   _valgrind_basic_setup(${target})
@@ -311,13 +311,14 @@ function(swift_add_valgrind_memcheck target)
 
   if (x_GENERATE_JUNIT_REPORT)
     set(xml_dir ${report_directory}/junit-xml)
-    set(options --${x_JUNIT_OPTIONS})
+    set(junit_options --${x_JUNIT_OPTIONS})
     add_custom_command(TARGET ${target_name} POST_BUILD
       COMMAND ${CMAKE_COMMAND} -E make_directory ${xml_dir}
-      COMMAND ${CMAKE_COMMAND} -Dinput_directory=${report_directory}/${report_folder} 
-                               -Doutput_directory=${xml_dir}
-                               -Djunit_options=${options} 
-                               -P ${CMAKE_SOURCE_DIR}/cmake/common/JunitGenerator.cmake
+      COMMAND ${CMAKE_COMMAND} -DScript=memcheck_xml2junit_converter.py
+                               -DInput_directory=${report_directory}/${report_folder}
+                               -DOutput_directory=${xml_dir}
+                               -DScript_options=${junit_options}
+                               -P ${CMAKE_SOURCE_DIR}/cmake/common/PythonWrapper.cmake
     )
   endif()
 endfunction()
