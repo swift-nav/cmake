@@ -54,7 +54,6 @@ for subdir, dirs, files in os.walk(args.input_directory):
   if os.path.basename(subdir) == os.path.basename(args.output_directory):
     continue
   for filename in files:
-    print filename
     if "xml" in filename:
       # read errors in valgrind memcheck xml
       input_filepath = os.path.join(subdir, filename)
