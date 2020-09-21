@@ -119,14 +119,20 @@
 # UNDEF_VALUE_ERRORS controls whether Memcheck reports uses of undefined value
 # errors.
 #
-# GENERATE_JUNIT_REPORT converts the xml file output to a Junit xml file
+# GENERATE_JUNIT_REPORT converts the xml file output to a JUnit xml file
 # format that can be picked up by CI tools such as Jenkins to display test
 # results. 
 #
-# JUNIT_OPTIONS=<skip_test> can be used in addition to `GENERATE_JUNIT_REPORT`
-# if a failing test should be skipped. Errors reported by valgrind memcheck
-# is then converted in the junit xml file to a skipped message, and will not
-# cause a fail in a CI tools pipeline.
+# JUNIT_OPTIONS enables additional options when generating JUnit reports.
+# * --input_directory:  Set equal to a folder path where Valgrind Memcheck xml
+#                       files exist. [Default: `${report_directory}/${report_folder}`]
+# * --output_directory: Set equal to a folder path where the converted files should
+#                       be placed. [Default: `${report_directory}/junit-xml`]
+# * --skip_tests:       Boolean flag that, if included, skips a test with
+#                       reported errors and which prevents failure of a
+#                       CI tools pipeline step. [Default: False]
+#
+# Example: `JUNIT_OPTIONS --output_directory=/path_to_location/ --skip_tests`.
 #
 ### MASSIF SPECIFIC OPTIONS:
 #
@@ -310,14 +316,24 @@ function(swift_add_valgrind_memcheck target)
   setup_custom_target(${valgrind_tool} ${target_name})
 
   if (x_GENERATE_JUNIT_REPORT)
-    set(xml_dir ${report_directory}/junit-xml)
+    set(junit_input_dir -i=${report_directory}/${report_folder})
+    set(junit_output_dir -o=${report_directory}/junit-xml)
+    foreach (junit_option ${x_JUNIT_OPTIONS})
+      if (${junit_option} MATCHES "--input_directory")
+        set(junit_input_dir ${junit_option})
+        list(REMOVE_ITEM x_JUNIT_OPTIONS ${junit_option})
+      elseif (${junit_option} MATCHES "--output_directory")
+        set(junit_output_dir ${junit_option})
+        list(REMOVE_ITEM x_JUNIT_OPTIONS ${junit_option})
+      endif()
+    endforeach()
+
+    set(script_options ${x_JUNIT_OPTIONS})
+    list(APPEND script_options ${junit_input_dir})
+    list(APPEND script_options ${junit_output_dir})
+
     add_custom_command(TARGET ${target_name} POST_BUILD
-      COMMAND ${CMAKE_COMMAND} -E make_directory ${xml_dir}
-      COMMAND ${CMAKE_COMMAND} -DScript=memcheck_xml2junit_converter.py
-                               -DInput_directory=${report_directory}/${report_folder}
-                               -DOutput_directory=${xml_dir}
-                               -DScript_options=${x_JUNIT_OPTIONS}
-                               -P ${CMAKE_SOURCE_DIR}/cmake/common/PythonWrapper.cmake
+      COMMAND python ${CMAKE_SOURCE_DIR}/cmake/common/scripts/memcheck_xml2junit_converter.py ${script_options}
     )
   endif()
 endfunction()
