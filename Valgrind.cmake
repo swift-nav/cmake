@@ -119,6 +119,21 @@
 # UNDEF_VALUE_ERRORS controls whether Memcheck reports uses of undefined value
 # errors.
 #
+# GENERATE_JUNIT_REPORT converts the xml file output to a JUnit xml file
+# format that can be picked up by CI tools such as Jenkins to display test
+# results. 
+#
+# JUNIT_OPTIONS enables additional options when generating JUnit reports.
+# * --input_directory:  Set equal to a folder path where Valgrind Memcheck xml
+#                       files exist. [Default: `${report_directory}/${report_folder}`]
+# * --output_directory: Set equal to a folder path where the converted files should
+#                       be placed. [Default: `${report_directory}/junit-xml`]
+# * --skip_tests:       Boolean flag that, if included, skips a test with
+#                       reported errors and which prevents failure of a
+#                       CI tools pipeline step. [Default: False]
+#
+# Example: `JUNIT_OPTIONS --output_directory=/path_to_location/ --skip_tests`.
+#
 ### MASSIF SPECIFIC OPTIONS:
 #
 # DEPTH=<number> [default: 30], maximum depth of the allocation trees recorded
@@ -266,9 +281,9 @@ macro(setup_custom_target valgrind_tool target_name)
 endmacro()
 
 function(swift_add_valgrind_memcheck target)
-  set(argOption SHOW_REACHABLE TRACK_ORIGINS UNDEF_VALUE_ERRORS)
+  set(argOption SHOW_REACHABLE TRACK_ORIGINS UNDEF_VALUE_ERRORS GENERATE_JUNIT_REPORT)
   set(argSingle LEAK_CHECK)
-  set(argMulti "")
+  set(argMulti JUNIT_OPTIONS)
 
   set(valgrind_tool memcheck)
   _valgrind_basic_setup(${target})
@@ -299,6 +314,28 @@ function(swift_add_valgrind_memcheck target)
   endif()
 
   setup_custom_target(${valgrind_tool} ${target_name})
+
+  if (x_GENERATE_JUNIT_REPORT)
+    set(junit_input_dir -i=${report_directory}/${report_folder})
+    set(junit_output_dir -o=${report_directory}/junit-xml)
+    foreach (junit_option ${x_JUNIT_OPTIONS})
+      if (${junit_option} MATCHES "--input_directory")
+        set(junit_input_dir ${junit_option})
+        list(REMOVE_ITEM x_JUNIT_OPTIONS ${junit_option})
+      elseif (${junit_option} MATCHES "--output_directory")
+        set(junit_output_dir ${junit_option})
+        list(REMOVE_ITEM x_JUNIT_OPTIONS ${junit_option})
+      endif()
+    endforeach()
+
+    set(script_options ${x_JUNIT_OPTIONS})
+    list(APPEND script_options ${junit_input_dir})
+    list(APPEND script_options ${junit_output_dir})
+
+    add_custom_command(TARGET ${target_name} POST_BUILD
+      COMMAND python ${CMAKE_SOURCE_DIR}/cmake/common/scripts/memcheck_xml2junit_converter.py ${script_options}
+    )
+  endif()
 endfunction()
 
 function(swift_add_valgrind_callgrind target)
