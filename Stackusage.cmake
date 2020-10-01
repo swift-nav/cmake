@@ -157,22 +157,20 @@ function(swift_add_stackusage target)
   add_dependencies(do-all-memory-profiling do-all-stackusage)
 
   if (x_LOG_TOTAL_MEMORY)
-    set(memory_input_dir -i=${report_directory}/${output_file})
-    set(memory_output_dir -o=${report_directory}/../memory_log.txt)
-    set(memory_message "-m=Stack memory usage:")
-
+    set(memory_input_file -i=${report_directory}/${output_file})
+    set(memory_output_file -o=${report_directory}/../memory_log.txt)
     foreach (memory_option ${x_LOG_TOTAL_MEMORY_OPTIONS})
       if (${memory_option} MATCHES "--input_file")
         set(memory_input_dir ${memory_option})
+        list(REMOVE_ITEM x_LOG_TOTAL_MEMORY_OPTIONS ${memory_option})
       elseif (${memory_option} MATCHES "--output_file")
         set(memory_output_dir ${memory_option})
-      elseif (${memory_option} MATCHES "--message")
-        set(memory_message ${memory_option})
+        list(REMOVE_ITEM x_LOG_TOTAL_MEMORY_OPTIONS ${memory_option})
       endif()
     endforeach()
 
-    unset(script_options)
-    list(APPEND script_options ${memory_input_dir} ${memory_output_dir} ${memory_message})
+    set(script_options ${x_LOG_TOTAL_MEMORY_OPTIONS})
+    list(APPEND script_options ${memory_input_file} ${memory_output_file})
     add_custom_command(TARGET ${target_name} POST_BUILD
       COMMAND python ${CMAKE_SOURCE_DIR}/cmake/common/scripts/parse_stackusage.py ${script_options}
     )

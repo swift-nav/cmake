@@ -31,7 +31,7 @@ required.add_argument('-o','--output_file',
                       required=True)
 optional.add_argument('-m','--message',
                       help='Custom message that gets concatenated with the reported memory usage',
-                      default='')
+                      default='Heap memory usage:')
 parser._action_groups.append(optional)
 args = parser.parse_args()
 
