@@ -7,6 +7,8 @@
 # USAGE
 #
 #   swift_add_stackusage(<target>
+#     [LOG_TOTAL_MEMORY]
+#     [LOG_TOTAL_MEMORY_OPTIONS arg1 arg2 ...]
 #     [NAME name]
 #     [WORKING_DIRECTORY working_directory]
 #     [REPORT_DIRECTORY report_directory]
@@ -17,22 +19,31 @@
 # executable binary with stackusage applied. All targets created with
 # `swift_add_stackusage` can be invoked by calling the common target 'do-all-stackusage'.
 #
-# NAME
-# This variable makes it possible to choose a custom name for the target, which
+# LOG_TOTAL_MEMORY enables the creation of a log file where the output from Stackusage
+# is parsed and the total number of allocated stack memory for each thread gets
+# summarized and inserted.
+#
+# LOG_TOTAL_MEMORY_OPTIONS enables additional options when logging of total memory
+# is enabled.
+# * --input_file:  Set equal to a file path where an output file from Stackusage
+#                  exists. [Default: `${report_directory}/${output_file}`]
+# * --output_file: Set equal to a file path where the log file should be written.
+#                  [Default: `${report_directory}/../memory_log.txt`]
+# * --message:     Add a custom message that gets concatenated with the reported
+#                  total memory. [Default: `"Stack memory usage:"`]
+#
+# NAME makes it possible to choose a custom name for the target, which
 # is useful in situations using Google Test.
 #
-# WORKING_DIRECTORY
-# This variable changes the execution directory for the tool from the default
+# WORKING_DIRECTORY changes the execution directory for the tool from the default
 # folder `${CMAKE_CURRENT_BINARY_DIR}` to the given argument. For instance, if
 # a user wants to utilize files located in a specific folder.
 #
-# REPORT_DIRECTORY
-# This variable changes the output directory for the tool from the default folder
-# `${CMAKE_BINARY_DIR}/profiling/stackusage-reports` to the given argument.
+# REPORT_DIRECTORY changes the output directory for the tool from the default
+# folder `${CMAKE_BINARY_DIR}/profiling/stackusage-reports` to the given argument.
 # Example, using argument `/tmp`, outputs the result to `/tmp`.
 #
-# PROGRAM_ARGS
-# This variable specifies target arguments. Example, using a yaml-config
+# PROGRAM_ARGS specifies target arguments. Example, using a yaml-config
 # with "--config example.yaml".
 #
 # NOTE
@@ -91,9 +102,9 @@ endmacro()
 function(swift_add_stackusage target)
   eval_stackusage_target(${target})
   
-  set(argOption "")
+  set(argOption LOG_TOTAL_MEMORY)
   set(argSingle NAME WORKING_DIRECTORY REPORT_DIRECTORY)
-  set(argMulti PROGRAM_ARGS)
+  set(argMulti PROGRAM_ARGS LOG_TOTAL_MEMORY_OPTIONS)
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
@@ -144,4 +155,24 @@ function(swift_add_stackusage target)
 
   add_dependencies(do-all-stackusage ${target_name})
   add_dependencies(do-all-memory-profiling do-all-stackusage)
+
+  if (x_LOG_TOTAL_MEMORY)
+    set(memory_input_file -i=${report_directory}/${output_file})
+    set(memory_output_file -o=${report_directory}/../memory_log.txt)
+    foreach (memory_option ${x_LOG_TOTAL_MEMORY_OPTIONS})
+      if (${memory_option} MATCHES "--input_file")
+        set(memory_input_dir ${memory_option})
+        list(REMOVE_ITEM x_LOG_TOTAL_MEMORY_OPTIONS ${memory_option})
+      elseif (${memory_option} MATCHES "--output_file")
+        set(memory_output_dir ${memory_option})
+        list(REMOVE_ITEM x_LOG_TOTAL_MEMORY_OPTIONS ${memory_option})
+      endif()
+    endforeach()
+
+    set(script_options ${x_LOG_TOTAL_MEMORY_OPTIONS})
+    list(APPEND script_options ${memory_input_file} ${memory_output_file})
+    add_custom_command(TARGET ${target_name} POST_BUILD
+      COMMAND python ${CMAKE_SOURCE_DIR}/cmake/common/scripts/parse_stackusage.py ${script_options}
+    )
+  endif()
 endfunction()

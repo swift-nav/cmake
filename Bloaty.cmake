@@ -8,6 +8,8 @@
 #
 #   swift_add_bloaty(<target>
 #     [OPTIONS]
+#     [LOG_TOTAL_MEMORY]
+#     [LOG_TOTAL_MEMORY_OPTIONS arg1 arg2 ...]
 #     [WORKING_DIRECTORY working_directory]
 #     [REPORT_DIRECTORY report_directory]
 #   )
@@ -35,13 +37,23 @@
 #             how much space the binary is taking on disk.
 #      both - Default, sorts by max(vm, file).
 #
-# WORKING_DIRECTORY
-# This variable changes the execution directory for the tool from the default
+# LOG_TOTAL_MEMORY enables the creation of a log file where the output from Bloaty
+# is parsed and the total number of allocated static memory (VM size) gets inserted.
+#
+# LOG_TOTAL_MEMORY_OPTIONS enables additional options when logging of total memory
+# is enabled.
+# * --input_file:  Set equal to a file path where an output file from Bloaty
+#                  exists. [Default: `${report_directory}/${output_file}`]
+# * --output_file: Set equal to a file path where the log file should be written.
+#                  [Default: `${report_directory}/../memory_log.txt`]
+# * --message:     Add a custom message that gets concatenated with the reported
+#                  total memory. [Default: `"Static memory usage:"`]
+#
+# WORKING_DIRECTORY changes the execution directory for the tool from the default
 # folder `${CMAKE_CURRENT_BINARY_DIR}` to the given argument. For instance, if
 # a user wants to utilize files located in a specific folder.
 #
-# REPORT_DIRECTORY
-# This variable changes the output directory for the tool from the default folder
+# REPORT_DIRECTORY changes the output directory for the tool from the default folder
 # `${CMAKE_BINARY_DIR}/profiling/bloaty-reports` to the given argument.
 # Example, using argument `/tmp`, outputs the result to `/tmp`.
 #
@@ -99,9 +111,9 @@ endmacro()
 function(swift_add_bloaty target)
   eval_bloaty_target(${target})
   
-  set(argOption SEGMENTS SECTIONS SYMBOLS COMPILEUNITS)
+  set(argOption SEGMENTS SECTIONS SYMBOLS COMPILEUNITS LOG_TOTAL_MEMORY)
   set(argSingle NUM SORT WORKING_DIRECTORY REPORT_DIRECTORY)
-  set(argMulti "")
+  set(argMulti LOG_TOTAL_MEMORY_OPTIONS)
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
@@ -179,4 +191,24 @@ function(swift_add_bloaty target)
 
   add_dependencies(do-all-bloaty ${target_name})
   add_dependencies(do-all-memory-profiling do-all-bloaty)
+
+  if (x_LOG_TOTAL_MEMORY)
+    set(memory_input_file -i=${report_directory}/${output_file})
+    set(memory_output_file -o=${report_directory}/../memory_log.txt)
+    foreach (memory_option ${x_LOG_TOTAL_MEMORY_OPTIONS})
+      if (${memory_option} MATCHES "--input_file")
+        set(memory_input_file ${memory_option})
+        list(REMOVE_ITEM x_LOG_TOTAL_MEMORY_OPTIONS ${memory_option})
+      elseif (${memory_option} MATCHES "--output_file")
+        set(memory_output_file ${memory_option})
+        list(REMOVE_ITEM x_LOG_TOTAL_MEMORY_OPTIONS ${memory_option})
+      endif()
+    endforeach()
+
+    set(script_options ${x_LOG_TOTAL_MEMORY_OPTIONS})
+    list(APPEND script_options ${memory_input_file} ${memory_output_file})
+    add_custom_command(TARGET ${target_name} POST_BUILD
+      COMMAND python ${CMAKE_SOURCE_DIR}/cmake/common/scripts/parse_bloaty.py ${script_options}
+    )
+  endif()
 endfunction()
