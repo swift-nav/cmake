@@ -5,8 +5,17 @@
 #
 # Single Value Options:
 #
-#  C: C language standard to follow, current support values are 90, 99, and 11 (see: https://cmake.org/cmake/help/latest/prop_tgt/C_STANDARD.html)
-#  CXX: C++ language standard to follow, current supported values are 98, 11, 14, 17, and 20 (see: https://cmake.org/cmake/help/latest/prop_tgt/CXX_STANDARD.html)
+#  C
+#    C language standard to follow, current support values are 90, 99, and 11
+#    (see: https://cmake.org/cmake/help/latest/prop_tgt/C_STANDARD.html)
+#
+#  CXX
+#    C++ language standard to follow, current supported values are 98, 11, 14,
+#    17, and 20 (see: https://cmake.org/cmake/help/latest/prop_tgt/CXX_STANDARD.html)
+#
+#  WARNING
+#    By default all compiler warnings are treated as errors, adding this
+#    option treats all warnings as just warnings.
 #
 # Global Variable:
 #
@@ -34,11 +43,12 @@
 #
 
 function(swift_set_language_standards)
-    set(argOption "")
+    set(argOption "WARNING")
     set(argSingle "C" "CXX")
     set(argMulti "")
 
     cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
+    set(TARGETS ${x_UNPARSED_ARGUMENTS})
 
     if(NOT x_C)
         set(x_C 99)
@@ -48,7 +58,7 @@ function(swift_set_language_standards)
         set(x_CXX 14)
     endif()
 
-    set_target_properties(${x_UNPARSED_ARGUMENTS}
+    set_target_properties(${TARGETS}
         PROPERTIES
             C_STANDARD ${x_C}
             C_STANDARD_REQUIRED ON
@@ -58,14 +68,12 @@ function(swift_set_language_standards)
             CXX_EXTENSIONS OFF
     )
 
-    _common_clang_gnu_options(${x_UNPARSED_ARGUMENTS})
-    _clang_options(${x_UNPARSED_ARGUMENTS})
-    _gnu_options(${x_UNPARSED_ARGUMENTS})
+    _common_clang_gnu_warnings()
+    _clang_warnings()
+    _gnu_warnings()
 endfunction()
 
-function (_common_clang_gnu_options)
-  set(TARGETS ${ARGN})
-
+function (_common_clang_gnu_warnings)
   target_compile_options(${TARGETS}
     PRIVATE
       $<$<COMPILE_LANGUAGE:C>:-Wno-strict-prototypes>
@@ -131,9 +139,7 @@ function (_common_clang_gnu_options)
   endif()
 endfunction()
 
-function(_clang_options)
-  set(TARGETS ${ARGN})
-
+function(_clang_warnings)
   if (CMAKE_C_COMPILER_ID MATCHES "Clang")
     target_compile_options(${TARGETS}
       PRIVATE
@@ -143,5 +149,5 @@ function(_clang_options)
   endif()
 endfunction()
 
-function(_gnu_options)
+function(_gnu_warnings)
 endfunction()
