@@ -48,7 +48,7 @@ function(swift_set_language_standards)
     set(argMulti "")
 
     cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
-    set(TARGETS ${x_UNPARSED_ARGUMENTS})
+    set(targets ${x_UNPARSED_ARGUMENTS})
 
     if(NOT x_C)
         set(x_C 99)
@@ -58,7 +58,7 @@ function(swift_set_language_standards)
         set(x_CXX 14)
     endif()
 
-    set_target_properties(${TARGETS}
+    set_target_properties(${targets}
         PROPERTIES
             C_STANDARD ${x_C}
             C_STANDARD_REQUIRED ON
@@ -68,13 +68,15 @@ function(swift_set_language_standards)
             CXX_EXTENSIONS OFF
     )
 
-    _common_clang_gnu_warnings()
-    _clang_warnings()
-    _gnu_warnings()
+    foreach(target IN LISTS targets)
+      _common_clang_gnu_warnings(${target})
+      _clang_warnings(${target})
+      _gnu_warnings(${target})
+    endforeach()
 endfunction()
 
-function (_common_clang_gnu_warnings)
-  target_compile_options(${TARGETS}
+function (_common_clang_gnu_warnings target)
+  target_compile_options(${target}
     PRIVATE
       $<$<COMPILE_LANGUAGE:C>:-Wno-strict-prototypes>
       -Wall
@@ -128,20 +130,20 @@ function (_common_clang_gnu_warnings)
 
   if (DEFINED SWIFT_COMPILER_WARNING_ARE_ERROR)
     if (SWIFT_COMPILER_WARNING_ARE_ERROR)
-      target_compile_options(${TARGETS} PRIVATE -Werror)
+      target_compile_options(${target} PRIVATE -Werror)
     else()
-      target_compile_options(${TARGETS} PRIVATE -Wno-error)
+      target_compile_options(${target} PRIVATE -Wno-error)
     endif()
   else()
     if (NOT x_WARNING)
-      target_compile_options(${TARGETS} PRIVATE -Werror)
+      target_compile_options(${target} PRIVATE -Werror)
     endif()
   endif()
 endfunction()
 
-function(_clang_warnings)
+function(_clang_warnings target)
   if (CMAKE_C_COMPILER_ID MATCHES "Clang")
-    target_compile_options(${TARGETS}
+    target_compile_options(${target}
       PRIVATE
         -Wimplicit-fallthrough
         -Wno-error=typedef-redefinition
@@ -149,5 +151,5 @@ function(_clang_warnings)
   endif()
 endfunction()
 
-function(_gnu_warnings)
+function(_gnu_warnings target)
 endfunction()
