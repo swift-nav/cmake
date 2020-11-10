@@ -84,7 +84,7 @@ function (_common_clang_gnu_warnings target)
       -Wcast-qual
       -Wchar-subscripts
       -Wcomment
-      -Wconversion
+#      -Wconversion
       -Wdisabled-optimization
       -Wextra
       -Wfloat-equal
