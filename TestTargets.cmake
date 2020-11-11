@@ -186,7 +186,7 @@ function(swift_add_test_runner target)
 endfunction()
 
 function(swift_add_test target)
-  set(argOption "PARALLEL" "POST_BUILD")
+  set(argOption "LENIENT" "PARALLEL" "POST_BUILD")
   set(argSingle "COMMENT" "WORKING_DIRECTORY")
   set(argMulti "SRCS" "LINK" "INCLUDE")
 
@@ -210,8 +210,13 @@ function(swift_add_test target)
     set(wd WORKING_DIRECTORY ${x_WORKING_DIRECTORY})
   endif()
 
+  unset(language_standard_options)
+  if(x_LENIENT)
+    set(language_standard_options LENIENT)
+  endif()
+
   add_executable(${target} EXCLUDE_FROM_ALL ${x_SRCS})
-  swift_set_language_standards(${target})
+  swift_set_language_standards(${target} ${language_standard_options})
   if(x_INCLUDE)
     target_include_directories(${target} PRIVATE ${x_INCLUDE})
   endif()

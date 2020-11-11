@@ -17,6 +17,10 @@
 #    By default all compiler warnings are treated as errors, adding this
 #    option treats all warnings as just warnings.
 #
+#  LENIENT
+#    By default the standard is quite strict, adding this option in will reduce
+#    the number of warnings that it will ask the compiler to nag one about.
+#
 # Global Variable:
 #
 #  SWIFT_COMPILER_WARNING_ARE_ERROR
@@ -43,7 +47,7 @@
 #
 
 function(swift_set_language_standards)
-    set(argOption "WARNING")
+    set(argOption "LENIENT" "WARNING")
     set(argSingle "C" "CXX")
     set(argMulti "")
 
@@ -110,6 +114,30 @@ function (_common_clang_gnu_warnings target)
       -Wvolatile-register-var
       -Wwrite-strings
   )
+
+  if (NOT x_LENIENT)
+    target_compile_options(${target}
+      PRIVATE
+        -Wcast-qual
+        -Wconversion
+        -Wextra
+        -Wfloat-equal
+        -Wformat-nonliteral
+        -Wformat=2
+        -Wmissing-format-attribute
+        -Wmissing-include-dirs
+        -Wmissing-noreturn
+        -Wno-strict-prototypes
+        -Wredundant-decls
+        -Wshadow
+        -Wstrict-aliasing
+        -Wstrict-aliasing=2
+        -Wswitch-default
+        -Wswitch-enum
+        -Wunreachable-code
+        -Wunused-parameter
+    )
+  endif()
 
   if (DEFINED SWIFT_COMPILER_WARNING_ARE_ERROR)
     if (SWIFT_COMPILER_WARNING_ARE_ERROR)
