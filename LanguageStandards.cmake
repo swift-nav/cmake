@@ -127,7 +127,6 @@ function (_common_clang_gnu_warnings target)
         -Wmissing-format-attribute
         -Wmissing-include-dirs
         -Wmissing-noreturn
-        -Wno-strict-prototypes
         -Wredundant-decls
         -Wshadow
         -Wstrict-aliasing
