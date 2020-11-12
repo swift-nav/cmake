@@ -123,7 +123,6 @@ function (_common_clang_gnu_warnings target)
     target_compile_options(${target}
       PRIVATE
         -Wcast-qual
-        -Wconversion
         -Wextra
         -Wfloat-equal
         -Wformat-nonliteral
