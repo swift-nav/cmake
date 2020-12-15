@@ -231,6 +231,7 @@ function(swift_setup_clang_format)
   create_clang_format_targets(
       TOP_LEVEL ${top_level_project}
       ALL_COMMAND git ls-files ${patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
-      DIFF_COMMAND git diff --diff-filter=ACMRTUXB --name-only master -- ${patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
+      DIFF_COMMAND git diff --diff-filter=ACMRTUXB --name-only --line-prefix=`git rev-parse --show-toplevel`/ HEAD -- ${patterns}
+                   | xargs -t ${${PROJECT_NAME}_CLANG_FORMAT} -i
   )
 endfunction()
