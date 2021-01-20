@@ -6,6 +6,7 @@ function(swift_set_compiler_options)
     cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
     set(targets ${x_UNPARSED_ARGUMENTS})
 
+    foreach(target IN LISTS targets)
   target_compile_options(${target}
     PRIVATE
       -Wall
@@ -69,7 +70,6 @@ function(swift_set_compiler_options)
     endif()
   endif()
 
-    foreach(target IN LISTS targets)
       if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
         _clang_warnings(${target})
       elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
