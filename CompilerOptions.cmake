@@ -6,18 +6,6 @@ function(swift_set_compiler_options)
     cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
     set(targets ${x_UNPARSED_ARGUMENTS})
 
-    foreach(target IN LISTS targets)
-      if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
-        _common_clang_gnu_warnings(${target})
-        _clang_warnings(${target})
-      elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
-        _common_clang_gnu_warnings(${target})
-        _gnu_warnings(${target})
-      endif()
-    endforeach()
-endfunction()
-
-function (_common_clang_gnu_warnings target)
   target_compile_options(${target}
     PRIVATE
       -Wall
@@ -51,11 +39,6 @@ function (_common_clang_gnu_warnings target)
       -Wunused-variable
       -Wvolatile-register-var
       -Wwrite-strings
-  )
-
-  if (NOT x_LENIENT)
-    target_compile_options(${target}
-      PRIVATE
         -Wcast-qual
         -Wextra
         -Wfloat-equal
@@ -72,8 +55,7 @@ function (_common_clang_gnu_warnings target)
         -Wswitch-enum
         -Wunreachable-code
         -Wunused-parameter
-    )
-  endif()
+  )
 
   if (DEFINED SWIFT_COMPILER_WARNING_ARE_ERROR)
     if (SWIFT_COMPILER_WARNING_ARE_ERROR)
@@ -86,6 +68,14 @@ function (_common_clang_gnu_warnings target)
       target_compile_options(${target} PRIVATE -Werror)
     endif()
   endif()
+
+    foreach(target IN LISTS targets)
+      if(CMAKE_C_COMPILER_ID STREQUAL "Clang" OR CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        _clang_warnings(${target})
+      elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU" OR CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
+        _gnu_warnings(${target})
+      endif()
+    endforeach()
 endfunction()
 
 function(_clang_warnings target)
