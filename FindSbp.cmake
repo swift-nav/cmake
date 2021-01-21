@@ -4,4 +4,5 @@ option(libsbp_ENABLE_DOCS "" OFF)
 GenericFindDependency(
     TARGET sbp
     SOURCE_DIR "c"
+    SYSTEM_INCLUDES
     )
