@@ -9,53 +9,52 @@ function(swift_set_compiler_options)
     foreach(target IN LISTS targets)
   target_compile_options(${target}
     PRIVATE
-      -Wall
-      -Wcast-align
-      -Wchar-subscripts
-      -Wcomment
-      -Wdisabled-optimization
-      -Wformat
-      -Wformat-security
-      -Wformat-y2k
-      -Wimport
-      -Winit-self
-      -Winvalid-pch
-      -Wmissing-braces
-      -Wmissing-field-initializers
-      -Wno-unused-value
-      -Wparentheses
-      -Wpointer-arith
-      -Wreturn-type
-      -Wsequence-point
-      -Wsign-compare
-      -Wstack-protector
-      -Wswitch
-      -Wtrigraphs
-      -Wuninitialized
-      -Wunknown-pragmas
-      -Wunused
-      -Wunused-function
-      -Wunused-label
-      -Wunused-value
-      -Wunused-variable
-      -Wvolatile-register-var
-      -Wwrite-strings
-        -Wcast-qual
-        -Wextra
-        -Wfloat-equal
-        -Wformat-nonliteral
-        -Wformat=2
-        -Wmissing-format-attribute
-        -Wmissing-include-dirs
-        -Wmissing-noreturn
-        -Wredundant-decls
-        -Wshadow
-        -Wstrict-aliasing
-        -Wstrict-aliasing=2
-        -Wswitch-default
-        -Wswitch-enum
-        -Wunreachable-code
-        -Wunused-parameter
+    -Wall
+    -Wextra
+    -Wno-unused-value
+    -Wcast-align
+    -Wcast-qual
+    -Wchar-subscripts
+    -Wcomment
+    -Wconversion
+    -Wdisabled-optimization
+    -Wfloat-equal
+    -Wformat
+    -Wformat-security
+    -Wformat-y2k
+    -Wimport
+    -Winit-self
+    -Winvalid-pch
+    -Wmissing-braces
+    -Wmissing-field-initializers
+    -Wmissing-include-dirs
+    -Wparentheses
+    -Wpointer-arith
+    -Wredundant-decls
+    -Wreturn-type
+    -Wsequence-point
+    -Wshadow
+    -Wsign-compare
+    -Wstack-protector
+    -Wstrict-aliasing
+    -Wstrict-aliasing=2
+    -Wswitch
+    -Wswitch-default
+    -Wswitch-enum
+    -Wtrigraphs
+    -Wuninitialized
+    -Wunknown-pragmas
+    -Wunreachable-code
+    -Wunused
+    -Wunused-function
+    -Wunused-label
+    -Wunused-parameter
+    -Wunused-value
+    -Wunused-variable
+    -Wvolatile-register-var
+    -Wwrite-strings
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
+    $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
   )
 
   if (DEFINED SWIFT_COMPILER_WARNING_ARE_ERROR)
@@ -83,7 +82,6 @@ function(_clang_warnings target)
     target_compile_options(${target}
       PRIVATE
         -Wimplicit-fallthrough
-        -Wno-error=typedef-redefinition
     )
   endif()
 endfunction()
