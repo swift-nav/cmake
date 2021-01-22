@@ -64,17 +64,37 @@ def FixHeaderGuard(filename):
         define = linesplit[1]
         define_linenum = linenum
 
-  if ifndef_linenum > -1 and ifndef == expected_guard and define_linenum > -1 and define == expected_guard:
-        return
+  if ifndef_linenum == -1 or ifndef != expected_guard or define_linenum == -1 or define != expected_guard:
+    if ifndef_linenum == -1:
+      # file doesn't have an include guard so generate one
+      lines.insert(0, "#ifndef %s\n#define %s\n" % (expected_guard, expected_guard))
+      lines.append("\n#endif")
+    else: 
+      # need to fix
+      lines[ifndef_linenum] = "#ifndef " + expected_guard
+      lines[define_linenum] = "#define " + expected_guard
 
-  if ifndef_linenum == -1:
-    # file doesn't have an include guard so generate one
-    lines.insert(0, "#ifndef %s\n#define %s\n" % (expected_guard, expected_guard))
-    lines.append("\n#endif")
-  else: 
-    # need to fix
-    lines[ifndef_linenum] = "#ifndef " + expected_guard
-    lines[define_linenum] = "#define " + expected_guard
+  # Check for copyright notice
+  default_copyright = """/**
+ * Copyright (C) 2021 Swift Navigation Inc.
+ * Contact: Swift Navigation <dev@swiftnav.com>
+ *
+ * This source is subject to the license found in the file 'LICENSE' which must
+ * be be distributed together with this source. All other rights reserved.
+ *
+ * THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
+ * EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+ * WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+ */"""
+
+  # We'll say it should occur by line 10. Don't forget there's a
+  # placeholder line at the front.
+  for line in range(1, min(len(lines), 11)):
+    if re.search(r'Copyright', lines[line], re.I):
+        break
+  else:                       # means no copyright line was found
+    # Generate a default copyright notice
+    lines.insert(0, default_copyright)
 
   with codecs.open(filename, 'w', 'utf8', 'replace') as output_file:
     output_file.write('\n'.join(lines))
