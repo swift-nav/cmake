@@ -82,13 +82,13 @@ function(swift_set_compiler_options)
 endfunction()
 
 function(_clang_warnings target)
-  if (CMAKE_C_COMPILER_ID MATCHES "Clang")
+  if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
     target_compile_options(${target}
       PRIVATE
       $<$<COMPILE_LANGUAGE:C>:-Wimplicit-fallthrough>
     )
   endif()
-  if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
+  if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
     target_compile_options(${target}
       PRIVATE
       $<$<COMPILE_LANGUAGE:CXX>:-Wimplicit-fallthrough>
