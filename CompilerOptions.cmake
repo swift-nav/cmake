@@ -6,6 +6,10 @@ function(swift_set_compiler_options)
     cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
     set(targets ${x_UNPARSED_ARGUMENTS})
 
+    if (MSVC)
+      return()
+    endif()
+
     foreach(target IN LISTS targets)
   target_compile_options(${target}
     PRIVATE
@@ -81,9 +85,14 @@ function(_clang_warnings target)
   if (CMAKE_C_COMPILER_ID MATCHES "Clang")
     target_compile_options(${target}
       PRIVATE
-        -Wimplicit-fallthrough
+      $<$<COMPILE_LANGUAGE:C>-Wimplicit-fallthrough>
     )
   endif()
+  if (CMAKE_CXX_COMPILER_ID_MATCHES "GNU")
+    target_compile_options(${target}
+      PRIVATE
+      $<$<COMPILE_LANGUAGE:CXX>-Wimplicit-fallthrough>
+    )
 endfunction()
 
 function(_gnu_warnings target)
