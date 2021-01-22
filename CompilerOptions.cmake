@@ -85,14 +85,15 @@ function(_clang_warnings target)
   if (CMAKE_C_COMPILER_ID MATCHES "Clang")
     target_compile_options(${target}
       PRIVATE
-      $<$<COMPILE_LANGUAGE:C>-Wimplicit-fallthrough>
+      $<$<COMPILE_LANGUAGE:C>:-Wimplicit-fallthrough>
     )
   endif()
   if (CMAKE_CXX_COMPILER_ID MATCHES "GNU")
     target_compile_options(${target}
       PRIVATE
-      $<$<COMPILE_LANGUAGE:CXX>-Wimplicit-fallthrough>
+      $<$<COMPILE_LANGUAGE:CXX>:-Wimplicit-fallthrough>
     )
+  endif()
 endfunction()
 
 function(_gnu_warnings target)
