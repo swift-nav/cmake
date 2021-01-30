@@ -4,7 +4,7 @@ include(CheckCXXCompilerFlag)
 function(swift_set_compile_options)
     set(argOption "WARNING")
     set(argSingle "")
-    set(argMulti "EXTRA")
+    set(argMulti "EXTRA" "REMOVE")
 
     cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
     set(targets ${x_UNPARSED_ARGUMENTS})
@@ -74,6 +74,10 @@ function(swift_set_compile_options)
         -fno-strict-aliasing
     )
 
+    if(x_REMOVE)
+      list(REMOVE_ITEM all_flags ${x_REMOVE})
+    endif()
+
     # -Wimplicit-fallthrough only works on clang and later gcc versions
     list(INSERT x_EXTRA 0 -Wimplicit-fallthrough)
 
@@ -82,10 +86,14 @@ function(swift_set_compile_options)
       check_c_compiler_flag(${flag} supported)
       if(supported)
         list(APPEND all_flags $<$<COMPILE_LANGUAGE:C>:${flag}>)
+      else()
+        message(WARNING "${flag} not supported by C compiler")
       endif()
       check_cxx_compiler_flag(${flag} supported)
       if(supported)
         list(APPEND all_flags $<$<COMPILE_LANGUAGE:CXX>:${flag}>)
+      else()
+        message(WARNING "${flag} not supported by C++ compiler")
       endif()
     endforeach()
 
