@@ -29,17 +29,18 @@ function(swift_set_compile_options)
     # and can safely be specified without any extra checks
     list(APPEND all_flags
         -Wall
-        -Wextra
         -Wcast-align
         -Wcast-qual
         -Wchar-subscripts
         -Wcomment
         -Wconversion
         -Wdisabled-optimization
+        -Wextra
         -Wfloat-equal
         -Wformat
         -Wformat-security
         -Wformat-y2k
+        -Wimplicit-fallthrough
         -Wimport
         -Winit-self
         -Winvalid-pch
@@ -72,41 +73,40 @@ function(swift_set_compile_options)
         -fno-strict-aliasing
     )
 
-    if(x_EXCEPTIONS)
-      list(APPEND all_flags $<$<COMPILE_LANGUAGE:CXX>:-fexceptions>)
-    else()
-      list(APPEND all_algs $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>)
-    endif()
-
-    if(x_RTTI)
-      list(APPEND all_flags $<$<COMPILE_LANGUAGE:CXX>:-frtti>)
-    else()
-      list(APPEND all_algs $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
-    endif()
-
     if(x_REMOVE)
       list(REMOVE_ITEM all_flags ${x_REMOVE})
     endif()
 
-    # -Wimplicit-fallthrough only works on clang and later gcc versions
-    list(INSERT x_EXTRA 0 -Wimplicit-fallthrough)
+    if(x_EXCEPTIONS)
+      list(APPEND all_flags -fexceptions)
+    else()
+      list(APPEND all_flags -fno-exceptions)
+    endif()
 
-    # add in any extra flags specified by the caller.
+    if(x_RTTI)
+      list(APPEND all_flags -frtti)
+    else()
+      list(APPEND all_flags -fno-rtti)
+    endif()
+
+    list(APPEND all_flags ${x_EXTRA})
+
     foreach(flag ${x_EXTRA})
-      string(REPLACE "-" "_" supported ${flag})
-      check_c_compiler_flag(${flag} C_${supported})
-      if(${C_${supported}})
-        list(APPEND all_flags $<$<COMPILE_LANGUAGE:C>:${flag}>)
-      endif()
-      check_cxx_compiler_flag(${flag} CXX_${supported})
-      if(${CXX_${supported}})
-        list(APPEND all_flags $<$<COMPILE_LANGUAGE:CXX>:${flag}>)
-      endif()
-    endforeach()
+      string(REPLACE "-" "_" sanitised_flag ${flag})
+      string(TOUPPER sanitised_flag ${sanitised_flag})
 
-    # finally set the private compile options for each target
-    foreach(target IN LISTS targets)
-      target_compile_options(${target} PRIVATE ${all_flags})
+      set(c_supported C_FLAG_${sanitised_flag})
+      set(cxx_supported CXX_FLAG_${sanitised_flag})
+
+      check_c_compiler_flag(${flag} ${c_supported})
+      if(${${c_supported}})
+        target_compile_options(${target} PRIVATE $<$<COMPILE_LANGUAGE:C>:${flag}>)
+      endif()
+
+      check_cxx_compiler_flag(${flag} ${cxx_supported})
+      if(${${cxx_supported}))
+        target_compile_options(${target} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${flag}>)
+      endif()
     endforeach()
 endfunction()
 
