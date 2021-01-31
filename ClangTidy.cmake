@@ -83,6 +83,8 @@
 # will explicitly disable these targets from the command line at configure time
 #
 
+find_package(Git)
+
 # Helper function to actually create the targets, not to be used outside this file
 function(create_clang_tidy_targets)
   set(argOption "")
@@ -191,60 +193,69 @@ function(swift_setup_clang_tidy)
     message(FATAL_ERROR "Unparsed arguments ${x_UNPARSED_ARGUMENTS}")
   endif()
 
-  if(NOT EXISTS ${PROJECT_SOURCE_DIR}/.clang-tidy)
-    # create .clang-tidy in project top level
-    set(checks
-        -*
-        cert-*
-        google-*
-        misc-*
-        readability-*
-        clang-analyzer-*
-        modernize-*
-        performance-*
-        -clang-analyzer-alpha*
-        cppcoreguidelines-*
-        cert-*
-        -cert-dcl03-c
-        -cert-dcl21-cpp
-        -cert-err34-c
-        -cert-err58-cpp
-        -clang-analyzer-core.CallAndMessage
-        -clang-analyzer-core.UndefinedBinaryOperatorResult
-        -clang-analyzer-core.uninitialized.Assign
-        -clang-analyzer-core.uninitialized.UndefReturn
-        -clang-analyzer-optin.cplusplus.VirtualCall
-        -cppcoreguidelines-owning-memory
-        -cppcoreguidelines-pro-bounds-array-to-pointer-decay
-        -cppcoreguidelines-pro-bounds-constant-array-index
-        -cppcoreguidelines-pro-bounds-pointer-arithmetic
-        -cppcoreguidelines-pro-type-member-init
-        -cppcoreguidelines-pro-type-static-cast-downcast
-        -cppcoreguidelines-pro-type-vararg
-        -cppcoreguidelines-special-member-functions
-        -google-runtime-references
-        -misc-static-assert
-        -modernize-deprecated-headers
-        -modernize-pass-by-value
-        -modernize-redundant-void-arg
-        -modernize-return-braced-init-list
-        -modernize-use-auto
-        -modernize-use-bool-literals
-        -modernize-use-default-member-init
-        -modernize-use-emplace
-        -modernize-use-equals-default
-        -modernize-use-equals-delete
-        -modernize-use-using
-        -performance-unnecessary-value-param
-        -readability-avoid-const-params-in-decls
-        -readability-non-const-parameter
-        -readability-redundant-declaration
-        -readability-redundant-member-init
-    )
-    list(APPEND checks ${x_EXTRA_CHECKS})
-    list(JOIN checks "," CLANG_TIDY_CHECKS)
-    configure_file(${PROJECT_SOURCE_DIR}/cmake/common/.clang-tidy.in
-      ${PROJECT_SOURCE_DIR}/.clang-tidy)
+  execute_process(
+    COMMAND "${GIT_EXECUTABLE}" ls-files --error-unmatch ${PROJECT_SOURCE_DIR}/.clang-tidy
+    OUTPUT_QUIET
+    ERROR_QUIET
+    RESULT_VARIABLE result)
+  if(result)
+    # The very helpful variable CMAKE_CURRENT_FUNCTION_LIST_DIR isn't available until
+    # cmake 3.17 so we can run in to problems when project() is used in repo subdirectories
+    if(EXISTS ${PROJECT_SOURCE_DIR}/cmake/common/.clang-tidy.in)
+      # create .clang-tidy in project top level
+      set(checks
+          -*
+          cert-*
+          google-*
+          misc-*
+          readability-*
+          clang-analyzer-*
+          modernize-*
+          performance-*
+          -clang-analyzer-alpha*
+          cppcoreguidelines-*
+          cert-*
+          -cert-dcl03-c
+          -cert-dcl21-cpp
+          -cert-err34-c
+          -cert-err58-cpp
+          -clang-analyzer-core.CallAndMessage
+          -clang-analyzer-core.UndefinedBinaryOperatorResult
+          -clang-analyzer-core.uninitialized.Assign
+          -clang-analyzer-core.uninitialized.UndefReturn
+          -clang-analyzer-optin.cplusplus.VirtualCall
+          -cppcoreguidelines-owning-memory
+          -cppcoreguidelines-pro-bounds-array-to-pointer-decay
+          -cppcoreguidelines-pro-bounds-constant-array-index
+          -cppcoreguidelines-pro-bounds-pointer-arithmetic
+          -cppcoreguidelines-pro-type-member-init
+          -cppcoreguidelines-pro-type-static-cast-downcast
+          -cppcoreguidelines-pro-type-vararg
+          -cppcoreguidelines-special-member-functions
+          -google-runtime-references
+          -misc-static-assert
+          -modernize-deprecated-headers
+          -modernize-pass-by-value
+          -modernize-redundant-void-arg
+          -modernize-return-braced-init-list
+          -modernize-use-auto
+          -modernize-use-bool-literals
+          -modernize-use-default-member-init
+          -modernize-use-emplace
+          -modernize-use-equals-default
+          -modernize-use-equals-delete
+          -modernize-use-using
+          -performance-unnecessary-value-param
+          -readability-avoid-const-params-in-decls
+          -readability-non-const-parameter
+          -readability-redundant-declaration
+          -readability-redundant-member-init
+      )
+      list(APPEND checks ${x_EXTRA_CHECKS})
+      list(JOIN checks "," CLANG_TIDY_CHECKS)
+      configure_file(${PROJECT_SOURCE_DIR}/cmake/common/.clang-tidy.in
+        ${PROJECT_SOURCE_DIR}/.clang-tidy)
+    endif()
   endif()
 
   # Global clang-tidy enable option, influences the default project specific enable option
