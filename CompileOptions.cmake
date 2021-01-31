@@ -2,7 +2,7 @@ include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
 
 function(swift_set_compile_options)
-    set(argOption "WARNING")
+    set(argOption "WARNING" "EXCEPTIONS" "RTTI")
     set(argSingle "")
     set(argMulti "EXTRA" "REMOVE")
 
@@ -69,10 +69,20 @@ function(swift_set_compile_options)
         -Wunused-variable
         -Wvolatile-register-var
         -Wwrite-strings
-        $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>
-        $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>
         -fno-strict-aliasing
     )
+
+    if(x_EXCEPTIONS)
+      list(APPEND all_flags $<$<COMPILE_LANGUAGE:CXX>:-fexceptions>)
+    else()
+      list(APPEND all_algs $<$<COMPILE_LANGUAGE:CXX>:-fno-exceptions>)
+    endif()
+
+    if(x_RTTI)
+      list(APPEND all_flags $<$<COMPILE_LANGUAGE:CXX>:-frtti>)
+    else()
+      list(APPEND all_algs $<$<COMPILE_LANGUAGE:CXX>:-fno-rtti>)
+    endif()
 
     if(x_REMOVE)
       list(REMOVE_ITEM all_flags ${x_REMOVE})
@@ -84,12 +94,12 @@ function(swift_set_compile_options)
     # add in any extra flags specified by the caller.
     foreach(flag ${x_EXTRA})
       string(REPLACE "-" "_" supported ${flag})
-      check_c_compiler_flag(${flag} ${supported})
-      if(${${supported}})
+      check_c_compiler_flag(${flag} C_${supported})
+      if(${C_${supported}})
         list(APPEND all_flags $<$<COMPILE_LANGUAGE:C>:${flag}>)
       endif()
-      check_cxx_compiler_flag(${flag} ${supported})
-      if(${${supported}})
+      check_cxx_compiler_flag(${flag} CXX_${supported})
+      if(${CXX_${supported}})
         list(APPEND all_flags $<$<COMPILE_LANGUAGE:CXX>:${flag}>)
       endif()
     endforeach()
