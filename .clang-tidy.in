@@ -1,0 +1,5 @@
+Checks: "@CLANG_TIDY_CHECKS@"
+AnalyzeTemporaryDtors: true
+HeaderFilterRegex: .*
+...
+
