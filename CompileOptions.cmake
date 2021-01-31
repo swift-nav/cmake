@@ -91,7 +91,9 @@ function(swift_set_compile_options)
 
     list(APPEND all_flags ${x_EXTRA})
 
-    foreach(flag ${x_EXTRA})
+    unset(final_flags)
+
+    foreach(flag ${all_flags})
       string(REPLACE "-" "_" sanitised_flag ${flag})
       string(TOUPPER sanitised_flag ${sanitised_flag})
 
@@ -100,13 +102,18 @@ function(swift_set_compile_options)
 
       check_c_compiler_flag(${flag} ${c_supported})
       if(${${c_supported}})
-        target_compile_options(${target} PRIVATE $<$<COMPILE_LANGUAGE:C>:${flag}>)
+        list(APPEND final_flags $<$<COMPILE_LANGUAGE:C>:${flag}>)
       endif()
 
       check_cxx_compiler_flag(${flag} ${cxx_supported})
-      if(${${cxx_supported}))
-        target_compile_options(${target} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:${flag}>)
+      if(${${cxx_supported}})
+        list(APPEND final_flags $<$<COMPILE_LANGUAGE:CXX>:${flag}>)
       endif()
     endforeach()
+
+    foreach(target ${targets})
+      target_compile_options(${target} PRIVATE ${final_flags})
+    endforeach()
+
 endfunction()
 
