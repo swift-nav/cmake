@@ -219,6 +219,7 @@ function(swift_setup_clang_tidy)
           -cert-dcl21-cpp
           -cert-err34-c
           -cert-err58-cpp
+          -cert-oop11-cpp
           -clang-analyzer-core.CallAndMessage
           -clang-analyzer-core.UndefinedBinaryOperatorResult
           -clang-analyzer-core.uninitialized.Assign
@@ -230,6 +231,7 @@ function(swift_setup_clang_tidy)
           -cppcoreguidelines-pro-bounds-pointer-arithmetic
           -cppcoreguidelines-pro-type-member-init
           -cppcoreguidelines-pro-type-static-cast-downcast
+          -cppcoreguidelines-pro-type-union-access
           -cppcoreguidelines-pro-type-vararg
           -cppcoreguidelines-special-member-functions
           -google-runtime-references
@@ -246,6 +248,7 @@ function(swift_setup_clang_tidy)
           -modernize-use-equals-delete
           -modernize-use-using
           -performance-unnecessary-value-param
+          -performance-move-constructor-init
           -readability-avoid-const-params-in-decls
           -readability-non-const-parameter
           -readability-redundant-declaration
