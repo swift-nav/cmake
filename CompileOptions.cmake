@@ -26,89 +26,49 @@ function(swift_set_compile_options)
     endif()
 
     list(APPEND all_flags
-        -fno-strict-aliasing
-
-        # Enabled by -Wall
-        -Waddress
-        -Warray-bounds=1
-        -Wbool-compare
-        -Wc++14-compat
-        -Wcomment
-        -Wenum-compare
-        -Wimplicit-function-declaration 
-        -Wimplicit-int
-        -Winit-self 
-        -Wlogical-not-parentheses 
-        -Wmain 
-        -Wmaybe-uninitialized
-        -Wmemset-transposed-args 
-        -Wmisleading-indentation 
-        -Wmissing-braces
-        -Wnarrowing
-        -Wnonnull
-        -Wnonnull-compare
-        -Wopenmp-simd 
-        -Wparentheses
-        -Wpointer-sign
-        -Wreorder 
-        -Wreturn-type 
-        -Wsequence-point
-        -Wsign-compare
-        -Wsizeof-pointer-memaccess
-        -Wstrict-overflow 
-        -Wswitch 
-        -Wtautological-compare 
-        -Wtrigraphs
-        -Wuninitialized
-        -Wunknown-pragmas
-        -Wunused-function
-        -Wunused-label
-        -Wunused-variable
-        -Wvolatile-register-var
-
-        #Enabled by -Wextra 
-        -Wclobbered
-        -Wempty-body 
-        -Wignored-qualifiers 
-        -Wmissing-field-initializers 
-        -Wmissing-parameter-type 
-        -Wold-style-declaration
-        -Woverride-init
-        -Wshift-negative-value 
-        -Wsign-compare 
-        -Wtype-limits 
-        -Wuninitialized
-        -Wunused-but-set-parameter
-        -Wunused-local-typedefs 
-        -Wunused-parameters 
-        -Wunused-result 
-
+        -Wall
         -Wcast-align
         -Wcast-qual
         -Wchar-subscripts
+        -Wcomment
         -Wconversion
         -Wdisabled-optimization
+        -Wextra
         -Wfloat-equal
-        -Wformat-contains-nul
-        -Wformat-extra-args 
-        -Wformat-zero-length 
-        -Wformat-nonliteral
+        -Wformat
         -Wformat-security
-        -Wformat-signedness
         -Wformat-y2k
         -Wimplicit-fallthrough
         -Wimport
+        -Winit-self
         -Winvalid-pch
+        -Wmissing-braces
+        -Wmissing-field-initializers
+        -Wmissing-include-dirs
+        -Wparentheses
         -Wpointer-arith
         -Wredundant-decls
+        -Wreturn-type
+        -Wsequence-point
         -Wshadow
+        -Wsign-compare
         -Wstack-protector
         -Wswitch
         -Wswitch-default
         -Wswitch-enum
-        -Wswitch-bool
+        -Wtrigraphs
+        -Wuninitialized
+        -Wunknown-pragmas
         -Wunreachable-code
+        -Wunused
+        -Wunused-function
+        -Wunused-label
+        -Wunused-parameter
+        -Wunused-value
+        -Wunused-variable
+        -Wvolatile-register-var
         -Wwrite-strings
+        -fno-strict-aliasing
     )
 
     if(x_REMOVE)
