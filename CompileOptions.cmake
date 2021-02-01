@@ -4,7 +4,7 @@ include(CheckCXXCompilerFlag)
 function(swift_set_compile_options)
     set(argOption "WARNING" "EXCEPTIONS" "RTTI")
     set(argSingle "")
-    set(argMulti "EXTRA" "REMOVE")
+    set(argMulti "ADD" "REMOVE")
 
     cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
     set(targets ${x_UNPARSED_ARGUMENTS})
@@ -25,52 +25,90 @@ function(swift_set_compile_options)
       endif()
     endif()
 
-    # The following flags are supported by all version of gcc and clang
-    # and can safely be specified without any extra checks
     list(APPEND all_flags
-        -Wall
+        -fno-strict-aliasing
+
+        # Enabled by -Wall
+        -Waddress
+        -Warray-bounds=1
+        -Wbool-compare
+        -Wc++14-compat
+        -Wcomment
+        -Wenum-compare
+        -Wimplicit-function-declaration 
+        -Wimplicit-int
+        -Winit-self 
+        -Wlogical-not-parentheses 
+        -Wmain 
+        -Wmaybe-uninitialized
+        -Wmemset-transposed-args 
+        -Wmisleading-indentation 
+        -Wmissing-braces
+        -Wnarrowing
+        -Wnonnull
+        -Wnonnull-compare
+        -Wopenmp-simd 
+        -Wparentheses
+        -Wpointer-sign
+        -Wreorder 
+        -Wreturn-type 
+        -Wsequence-point
+        -Wsign-compare
+        -Wsizeof-pointer-memaccess
+        -Wstrict-overflow 
+        -Wswitch 
+        -Wtautological-compare 
+        -Wtrigraphs
+        -Wuninitialized
+        -Wunknown-pragmas
+        -Wunused-function
+        -Wunused-label
+        -Wunused-variable
+        -Wvolatile-register-var
+
+        #Enabled by -Wextra 
+        -Wclobbered
+        -Wempty-body 
+        -Wignored-qualifiers 
+        -Wmissing-field-initializers 
+        -Wmissing-parameter-type 
+        -Wold-style-declaration
+        -Woverride-init
+        -Wshift-negative-value 
+        -Wsign-compare 
+        -Wtype-limits 
+        -Wuninitialized
+        -Wunused-but-set-parameter
+        -Wunused-local-typedefs 
+        -Wunused-parameters 
+        -Wunused-result 
+
         -Wcast-align
         -Wcast-qual
         -Wchar-subscripts
-        -Wcomment
         -Wconversion
         -Wdisabled-optimization
-        -Wextra
         -Wfloat-equal
-        -Wformat
+        -Wformat-contains-nul
+        -Wformat-extra-args 
+        -Wformat-zero-length 
+        -Wformat-nonliteral
         -Wformat-security
+        -Wformat-signedness
         -Wformat-y2k
         -Wimplicit-fallthrough
         -Wimport
-        -Winit-self
         -Winvalid-pch
-        -Wmissing-braces
-        -Wmissing-field-initializers
-        -Wmissing-include-dirs
-        -Wparentheses
         -Wpointer-arith
         -Wredundant-decls
-        -Wreturn-type
-        -Wsequence-point
         -Wshadow
-        -Wsign-compare
         -Wstack-protector
         -Wswitch
         -Wswitch-default
         -Wswitch-enum
-        -Wtrigraphs
-        -Wuninitialized
-        -Wunknown-pragmas
+        -Wswitch-bool
         -Wunreachable-code
-        -Wunused
-        -Wunused-function
-        -Wunused-label
-        -Wunused-parameter
-        -Wunused-value
-        -Wunused-variable
-        -Wvolatile-register-var
         -Wwrite-strings
-        -fno-strict-aliasing
     )
 
     if(x_REMOVE)
@@ -89,7 +127,7 @@ function(swift_set_compile_options)
       list(APPEND all_flags -fno-rtti)
     endif()
 
-    list(APPEND all_flags ${x_EXTRA})
+    list(APPEND all_flags ${x_ADD})
 
     unset(final_flags)
 
