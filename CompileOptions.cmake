@@ -151,11 +151,14 @@ function(swift_set_compile_options)
     list(FIND enabled_languages "CXX" cxx_enabled)
 
     foreach(flag ${all_flags})
-      string(REPLACE "-" "_" sanitised_flag ${flag})
-      string(TOUPPER sanitised_flag ${sanitised_flag})
+      string(TOUPPER ${flag} sanitised_flag)
+      string(REPLACE "+" "X" sanitised_flag ${sanitised_flag})
+      string(REGEX REPLACE "[^A-Za-z_0-9]" "_" sanitised_flag ${sanitised_flag})
 
-      set(c_supported C_FLAG_${sanitised_flag})
-      set(cxx_supported CXX_FLAG_${sanitised_flag})
+      set(c_supported HAVE_C_FLAG_${sanitised_flag})
+      string(REGEX REPLACE "_+" "_" c_supported ${c_supported})
+      set(cxx_supported HAVE_CXX_FLAG_${sanitised_flag})
+      string(REGEX REPLACE "_+" "_" cxx_supported ${cxx_supported})
 
       if(${c_enabled} GREATER -1)
         check_c_compiler_flag(${flag} ${c_supported})
