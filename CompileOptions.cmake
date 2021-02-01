@@ -72,6 +72,12 @@ function(swift_set_compile_options)
     )
 
     if(x_REMOVE)
+      foreach(flag ${x_REMOVE})
+        list(FIND all_flags ${flag} found)
+        if(found EQUAL -1)
+          message(FATAL_ERROR "Compiler flag '${flag}' specified for removal is not part of the set of common compiler flags")
+        endif()
+      endforeach()
       list(REMOVE_ITEM all_flags ${x_REMOVE})
     endif()
 
