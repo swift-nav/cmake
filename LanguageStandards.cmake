@@ -1,33 +1,12 @@
 #
 # Offers a simple function to set a number of targets to follow the company
-# wide C/C++ standards. One can bypass some of these standards through the
-# following options:
+# wide C/C++ standard version. One can bypass some of these standards through
+# the following options:
 #
 # Single Value Options:
 #
-#  C
-#    C language standard to follow, current support values are 90, 99, and 11
-#    (see: https://cmake.org/cmake/help/latest/prop_tgt/C_STANDARD.html)
-#
-#  CXX
-#    C++ language standard to follow, current supported values are 98, 11, 14,
-#    17, and 20 (see: https://cmake.org/cmake/help/latest/prop_tgt/CXX_STANDARD.html)
-#
-#  WARNING
-#    By default all compiler warnings are treated as errors, adding this
-#    option treats all warnings as just warnings.
-#
-#  LENIENT
-#    By default the standard is quite strict, adding this option in will reduce
-#    the number of warnings that it will ask the compiler to nag one about.
-#
-# Global Variable:
-#
-#  SWIFT_COMPILER_WARNING_ARE_ERROR
-#    If the variable is present, this option overrules the company standard
-#    practice as well as function options. A value of true would make all
-#    warnings into error, a value of false would leave warnings as just
-#    warnings.
+#  C: C language standard to follow, current support values are 90, 99, and 11 (see: https://cmake.org/cmake/help/latest/prop_tgt/C_STANDARD.html)
+#  CXX: C++ language standard to follow, current supported values are 98, 11, 14, 17, and 20 (see: https://cmake.org/cmake/help/latest/prop_tgt/CXX_STANDARD.html)
 #
 # Usage: set a target to conform to company standard
 #
@@ -47,12 +26,11 @@
 #
 
 function(swift_set_language_standards)
-    set(argOption "LENIENT" "WARNING")
+    set(argOption "")
     set(argSingle "C" "CXX")
     set(argMulti "")
 
     cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
-    set(targets ${x_UNPARSED_ARGUMENTS})
 
     if(NOT x_C)
         set(x_C 99)
@@ -62,7 +40,7 @@ function(swift_set_language_standards)
         set(x_CXX 14)
     endif()
 
-    set_target_properties(${targets}
+    set_target_properties(${x_UNPARSED_ARGUMENTS}
         PROPERTIES
             C_STANDARD ${x_C}
             C_STANDARD_REQUIRED ON
@@ -71,6 +49,4 @@ function(swift_set_language_standards)
             CXX_STANDARD_REQUIRED ON
             CXX_EXTENSIONS OFF
     )
-
 endfunction()
-
