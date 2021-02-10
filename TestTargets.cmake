@@ -74,67 +74,17 @@
 # - build-all-tests - Build all specified tests
 # - do-all-tests - Execute all specified tests
 #
-# In addition tests can be added with the option POST_BUILD which will cause 
-# cmake to execute those tests as part of the 'all' target. To assist this 
-# functionality this module will create some extra targets
-#
-# - build-post-build-tests - Build all tests which have been marked as POST_BUILD
-# - do-post-build-tests - Run all tests which have been marked as POST_BUILD
-#
-# To specify a test to be run as part of 'make all' simply pass the option POST_BUILD
-#
-# swift_add_test(test-suite-name
-#    POST_BUILD
-#    SRCS ...srcs
-#    LINK ...libraries
-#    )
-#
-# or
-#
-# swift_add_test_runner(test-suite-name
-#    POST_BUILD
-#    COMMAND <path to executable>
-#    )
-#
-# Dependency chains are set up so that post build tests will be run towards the 
-# end of the build process. Cmake lacks functionality to run commands as a 
-# post-build step so it is not guaranteed that tests will run after everything 
-# has been built, just that they will run very late in the process. This should 
-# give a chance for compiler errors to surface before tests are run
-#
-# A command line option AUTORUN_TESTS can be specified (ON by default) to 
-# control whether or not tests run as part of 'make all'.
-#
-# cmake -DAUTORUN_TESTS=OFF <path to source>
-#
-# will disable post build tests from running as part of 'make all'. The post-build 
-# targets will still be created and can be invoked manually.
-#
 
 include(LanguageStandards)
 include(CodeCoverage)
 
-option(AUTORUN_TESTS "Automatically run post-build tests as part of 'all' target" ON)
-
 macro(swift_create_test_targets)
-if(AUTORUN_TESTS)
-  set(autorun ALL)
-endif()
-
 if(NOT TARGET build-all-tests)
   add_custom_target(build-all-tests)
 endif()
 
 if(NOT TARGET do-all-tests)
   add_custom_target(do-all-tests)
-endif()
-
-if(NOT TARGET build-post-build-tests)
-  add_custom_target(build-post-build-tests ${autorun})
-endif()
-
-if(NOT TARGET do-post-build-tests)
-  add_custom_target(do-post-build-tests ${autorun})
 endif()
 endmacro()
 
@@ -171,17 +121,7 @@ function(swift_add_test_runner target)
   endif()
 
   if(x_POST_BUILD)
-    add_custom_target(post-build-${target}
-        COMMAND ${x_COMMAND}
-        ${wd}
-        COMMENT "Running post build ${x_COMMENT}"
-        )
-    add_dependencies(do-post-build-tests post-build-${target})
-    add_dependencies(post-build-${target} build-post-build-tests)
-    if(x_DEPENDS)
-      add_dependencies(post-build-${target} ${x_DEPENDS})
-      add_dependencies(build-post-build-tests ${x_DEPENDS})
-    endif()
+    message(WARNING "Marking tests as POST_BUILD has been deprecated, tests will no longer run as part of `make all`. This test can be run individually with `make do-${target}`, or `make do-all-tests` can be used to run all registered tests")
   endif()
 endfunction()
 
@@ -241,14 +181,6 @@ function(swift_add_test target)
   add_dependencies(do-all-tests do-${target})
 
   if(x_POST_BUILD)
-    add_custom_target(
-        post-build-${target}
-        COMMAND ${target}
-        ${wd}
-        COMMENT "Running post build ${x_COMMENT}"
-        )
-    add_dependencies(do-post-build-tests post-build-${target})
-    add_dependencies(build-post-build-tests ${target})
-    add_dependencies(post-build-${target} build-post-build-tests)
+    message(WARNING "Marking tests as POST_BUILD has been deprecated, tests will no longer run as part of `make all`. This test can be run individually with `make do-${target}`, or `make do-all-tests` can be used to run all registered tests")
   endif()
 endfunction()
