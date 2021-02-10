@@ -154,7 +154,6 @@ function(swift_set_compile_options)
         -Wunused-variable
         -Wvolatile-register-var
         -Wwrite-strings
-        -fno-strict-aliasing
     )
 
     if(x_REMOVE)
