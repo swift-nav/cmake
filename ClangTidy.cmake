@@ -248,6 +248,9 @@ function(swift_setup_clang_tidy)
   # First search for an appropriate clang-tidy
   if(NOT x_CLANG_TIDY_NAMES)
     set(x_CLANG_TIDY_NAMES
+        run-clang-tidy     run-clang-tidy.py
+        run-clang-tidy-6.0 run-clang-tidy-6.0.py
+        run-clang-tidy-4.0 run-clang-tidy-4.0.py
         clang-tidy60 clang-tidy-6.0
         clang-tidy40 clang-tidy-4.0
         clang-tidy39 clang-tidy-3.9
@@ -285,11 +288,11 @@ function(swift_setup_clang_tidy)
     create_clang_tidy_targets(
         TOP_LEVEL ${top_level_project}
         ALL_COMMAND
-        ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
+        ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} -export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
           `git ls-files ${srcs}`
         DIFF_COMMAND
         git diff --diff-filter=ACMRTUXB --quiet --name-only master -- ${srcs} ||
-        ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
+        ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} -export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
           `git diff --diff-filter=ACMRTUXB --name-only master -- ${srcs}`
         )
   endif()
