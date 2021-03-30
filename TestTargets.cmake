@@ -57,6 +57,8 @@
 # but not built from source
 #
 # swift_add_test_runner(test-suite-name
+#    UNIT_TEST
+#    INTEGRATION_TEST
 #    COMMAND <testing command> <arguments>
 #    WORKING_DIRECTORY <path>
 #    DEPENDS <optional list of cmake targets on which this test depend>
@@ -64,6 +66,8 @@
 #
 # This will create just a single target:
 # - do-test-suite-name - Execute the given command
+#
+# UNIT_TEST and INTEGRATION_TEST options work identical to swift_add_test
 #
 # WORKING_DIRECTORY and DEPENDS are optional arguments. WORKING_DIRECTORY defaults
 # to ${CMAKE_CURRENT_BINARY_DIR}
@@ -154,7 +158,7 @@ macro(swift_create_test_targets)
 endmacro()
 
 function(swift_add_test_runner target)
-  set(argOption "POST_BUILD")
+  set(argOption "INTEGRATION_TEST" "POST_BUILD" "UNIT_TEST")
   set(argSingle "COMMENT" "WORKING_DIRECTORY")
   set(argMulti "COMMAND" "DEPENDS")
 
@@ -174,6 +178,12 @@ function(swift_add_test_runner target)
     set(wd WORKING_DIRECTORY ${x_WORKING_DIRECTORY})
   endif()
 
+  if (NOT x_INTEGRATION_TEST AND NOT x_UNIT_TEST)
+    message(WARNING "Missing INTEGRATION_TEST or UNIT_TEST option")
+  elseif(x_INTEGRATION_TEST AND x_UNIT_TEST)
+    message(FATAL_ERROR "Both INTEGRATION_TEST and UNIT_TEST option were specified, you can only specify one")
+  endif()
+
   add_custom_target(
       do-${target}
       COMMAND ${x_COMMAND}
@@ -183,6 +193,22 @@ function(swift_add_test_runner target)
   add_dependencies(do-all-tests do-${target})
   if(x_DEPENDS)
     add_dependencies(do-${target} ${x_DEPENDS})
+  endif()
+
+  if (x_INTEGRATION_TEST)
+    if (NOT TARGET do-all-integration-tests)
+      add_custom_target(do-all-integration-tests)
+    endif()
+
+    add_dependencies(do-all-integration-tests do-${target})
+  endif()
+
+  if (x_UNIT_TEST)
+    if (NOT TARGET do-all-unit-tests)
+      add_custom_target(do-all-unit-tests)
+    endif()
+
+    add_dependencies(do-all-unit-tests do-${target})
   endif()
 
   if(x_POST_BUILD)
