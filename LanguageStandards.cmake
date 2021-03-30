@@ -33,7 +33,7 @@ function(swift_set_language_standards)
     cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
     if(NOT x_C)
-        set(x_C 99)
+        set(x_C 11)
     endif()
 
     if(NOT x_CXX)
