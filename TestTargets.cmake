@@ -9,8 +9,7 @@
 # Basic usage is
 #
 # swift_add_test(test-suite-name
-#    UNIT_TEST
-#    INTEGRATION_TEST
+#    <UNIT_TEST|INTEGRATION_TEST>
 #    SRCS
 #      main.cc
 #      ...more source files
@@ -57,8 +56,7 @@
 # but not built from source
 #
 # swift_add_test_runner(test-suite-name
-#    UNIT_TEST
-#    INTEGRATION_TEST
+#    <UNIT_TEST|INTEGRATION_TEST>
 #    COMMAND <testing command> <arguments>
 #    WORKING_DIRECTORY <path>
 #    DEPENDS <optional list of cmake targets on which this test depend>
