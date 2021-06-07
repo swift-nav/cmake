@@ -44,7 +44,7 @@ function(swift_set_language_standards)
         PROPERTIES
             C_STANDARD ${x_C}
             C_STANDARD_REQUIRED ON
-            C_EXTENSIONS ON
+            C_EXTENSIONS OFF
             CXX_STANDARD ${x_CXX}
             CXX_STANDARD_REQUIRED ON
             CXX_EXTENSIONS OFF
