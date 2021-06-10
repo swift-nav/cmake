@@ -3,6 +3,8 @@
 # wide C/C++ standard version. One can bypass some of these standards through
 # the following options:
 #
+#   C_EXTENSIONS_ON: Turns on C_EXTENSIONS in the target properties if specified (see: https://cmake.org/cmake/help/latest/prop_tgt/C_EXTENSIONS.html)
+#
 # Single Value Options:
 #
 #  C: C language standard to follow, current support values are 90, 99, and 11 (see: https://cmake.org/cmake/help/latest/prop_tgt/C_STANDARD.html)
@@ -26,7 +28,7 @@
 #
 
 function(swift_set_language_standards)
-    set(argOption "")
+    set(argOption C_EXTENSIONS_ON)
     set(argSingle "C" "CXX")
     set(argMulti "")
 
@@ -40,11 +42,17 @@ function(swift_set_language_standards)
         set(x_CXX 14)
     endif()
 
+    set(C_EXTENSIONS ON)
+
+    if(NOT x_C_EXTENSIONS_ON)
+        set(C_EXTENSIONS OFF)
+    endif()
+
     set_target_properties(${x_UNPARSED_ARGUMENTS}
         PROPERTIES
             C_STANDARD ${x_C}
             C_STANDARD_REQUIRED ON
-            C_EXTENSIONS OFF
+            C_EXTENSIONS ${C_EXTENSIONS}
             CXX_STANDARD ${x_CXX}
             CXX_STANDARD_REQUIRED ON
             CXX_EXTENSIONS OFF
