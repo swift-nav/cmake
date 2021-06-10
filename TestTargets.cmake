@@ -256,7 +256,7 @@ function(swift_add_test target)
   endif()
 
   add_executable(${target} EXCLUDE_FROM_ALL ${x_SRCS})
-  swift_set_language_standards(${target})
+  swift_set_language_standards(${target} C_EXTENSIONS_ON)
   if(x_INCLUDE)
     target_include_directories(${target} PRIVATE ${x_INCLUDE})
   endif()
