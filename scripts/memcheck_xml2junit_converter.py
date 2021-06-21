@@ -33,6 +33,10 @@ import argparse
 import os
 import xml.etree.ElementTree as ET
 
+def get_testcase_preamble(name, close=False):
+    return '    <testcase classname="valgrind-memcheck" name="{}"{}>\n'.format(str(name), "/" if close else "")
+
+
 parser = argparse.ArgumentParser(description='Convert Valgrind Memcheck xml into JUnit xml format.')
 optional = parser._action_groups.pop()
 required = parser.add_argument_group('required arguments')
@@ -79,7 +83,7 @@ for subdir, dirs, files in os.walk(args.input_directory):
       out.write('<?xml version="1.0" encoding="UTF-8"?>\n')
       if len(errors) == 0:
         out.write('<testsuite name="valgrind" tests="1" '+test_type+''+plural+'="'+str(len(errors))+'">\n')
-        out.write('    <testcase classname="valgrind-memcheck" name="'+str(filename)+'"/>\n')
+        out.write(get_testcase_preamble(filename, close=True))
       else:
         out.write('<testsuite name="valgrind" tests="'+str(len(errors))+'" '+test_type+''+plural+'="'+str(len(errors))+'">\n')
         errorcount=0
@@ -101,9 +105,9 @@ for subdir, dirs, files in os.walk(args.input_directory):
               break
 
           if fi != None and li != None:
-            out.write('    <testcase classname="valgrind-memcheck" name="'+str(filename)+' '+str(errorcount)+' ('+kind.text+', '+fi.text+':'+li.text+')">\n')
+            out.write(get_testcase_preamble("{} {} ({}, {}:{})".format(str(filename), errorcount, kind.text, fi.text, li.text)))
           else:
-            out.write('    <testcase classname="valgrind-memcheck" name="'+str(filename)+' '+str(errorcount)+' ('+kind.text+')">\n')
+            out.write(get_testcase_preamble("{} {} ({})".format(str(filename), errorcount, kind.text)))
           out.write('        <'+test_type+' type="'+kind.text+'">\n')
           out.write('  '+what.text+'\n\n')
 
