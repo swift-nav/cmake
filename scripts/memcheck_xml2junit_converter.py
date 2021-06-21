@@ -26,11 +26,12 @@
 # * -o, --output_directory: Defines the output folder where the converted JUnit
 #                           xml files are collected.
 # * -s, --skip_tests:       Error elements in a Valgrind Memcheck xml file are
-#                           replaced by a skipped message type in the converted 
+#                           replaced by a skipped message type in the converted
 #                           JUnit xml file.
 #
+import argparse
+import os
 import xml.etree.ElementTree as ET
-import sys, os, argparse
 
 parser = argparse.ArgumentParser(description='Convert Valgrind Memcheck xml into JUnit xml format.')
 optional = parser._action_groups.pop()
@@ -111,7 +112,7 @@ for subdir, dirs, files in os.walk(args.input_directory):
             fn = frame.find('fn')
             fi = frame.find('file')
             li = frame.find('line')
-	    if fn != None:
+            if fn != None:
               bodytext = fn.text
             else:
               bodytext = "unknown function name"
@@ -126,4 +127,3 @@ for subdir, dirs, files in os.walk(args.input_directory):
           out.write('    </testcase>\n')
       out.write('</testsuite>\n')
       out.close()
-

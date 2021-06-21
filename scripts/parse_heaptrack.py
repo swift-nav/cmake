@@ -18,7 +18,10 @@
 # * -o, --output_file: Sets the output file path.
 # * -m, --message:     Adds a message to the reported memory usage.
 #
-import sys, subprocess, re, argparse
+import argparse
+import re
+import subprocess
+import sys
 
 parser = argparse.ArgumentParser(description='Log peak heap memory consumption reported by Heaptrack.')
 optional = parser._action_groups.pop()
@@ -38,7 +41,7 @@ args = parser.parse_args()
 try:
   foutput = open(args.output_file,"a")
 except IOError:
-  exit()
+  sys.exit()
 
 p_heaptrack_print = subprocess.Popen(['which', 'heaptrack_print'], stdout=subprocess.PIPE)
 program_path = p_heaptrack_print.stdout.read().rstrip()
@@ -57,4 +60,3 @@ for string in reversed(text):
     break
 foutput.close()
 p.terminate()
-
