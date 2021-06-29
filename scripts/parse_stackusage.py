@@ -16,7 +16,8 @@
 # * -o, --output_file: Sets the output file path.
 # * -m, --message:     Adds a message to the reported memory usage.
 #
-import sys, argparse
+import argparse
+import sys
 
 parser = argparse.ArgumentParser(description='Log sum of the maximal used stack for all active threads reported by Stackusage.')
 optional = parser._action_groups.pop()
@@ -37,7 +38,7 @@ try:
   finput = open(args.input_file)
   foutput = open(args.output_file,"a")
 except IOError:
-  exit()
+  sys.exit()
 
 with finput:
   lines = finput.readlines()
@@ -52,4 +53,3 @@ with finput:
   foutput.write(message)
 finput.close()
 foutput.close()
-
