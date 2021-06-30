@@ -202,7 +202,7 @@ macro(_valgrind_basic_setup _target)
 
   if (NOT (${CMAKE_BUILD_TYPE} STREQUAL "Debug" OR
            ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo"))
-    message(WARNING "Use Debug or RelWithDebInfo as cmake build type to get debug info from Valgrind")
+    message(VERBOSE "Use Debug or RelWithDebInfo as cmake build type to get debug info from Valgrind")
   endif()
 
   if (NOT (Valgrind_FOUND AND
