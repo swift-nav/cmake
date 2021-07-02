@@ -42,6 +42,7 @@
 #                           JUnit xml file.
 #
 import argparse
+import errno
 import os
 import xml.etree.ElementTree as ET
 
@@ -65,7 +66,11 @@ parser._action_groups.append(optional)
 args = parser.parse_args()
 
 if not os.path.exists(args.output_directory):
-  os.mkdir(args.output_directory)
+  try:
+    os.mkdir(args.output_directory)
+  except OSError as e:
+    if e.errno != errno.EEXIST:
+      raise
 
 for subdir, dirs, files in os.walk(args.input_directory):
   if os.path.basename(subdir) == os.path.basename(args.output_directory):
