@@ -1,4 +1,16 @@
 #!/usr/bin/env python
+
+# Copyright (C) 2021 Swift Navigation Inc.
+# Contact: Swift Navigation <dev@swift-nav.com>
+#
+# This source is subject to the license found in the file 'LICENSE' which must
+# be be distributed together with this source. All other rights reserved.
+#
+# THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
+# EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+#
+
 #
 # OVERVIEW
 #
@@ -30,6 +42,7 @@
 #                           JUnit xml file.
 #
 import argparse
+import errno
 import os
 import xml.etree.ElementTree as ET
 
@@ -53,7 +66,11 @@ parser._action_groups.append(optional)
 args = parser.parse_args()
 
 if not os.path.exists(args.output_directory):
-  os.mkdir(args.output_directory)
+  try:
+    os.mkdir(args.output_directory)
+  except OSError as e:
+    if e.errno != errno.EEXIST:
+      raise
 
 for subdir, dirs, files in os.walk(args.input_directory):
   if os.path.basename(subdir) == os.path.basename(args.output_directory):

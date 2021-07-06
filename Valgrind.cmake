@@ -1,4 +1,16 @@
 #
+# Copyright (C) 2021 Swift Navigation Inc.
+# Contact: Swift Navigation <dev@swift-nav.com>
+#
+# This source is subject to the license found in the file 'LICENSE' which must
+# be be distributed together with this source. All other rights reserved.
+#
+# THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
+# EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+#
+
+#
 # OVERVIEW
 #
 # This module introduces various Valgrind tools, which are used for profiling
@@ -202,7 +214,7 @@ macro(_valgrind_basic_setup _target)
 
   if (NOT (${CMAKE_BUILD_TYPE} STREQUAL "Debug" OR
            ${CMAKE_BUILD_TYPE} STREQUAL "RelWithDebInfo"))
-    message(WARNING "Use Debug or RelWithDebInfo as cmake build type to get debug info from Valgrind")
+    message(VERBOSE "Use Debug or RelWithDebInfo as cmake build type to get debug info from Valgrind")
   endif()
 
   if (NOT (Valgrind_FOUND AND
