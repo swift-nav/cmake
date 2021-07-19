@@ -1,4 +1,4 @@
-#!/bin/bash
+#!/bin/sh
 
 # Copyright (C) 2021 Swift Navigation Inc.
 # Contact: Swift Navigation <dev@swift-nav.com>
@@ -14,7 +14,7 @@
 failed=0
 files=$(grep -l __attribute__ $(git ls-files $@))
 
-if [[ -n "$files" ]];
+if [ -n "$files" ];
 then
   grep -Hn __attribute__ $files |
     while read line;
