@@ -22,7 +22,7 @@ function(create_check_attributes_target)
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
-  set(arguments "'*.[ch]'" "'*.[ch]pp'" "'*.cc'")
+  set(arguments "'*.[ch]'" "'*.[ch]pp'" "'*.cc'" "'*.[ch]xx'")
   foreach(excl ${x_EXCLUDE})
     list(APPEND arguments ":!:${excl}")
   endforeach()
