@@ -1,5 +1,6 @@
 #!/bin/sh
 
+#
 # Copyright (C) 2021 Swift Navigation Inc.
 # Contact: Swift Navigation <dev@swift-nav.com>
 #
@@ -11,21 +12,27 @@
 # WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 #
 
-failed=0
-files=$(grep -l __attribute__ $(git ls-files $@))
+result=0
 
-if [ -n "$files" ];
-then
-  grep -Hn __attribute__ $files |
-    while read line;
-    do
-      # Output a message similar to a compiler error so that editors/IDEs can parse it
+files=$(git ls-files "$@")
+while read -r file;
+do
+  matches=$(grep -Hn __attribute__ "$file")
+  while read -r line;
+  do
+    if [ -n "$line" ];
+    then
       location=$(echo "$line" | cut -d: -f-2)
       code=$(echo "$line" | cut -d: -f3-)
-      echo $(pwd)/$location: error: Do not use __attribute__, prefer one of the macros from swiftnav/macros.h
+      echo "$(pwd)/$location: error: Do not use __attribute__, prefer one of the macros from swiftnav/macros.h"
       echo "          $code"
-    done
-  failed=1
-fi
+      result=1
+    fi
+  done <<EOF_MATCHES
+  $matches
+EOF_MATCHES
+done <<EOF_FILES
+$files
+EOF_FILES
 
-exit $failed
+exit $result
