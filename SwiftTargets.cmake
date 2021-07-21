@@ -1,6 +1,7 @@
 include(CodeCoverage)
 include(CompileOptions)
 include(LanguageStandards)
+include(TestTargets)
 
 cmake_policy(SET CMP0007 NEW)  # new behaviour list command no longer ignores empty elements
 
@@ -13,7 +14,7 @@ macro(swift_add_executable_collate_arguments prefix name)
   endforeach()
 endmacro()
 
-function(swift_add_executable target)
+function(swift_add_library target)
   set(this_option "")
   set(this_single "")
   set(this_multi "")
@@ -38,7 +39,7 @@ function(swift_add_executable target)
   swift_add_executable_collate_arguments(x compile_options)
   swift_add_executable_collate_arguments(x language_standards)
 
-  add_executable(${target} ${x_UNPARSED_ARGUMENTS})
+  add_library(${target} ${x_UNPARSED_ARGUMENTS})
   swift_set_compile_options(${target} ${compile_options_args})
   swift_set_language_standards(${target} ${language_standards_args})
   target_code_coverage(${target} AUTO ALL)
