@@ -6,9 +6,10 @@ include(TestTargets)
 cmake_policy(SET CMP0007 NEW)  # new behaviour list command no longer ignores empty elements
 
 macro(swift_collate_arguments prefix name)
+  set(exclusion_list ${ARGN})
   set(${name}_args "")
   foreach(arg IN LISTS ${name}_option ${name}_single ${name}_multi)
-    list(FIND ARGN "${arg}" index)
+    list(FIND exclusion_list "${arg}" index)
     if (NOT index EQUAL -1)
       continue()
     endif()
