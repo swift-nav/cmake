@@ -22,7 +22,7 @@ endmacro()
 function(swift_add_target target type)
   set(this_option "")
   set(this_single "")
-  set(this_multi "SOURCES")
+  set(this_multi SOURCES)
 
   set(compile_options_option WARNING NO_EXCEPTIONS EXCEPTIONS NO_RTTI RTTI)
   set(compile_options_single "")
