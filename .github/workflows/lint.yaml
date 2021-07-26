@@ -1,0 +1,22 @@
+name: Lint
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - master
+    tags:
+      - "*"
+  pull_request:
+jobs:
+  lint:
+    name: Test
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup
+        run: pip install trim
+
+      - name: Check whitespace
+        run: |
+          trim *.cmake
+          git diff --exit-code
