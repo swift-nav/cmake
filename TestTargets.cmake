@@ -195,11 +195,11 @@ function(swift_add_test_runner target)
   endif()
 
   add_custom_target(
-      do-${target}
-      COMMAND ${x_COMMAND}
-      ${wd}
-      COMMENT "Running ${x_COMMENT}"
-      )
+    do-${target}
+    COMMAND ${x_COMMAND}
+    ${wd}
+    COMMENT "Running ${x_COMMENT}"
+  )
   add_dependencies(do-all-tests do-${target})
   if(x_DEPENDS)
     add_dependencies(do-${target} ${x_DEPENDS})
@@ -223,10 +223,10 @@ function(swift_add_test_runner target)
 
   if(x_POST_BUILD)
     add_custom_target(post-build-${target}
-        COMMAND ${x_COMMAND}
-        ${wd}
-        COMMENT "Running post build ${x_COMMENT}"
-        )
+      COMMAND ${x_COMMAND}
+      ${wd}
+      COMMENT "Running post build ${x_COMMENT}"
+    )
     add_dependencies(do-post-build-tests post-build-${target})
     add_dependencies(post-build-${target} build-post-build-tests)
     if(x_DEPENDS)
@@ -277,20 +277,20 @@ function(swift_add_test target)
   endif()
 
   add_custom_target(
-      do-${target}
-      COMMAND ${target}
-      ${wd}
-      COMMENT "Running ${x_COMMENT}"
-      )
+    do-${target}
+    COMMAND ${target}
+    ${wd}
+    COMMENT "Running ${x_COMMENT}"
+  )
   add_dependencies(do-${target} ${target})
   target_code_coverage(${target} AUTO ALL)
 
   if(x_PARALLEL)
     add_custom_target(parallel-${target}
-        COMMAND ${PROJECT_SOURCE_DIR}/third_party/gtest-parallel/gtest-parallel $<TARGET_FILE:${target}>
-        ${wd}
-        COMMENT "Running ${x_COMMENT} in parallel"
-        )
+      COMMAND ${PROJECT_SOURCE_DIR}/third_party/gtest-parallel/gtest-parallel $<TARGET_FILE:${target}>
+      ${wd}
+      COMMENT "Running ${x_COMMENT} in parallel"
+    )
     add_dependencies(parallel-${target} ${target})
   endif()
 
@@ -328,11 +328,11 @@ function(swift_add_test target)
 
   if(x_POST_BUILD)
     add_custom_target(
-        post-build-${target}
-        COMMAND ${target}
-        ${wd}
-        COMMENT "Running post build ${x_COMMENT}"
-        )
+      post-build-${target}
+      COMMAND ${target}
+      ${wd}
+      COMMENT "Running post build ${x_COMMENT}"
+    )
     add_dependencies(do-post-build-tests post-build-${target})
     add_dependencies(build-post-build-tests ${target})
     add_dependencies(post-build-${target} build-post-build-tests)

@@ -9,14 +9,18 @@ on:
   pull_request:
 jobs:
   lint:
-    name: Test
+    name: Lint
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
       - name: Setup
-        run: pip install trim
+        run: pip install trim cmakelang
 
       - name: Check whitespace
         run: |
           trim *.cmake
           git diff --exit-code
+
+      - name: Lint cmake files
+        run: |
+          cmake-lint *.cmake

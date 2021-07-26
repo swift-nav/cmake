@@ -98,11 +98,11 @@ function(create_clang_format_targets)
   add_custom_target(clang-format-all-${PROJECT_NAME}
       COMMAND ${x_ALL_COMMAND}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      )
+  )
   add_custom_target(clang-format-diff-${PROJECT_NAME}
       COMMAND ${x_DIFF_COMMAND}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      )
+  )
 
   # Top level projects will create the targets clang-format-all and
   # clang-format-diff with the same commands as the namespaced targets
@@ -112,21 +112,21 @@ function(create_clang_format_targets)
     add_custom_target(clang-format-all
         COMMAND ${x_ALL_COMMAND}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
+    )
     add_custom_target(clang-format-diff
         COMMAND ${x_DIFF_COMMAND}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
+    )
     add_custom_target(clang-format-all-check
         COMMAND git diff --exit-code
         DEPENDS clang-format-all
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
+    )
     add_custom_target(clang-format-diff-check
         COMMAND git diff --exit-code
         DEPENDS clang-format-diff
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
+    )
   endif()
 endfunction()
 
@@ -184,7 +184,7 @@ function(swift_setup_clang_format)
           TOP_LEVEL ${top_level_project}
           ALL_COMMAND ${x_SCRIPT} all
           DIFF_COMMAND ${x_SCRIPT} diff
-          )
+      )
     else()
       message(FATAL_ERROR "Specified clang-format script ${x_SCRIPT} doesn't exist")
     endif()
@@ -202,7 +202,7 @@ function(swift_setup_clang_format)
           TOP_LEVEL ${top_level_project}
           ALL_COMMAND ${script} all
           DIFF_COMMAND ${script} diff
-          )
+      )
       return()
     endif()
   endforeach()
@@ -221,7 +221,7 @@ function(swift_setup_clang_format)
         clang-format35 clang-format-3.5
         clang-format34 clang-format-3.4
         clang-format
-       )
+    )
   endif()
   find_program(CLANG_FORMAT NAMES ${x_CLANG_FORMAT_NAMES})
 

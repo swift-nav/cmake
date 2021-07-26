@@ -132,7 +132,7 @@ function(search_dependency_source)
         WORKING_DIRECTORY ${P}
         OUTPUT_VARIABLE GIT_COMMIT
         OUTPUT_STRIP_TRAILING_WHITESPACE
-        )
+      )
       file(WRITE ${CMAKE_BINARY_DIR}/submodule-checks/${x_TARGET}.used "${GIT_COMMIT} ${P}\n")
 
       if(NOT TARGET ${x_TARGET})
@@ -352,9 +352,9 @@ function(GenericFindDependency)
 
       # Look for a suitably named directory which contains a CMakeLists.txt, try to add it
       search_dependency_source(
-          TARGET "${x_TARGET}"
-          SOURCE_SEARCH_PATHS "${x_SOURCE_SEARCH_PATHS}"
-          )
+        TARGET "${x_TARGET}"
+        SOURCE_SEARCH_PATHS "${x_SOURCE_SEARCH_PATHS}"
+      )
 
       # If the expected target was created we have succeeded
       if(TARGET ${x_TARGET})
@@ -374,10 +374,10 @@ function(GenericFindDependency)
 
       # Search either system libraries or sysroot, this is handled by cmake itself
       search_dependency_system(
-          TARGET "${x_TARGET}"
-          SYSTEM_HEADER_FILE "${x_SYSTEM_HEADER_FILE}"
-          SYSTEM_LIB_NAMES "${x_SYSTEM_LIB_NAMES}"
-          )
+        TARGET "${x_TARGET}"
+        SYSTEM_HEADER_FILE "${x_SYSTEM_HEADER_FILE}"
+        SYSTEM_LIB_NAMES "${x_SYSTEM_LIB_NAMES}"
+      )
 
       # If the target was found we have succeeded
       if(TARGET ${x_TARGET})

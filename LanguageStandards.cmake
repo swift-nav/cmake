@@ -38,27 +38,28 @@
 #
 
 function(swift_set_language_standards)
-    set(argOption "")
-    set(argSingle "C" "CXX")
-    set(argMulti "")
+  set(argOption "")
+  set(argSingle "C" "CXX")
+  set(argMulti "")
 
-    cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
+  cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
-    if(NOT x_C)
-        set(x_C 11)
-    endif()
+  if(NOT x_C)
+    set(x_C 11)
+  endif()
 
-    if(NOT x_CXX)
-        set(x_CXX 14)
-    endif()
+  if(NOT x_CXX)
+    set(x_CXX 14)
+  endif()
 
-    set_target_properties(${x_UNPARSED_ARGUMENTS}
-        PROPERTIES
-            C_STANDARD ${x_C}
-            C_STANDARD_REQUIRED ON
-            C_EXTENSIONS ON
-            CXX_STANDARD ${x_CXX}
-            CXX_STANDARD_REQUIRED ON
-            CXX_EXTENSIONS OFF
-    )
+  set_target_properties(
+    ${x_UNPARSED_ARGUMENTS}
+    PROPERTIES
+    C_STANDARD ${x_C}
+    C_STANDARD_REQUIRED ON
+    C_EXTENSIONS ON
+    CXX_STANDARD ${x_CXX}
+    CXX_STANDARD_REQUIRED ON
+    CXX_EXTENSIONS OFF
+  )
 endfunction()
