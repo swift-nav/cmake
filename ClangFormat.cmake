@@ -80,7 +80,7 @@
 #
 # The default value is ON for top level projects, and OFF for any others.
 #
-# Running 
+# Running
 #
 # cmake -D<project>_ENABLE_CLANG_FORMAT=OFF ..
 #
@@ -211,7 +211,7 @@ function(swift_setup_clang_format)
 
   # First try to find clang-format
   if(NOT x_CLANG_FORMAT_NAMES)
-    set(x_CLANG_FORMAT_NAMES 
+    set(x_CLANG_FORMAT_NAMES
         clang-format60 clang-format-6.0
         clang-format40 clang-format-4.0
         clang-format39 clang-format-3.9

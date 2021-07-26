@@ -122,7 +122,7 @@ endmacro()
 
 function(swift_add_bloaty target)
   eval_bloaty_target(${target})
-  
+
   set(argOption SEGMENTS SECTIONS SYMBOLS COMPILEUNITS LOG_TOTAL_MEMORY)
   set(argSingle NUM SORT WORKING_DIRECTORY REPORT_DIRECTORY)
   set(argMulti LOG_TOTAL_MEMORY_OPTIONS)

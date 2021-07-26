@@ -17,4 +17,3 @@ GenericFindDependency(
     SOURCE_DIR "json"
     SYSTEM_INCLUDES
     )
-

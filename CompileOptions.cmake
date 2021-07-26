@@ -21,41 +21,41 @@
 # - Warnings as errors (-Werror)
 # - Extensive set of enabled warnings
 #
-# Exceptions and/or RTTI can be selectively enabled for a 
-# target be passing EXCEPTIONS and/or RTTI as a parameter, eg 
+# Exceptions and/or RTTI can be selectively enabled for a
+# target be passing EXCEPTIONS and/or RTTI as a parameter, eg
 #
 #    swift_set_compile_options(sample-target EXCEPTIONS RTTI)
 #
 # will enable exceptions and rtti for sample-target only
 #
 # Warning flags can be removed from the default set by passing
-# REMOVE followed by a list of warning flags, eg 
+# REMOVE followed by a list of warning flags, eg
 #
 #    swift_set_compile_options(sample-target REMOVE -Wconversion)
 #
-# will prevent -Wconversion from being passed to the compiler 
-# for sample-target only 
+# will prevent -Wconversion from being passed to the compiler
+# for sample-target only
 #
-# Similarly extra options can be given by passing ADD followed 
-# by a list of warning flags (or other compiler options), eg 
+# Similarly extra options can be given by passing ADD followed
+# by a list of warning flags (or other compiler options), eg
 #
 #    swift_set_compile_options(sample-target ADD -Wformat=2)
 #
-# will pass -Wformat=2 to the compiler for sample-target only 
+# will pass -Wformat=2 to the compiler for sample-target only
 #
-# By default -Werror is set, but this can be prevented by passing 
-# WARNING as a parameter, eg 
+# By default -Werror is set, but this can be prevented by passing
+# WARNING as a parameter, eg
 #
 #    swift_set_compile_options(sample-target WARNING)
 #
-# will disable warnings-as-errors for sample-target only 
+# will disable warnings-as-errors for sample-target only
 #
 # All flags will be checked for suitability with the in-use
-# compilers before being selected. This is important since 
-# Swift code tends to be compiled with a wide variety of 
-# compilers which may not support the same set of flags and 
-# options. Therefore, it should be preferred to use this 
-# function to set compiler flags and options rather than 
+# compilers before being selected. This is important since
+# Swift code tends to be compiled with a wide variety of
+# compilers which may not support the same set of flags and
+# options. Therefore, it should be preferred to use this
+# function to set compiler flags and options rather than
 # target_compile_options()
 #
 
@@ -230,4 +230,3 @@ function(swift_set_compile_options)
     endforeach()
 
 endfunction()
-

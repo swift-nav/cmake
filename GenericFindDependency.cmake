@@ -19,7 +19,7 @@
 # in the host system or cross compiling sysroot.
 #
 # By default dependencies are first sought in bundled source code, and if not
-# found from the system libraries. This default behaviour can be controlled by 
+# found from the system libraries. This default behaviour can be controlled by
 # several options
 #
 # EXCLUDE - can be used to disable searching in a particular location. Valid
@@ -40,14 +40,14 @@
 # create an interface target which can be used to link in to any other target.
 #
 # The options "SYSTEM_HEADER_FILE" and "SYSTEM_LIB_NAMES" will be passed verbatim
-# to the cmake functions find_header() and find_library() to search all the 
+# to the cmake functions find_header() and find_library() to search all the
 # correct system locations.
 #
 # When using bundled source code the function will search several default locations
 # under '${CMAKE_CURRENT_SOURCE_DIR}/third_party' based on the package and target
 # names. The search location can be controlled by the "SOURCE_DIR" parameter
 #
-# The target name can be controlled by the option "TARGET". When using 
+# The target name can be controlled by the option "TARGET". When using
 # bundled source code this is used to verify the target was created properly
 # after calling add_subdirectory. If the add_subdirectory exposes a number of
 # other targets, you can use the "ADDITIONAL_TARGETS" option to list them, this
@@ -86,7 +86,7 @@ function(search_dependency_source)
       message(STATUS "Found ${x_TARGET} source code in ${P}")
       # Function arguments are automatically parsed out in to numbered variables
       # ARG#, and a complete argument list is stored in ARGN. Variables are passed
-      # down the function call stack until they are overwritten. This allows a 
+      # down the function call stack until they are overwritten. This allows a
       # badly written function to test for the existance of an optional variable
       # in it's own argument list but actually pick up a variable for a function
       # much higher up the call stack.
@@ -100,12 +100,12 @@ function(search_dependency_source)
       # here.
       #
       # This is a very ugly way of mitigating the error. We manually unset all
-      # the cmake variable related to function arguments immediately before 
+      # the cmake variable related to function arguments immediately before
       # including the dependency project. This will make it APPEAR as though
       # add_subdirectory was called from outside a function or macro.
       #
       # Note the limitation, argument lists are apparently unlimited, we are only
-      # unsetting the first 100 argument variables. This will probably be enough 
+      # unsetting the first 100 argument variables. This will probably be enough
       # as I haven't seen functions taking that many arguments, but it certainly
       # isn't bulletproof. Cmake doesn't appear to have any functionality which
       # could be used to achieve this so we are left with few, if any, other options.
@@ -119,7 +119,7 @@ function(search_dependency_source)
       #
       # Additionally, cmake variable are only propogated down the stack, not up
       # (unless PARENT_SCOPE is used in set()) so by unsetting variables here we
-      # won't affect whatever function called us, or anything even higher up 
+      # won't affect whatever function called us, or anything even higher up
       # the call stack.
       foreach(i RANGE 0 100)
         unset(ARGV${i})
@@ -134,11 +134,11 @@ function(search_dependency_source)
         OUTPUT_STRIP_TRAILING_WHITESPACE
         )
       file(WRITE ${CMAKE_BINARY_DIR}/submodule-checks/${x_TARGET}.used "${GIT_COMMIT} ${P}\n")
-  
+
       if(NOT TARGET ${x_TARGET})
         message(WARNING "Source code in ${P} did not declare target ${x_TARGET} as was expected")
       endif()
-  
+
       # This is very ugly, but required for some python modules, it will not last beyond this temporary solution
       if(EXISTS "${P}/include")
         set(x_${x_TARGET}_IncludeDir "${P}/include" CACHE PATH "Path to ${x_TARGET} bundled source code header files")
@@ -188,7 +188,7 @@ endfunction()
 # This macro will return(), ie cause the caller to return, if there are no available locations.
 # It will raise a fatal error if unknown values are specified for any of the input parameters.
 #
-# Inputs: 
+# Inputs:
 # - x_PREFER - Parameter to GenericFindDependency, preferred location as defined by the project
 # - SWIFT_PREFERRED_DEPENDENCY_SOURCE - Global user preference, defined on the command line
 # - x_EXCLUDE - List of sources to exclude from consideration
@@ -355,7 +355,7 @@ function(GenericFindDependency)
           TARGET "${x_TARGET}"
           SOURCE_SEARCH_PATHS "${x_SOURCE_SEARCH_PATHS}"
           )
-      
+
       # If the expected target was created we have succeeded
       if(TARGET ${x_TARGET})
         message(STATUS "Using dependency ${x_TARGET} from bundled source code")
@@ -407,4 +407,3 @@ function(GenericFindDependency)
     endif()
   endforeach()
 endfunction()
-    

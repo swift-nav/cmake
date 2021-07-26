@@ -113,7 +113,7 @@ endmacro()
 
 function(swift_add_stackusage target)
   eval_stackusage_target(${target})
-  
+
   set(argOption LOG_TOTAL_MEMORY)
   set(argSingle NAME WORKING_DIRECTORY REPORT_DIRECTORY)
   set(argMulti PROGRAM_ARGS LOG_TOTAL_MEMORY_OPTIONS)
@@ -141,7 +141,7 @@ function(swift_add_stackusage target)
   endif()
 
   set(resource_options -o ${report_directory}/${output_file})
-  
+
   if (NOT Stackusage_FOUND)
     add_custom_target(${target_name}
       COMMAND $(MAKE) --directory=${stackusage_BINARY_DIR}

@@ -20,4 +20,4 @@ if (NOT GProf_FOUND)
   set(GProf_FOUND ${GProf_FOUND} CACHE BOOL "Flag whether GProf package was found")
   mark_as_advanced(GProf_FOUND GProf_EXECUTABLE)
 
-endif ()
+endif()

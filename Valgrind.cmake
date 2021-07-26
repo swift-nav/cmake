@@ -133,7 +133,7 @@
 #
 # GENERATE_JUNIT_REPORT converts the xml file output to a JUnit xml file
 # format that can be picked up by CI tools such as Jenkins to display test
-# results. 
+# results.
 #
 # JUNIT_OPTIONS enables additional options when generating JUnit reports.
 # * --input_directory:  Set equal to a folder path where Valgrind Memcheck xml
@@ -425,4 +425,4 @@ function(swift_add_valgrind_massif target)
   endif()
 
   setup_custom_target(${valgrind_tool} ${target_name})
- endfunction()
+endfunction()

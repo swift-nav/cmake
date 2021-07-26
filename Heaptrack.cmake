@@ -112,7 +112,7 @@ endmacro()
 
 function(swift_add_heaptrack target)
   eval_heaptrack_target(${target})
-  
+
   set(argOption LOG_TOTAL_MEMORY)
   set(argSingle NAME WORKING_DIRECTORY REPORT_DIRECTORY)
   set(argMulti PROGRAM_ARGS LOG_TOTAL_MEMORY_OPTIONS)

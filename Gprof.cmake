@@ -190,7 +190,7 @@ function(swift_add_gprof target)
   if (x_REPORT_DIRECTORY)
     set(report_directory ${x_REPORT_DIRECTORY})
   endif()
-  
+
   unset(post_commands)
   if (GProf_FOUND AND x_GENERATE_REPORT)
     list(APPEND post_commands COMMAND find ${report_directory}/${report_folder} -regex '.*gmon\.[0-9].*' -execdir ${GProf_EXECUTABLE} $<TARGET_FILE:${target}> {} > ${report_directory}/${report_folder}/gmon.txt + -quit)

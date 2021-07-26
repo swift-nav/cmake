@@ -17,4 +17,3 @@ GenericFindDependency(
   SOURCE_DIR "nanopb"
   SYSTEM_INCLUDES
 )
-
