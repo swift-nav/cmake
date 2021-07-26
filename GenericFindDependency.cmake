@@ -121,6 +121,9 @@ function(search_dependency_source)
       # (unless PARENT_SCOPE is used in set()) so by unsetting variables here we
       # won't affect whatever function called us, or anything even higher up
       # the call stack.
+
+      # See https://github.com/cheshirekow/cmake_format/pull/257
+      # cmake-lint: disable=E1120
       foreach(i RANGE 0 100)
         unset(ARGV${i})
       endforeach()
