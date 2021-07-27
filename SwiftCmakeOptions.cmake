@@ -182,7 +182,10 @@ function(swift_create_project_options)
   if(NOT ${x_PROJECT}_BUILD_VARS_PROTECTED)
     foreach(feat "TESTS" "TEST_LIBS" "EXAMPLES" "DOCS")
       if(DEFINED ${x_PROJECT}_BUILD_${feat})
-        message(FATAL_ERROR "Something or someone has set ${x_PROJECT}_BUILD_${feat}. This is an internal option and must not be set from anywhere. Use ${x_PROJECT}_ENABLE_${feat} instead.")
+        message(
+          FATAL_ERROR
+          "Something or someone has set ${x_PROJECT}_BUILD_${feat}. This is an internal option and must not be set from anywhere. Use ${x_PROJECT}_ENABLE_${feat} instead."
+        )
       endif()
     endforeach()
     set(${x_PROJECT}_BUILD_VARS_PROTECTED ON CACHE BOOL "Checked that nothing has set any BUILD vars manually")

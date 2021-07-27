@@ -82,7 +82,9 @@
 # add_code_coverage_all_targets(EXCLUDE test/*) # Adds the 'ccov-all' target set and sets it to exclude all files in test/ folders.
 #
 # add_executable(theExe main.cpp non_covered.cpp)
-# target_code_coverage(theExe AUTO ALL EXCLUDE non_covered.cpp test/*) # As an executable target, adds to the 'ccov' and ccov-all' targets, and the reports will exclude the non-covered.cpp file, and any files in a test/ folder.
+# target_code_coverage(theExe AUTO ALL EXCLUDE non_covered.cpp test/*)
+#          # As an executable target, the above adds to the 'ccov' and ccov-all' targets,
+#          # and the reports will exclude the non-covered.cpp file, and any files in a test/ folder.
 # ~~~
 
 # Options
