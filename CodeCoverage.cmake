@@ -206,11 +206,12 @@ endif()
 # Optional:
 # AUTO - Adds the target to the 'ccov' target so that it can be run in a batch with others easily. Effective on executable targets.
 # ALL - Adds the target to the 'ccov-all' and 'ccov-all-report' targets, which merge several executable targets coverage data to a single report. Effective on executable targets.
+# NO_RUN - Excludes the target from having a 'ccov-run-*' target. Effective on executable targets.
 # EXCLUDE <REGEX_PATTERNS> - Excludes files of the patterns provided from coverage. **These do not copy to the 'all' targets.**
 # ~~~
 function(target_code_coverage TARGET_NAME)
   # Argument parsing
-  set(options AUTO ALL)
+  set(options AUTO ALL NO_RUN)
   set(multi_value_keywords EXCLUDE)
   cmake_parse_arguments(target_code_coverage
                         "${options}"
@@ -240,7 +241,7 @@ function(target_code_coverage TARGET_NAME)
 
     # Targets
     get_target_property(target_type ${TARGET_NAME} TYPE)
-    if(target_type STREQUAL "EXECUTABLE")
+    if(target_type STREQUAL "EXECUTABLE" AND NOT target_code_coverage_NO_RUN)
       if("${CMAKE_C_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang"
          OR "${CMAKE_CXX_COMPILER_ID}" MATCHES "(Apple)?[Cc]lang")
         add_custom_target(

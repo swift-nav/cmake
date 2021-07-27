@@ -258,7 +258,7 @@ function(swift_add_target target type)
   if (NOT x_INTERFACE)
     swift_set_compile_options(${target} ${compile_options_args})
     swift_set_language_standards(${target} ${language_standards_args})
-    target_code_coverage(${target} AUTO ALL)
+    target_code_coverage(${target} NO_RUN)
   endif()
 endfunction()
 
