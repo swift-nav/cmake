@@ -1,3 +1,139 @@
+#
+# Copyright (C) 2021 Swift Navigation Inc.
+# Contact: Swift Navigation <dev@swift-nav.com>
+#
+# This source is subject to the license found in the file 'LICENSE' which must
+# be be distributed together with this source. All other rights reserved.
+#
+# THIS CODE AND INFORMATION IS PROVIDED "AS IS" WITHOUT WARRANTY OF ANY KIND,
+# EITHER EXPRESSED OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE IMPLIED
+# WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
+#
+
+#
+# OVERVIEW
+# ========
+#
+# Offers a set of functions which should be replacements for "add_executable"
+# and "add_library". Upon including this module, the following functions should
+# be available to users:
+#
+#   * swift_add_executable - defines an executable which is production worthy
+#   * swift_add_library - defines a library which is production worthy
+#   * swift_add_tool - defines an executable which is an internal tool
+#   * swift_add_tool_library - defines a library which is used by internal tools
+#   * swift_add_test_library - defines a library which is used by our test libraries
+#
+# The term "production worthy" means that it complies with the strict standards
+# set forth by functions like "swift_set_compile_options" and
+# "swift_set_language_standards".
+#
+# Note that by including this module, the following functions are also
+# available for use:
+#
+#   * swift_add_test
+#   * swift_add_test_runner
+#
+# These functions are defined in "SwiftTargets.cmake", so please consult that
+# module for details on how to use them. Please notes that currently these
+# functions although very similar do have different API to the ones expressed
+# in this module.
+#
+# PURPOSE
+# =======
+#
+# The direct usage of "add_executable" and "add_library" has the unfortunate
+# drawback of requiring users to call function like "swift_set_compile_options"
+# and "swift_set_language_standards" explicitly to impose coding standards on
+# new targets. This imposes higher cognitive demand on users and as such can
+# lead to them accidentally forgetting to add them and thereby resulting in
+# portions of the codebase being less pedantic about coding guidelines.
+#
+# The usage of "swift_add_*" functions is meant to overcome these issues by:
+#
+#   * centralizing control over targets
+#   * categorizing targets according to different levels of stringent-ness
+#   * highlighting which targets are defined by Swift Navigation and which are
+#     defined and controlled by third party libraries
+#   * target tracking and reporting of compliance
+#
+# USAGE
+# =====
+#
+# For those that just want to get a quick synopsis of what it takes to use the
+# function, lets say we want to create a new library, lets call it "my-lib",
+# you can do so via:
+#
+#   swift_add_library(my-lib SOURCES a.cc b.cc c.cc)
+#
+# This would be roughly equivalent to:
+#
+#   add_librar(my-lib a.cc b.cc c.cc)
+#   swift_set_compile_options(my-lib)
+#   swift_set_language_standards(my-lib)
+#   target_code_coverage(my-lib AUTO ALL)
+#
+# You can achieve the same with an executable, simply replace "swift_add_library"
+# with "swift_add_executable". Note that to create libraries, you can use the
+# following function:
+#
+#   * swift_add_library
+#   * swift_add_tool_library
+#   * swift_add_test_library
+#
+# With executables, you can use one of the following:
+#
+#   * swift_add_executable
+#   * swift_add_tool
+#
+# There are a number of keywords you can use for the functions, they are listed
+# below. Just a reminder that when using these keywords, please try and specify
+# the multi-value keywords last, this can avoid some of the cmake issues that
+# people might stumble upon if they incorrectly spell the keyword.
+#
+# OPTION KEYWORDS
+#
+#  INTERFACE: this only works for library targets, it marks the library as an
+#  "interface" library (see: "add_library"'s INTERFACE keyword)
+#
+#  STATIC|SHARED|MODULE: this only works for library targets, it specifies the
+#  type of library, mirrors the exact same options as the "add_library" uses.
+#
+#  WARNING: normally if the compiler identifies any warnings in the program,
+#  it will error the build, by adding this keyword, the target will proceed
+#  with the build without failing the build.
+#
+#  EXCEPTIONS: by default, all targets have C++ exceptions turned off, by
+#  adding this keyword, a target can use exceptions.
+#
+#  RTTI: by default, all targets will have C++ RTTI (run time type information)
+#  disabled, by adding this keyword it enables RTTI on the target.
+#
+#  C_EXTENSIONS_ON: C extensions are disabled by default, adding this keyword
+#  enables C extensions.
+#
+# SINGLE VALUE KEYWORDS
+#
+#  C_STANDARD: allow uses to override the default C standard used in a target,
+#  see https://cmake.org/cmake/help/latest/prop_tgt/C_STANDARD.html for the
+#  list of possible values.
+#
+#  CXX_STANDARD: allow uses to override the default C++ standard used in a
+#  target, see https://cmake.org/cmake/help/latest/prop_tgt/CXX_STANDARD.html
+#  for the list of possible values.
+#
+# MULTI VALUE KEYWORDS
+#
+#  SOURCES: lists out the sources for a particular target. if one uses the
+#  INTERFACE keyword, one must not specify this keyword as well.
+#
+#  ADD_COMPILE_OPTIONS: allows users to specify compile options on a target
+#
+#  REMOVE_COMPILE_OPTIONS: allows users to remove the default compile options
+#  that are enabled by "swift_set_compile_options" (see "CompileOptions.cmake"
+#  for details).
+#
+
 include(CodeCoverage)
 include(CompileOptions)
 include(LanguageStandards)
@@ -35,7 +171,7 @@ function(swift_add_target target type)
   set(this_single "")
   set(this_multi SOURCES)
 
-  set(compile_options_option WARNING NO_EXCEPTIONS EXCEPTIONS NO_RTTI RTTI)
+  set(compile_options_option WARNING EXCEPTIONS RTTI)
   set(compile_options_single "")
   set(compile_options_multi ADD_COMPILE_OPTIONS REMOVE_COMPILE_OPTIONS)
 
