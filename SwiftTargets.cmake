@@ -34,7 +34,7 @@
 #   * swift_add_test
 #   * swift_add_test_runner
 #
-# These functions are defined in "SwiftTargets.cmake", so please consult that
+# These functions are defined in "TestTargets.cmake", so please consult that
 # module for details on how to use them. Please notes that currently these
 # functions although very similar do have different API to the ones expressed
 # in this module.
@@ -68,10 +68,10 @@
 #
 # This would be roughly equivalent to:
 #
-#   add_librar(my-lib a.cc b.cc c.cc)
+#   add_library(my-lib a.cc b.cc c.cc)
 #   swift_set_compile_options(my-lib)
 #   swift_set_language_standards(my-lib)
-#   target_code_coverage(my-lib AUTO ALL)
+#   target_code_coverage(my-lib NO_RUN)
 #
 # You can achieve the same with an executable, simply replace "swift_add_library"
 # with "swift_add_executable". Note that to create libraries, you can use the
@@ -93,10 +93,10 @@
 #
 # OPTION KEYWORDS
 #
-#  INTERFACE: this only works for library targets, it marks the library as an
-#  "interface" library (see: "add_library"'s INTERFACE keyword)
+#  INTERFACE: this only works for library targets; it marks the library as an
+#  "interface" library (see: "add_library"'s INTERFACE keyword).
 #
-#  STATIC|SHARED|MODULE: this only works for library targets, it specifies the
+#  STATIC|SHARED|MODULE: this only works for library targets; it specifies the
 #  type of library, mirrors the exact same options as the "add_library" uses.
 #
 #  WARNING: normally if the compiler identifies any warnings in the program,
