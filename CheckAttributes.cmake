@@ -30,6 +30,6 @@ function(create_check_attributes_target)
   add_custom_target(check-attributes ALL
     ${CMAKE_CURRENT_LIST_DIR}/cmake/common/scripts/check_attributes.sh ${arguments}
     WORKING_DIRECTORY ${CMAKE_CURRENT_LIST_DIR}
-    )
+  )
 
 endfunction()

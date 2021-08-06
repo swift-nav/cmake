@@ -40,33 +40,33 @@
 #
 
 function(swift_set_language_standards)
-    set(argOption C_EXTENSIONS_ON)
-    set(argSingle "C" "CXX")
-    set(argMulti "")
+  set(argOption C_EXTENSIONS_ON)
+  set(argSingle "C" "CXX")
+  set(argMulti "")
 
-    cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
+  cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
-    if(NOT x_C)
-        set(x_C 11)
-    endif()
+  if(NOT x_C)
+    set(x_C 11)
+  endif()
 
-    if(NOT x_CXX)
-        set(x_CXX 14)
-    endif()
+  if(NOT x_CXX)
+    set(x_CXX 14)
+  endif()
 
-    set(C_EXTENSIONS ON)
+  set(C_EXTENSIONS ON)
 
-    if(NOT x_C_EXTENSIONS_ON)
-        set(C_EXTENSIONS OFF)
-    endif()
+  if(NOT x_C_EXTENSIONS_ON)
+    set(C_EXTENSIONS OFF)
+  endif()
 
-    set_target_properties(${x_UNPARSED_ARGUMENTS}
-        PROPERTIES
-            C_STANDARD ${x_C}
-            C_STANDARD_REQUIRED ON
-            C_EXTENSIONS ${C_EXTENSIONS}
-            CXX_STANDARD ${x_CXX}
-            CXX_STANDARD_REQUIRED ON
-            CXX_EXTENSIONS OFF
-    )
+  set_target_properties(${x_UNPARSED_ARGUMENTS}
+      PROPERTIES
+          C_STANDARD ${x_C}
+          C_STANDARD_REQUIRED ON
+          C_EXTENSIONS ${C_EXTENSIONS}
+          CXX_STANDARD ${x_CXX}
+          CXX_STANDARD_REQUIRED ON
+          CXX_EXTENSIONS OFF
+  )
 endfunction()

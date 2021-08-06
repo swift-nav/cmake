@@ -16,4 +16,4 @@ option(CHECK_INSTALL "" OFF)
 GenericFindDependency(
   TARGET check
   SYSTEM_INCLUDES
-  )
+)

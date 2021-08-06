@@ -17,6 +17,6 @@ option (NLOPT_MATLAB "build matlab bindings" OFF)
 option (NLOPT_GUILE "build guile bindings" OFF)
 option (NLOPT_SWIG "use SWIG to build bindings" OFF)
 GenericFindDependency(
-    TARGET "nlopt"
-    SYSTEM_INCLUDES
-    )
+  TARGET "nlopt"
+  SYSTEM_INCLUDES
+)

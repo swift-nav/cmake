@@ -82,7 +82,9 @@
 # add_code_coverage_all_targets(EXCLUDE test/*) # Adds the 'ccov-all' target set and sets it to exclude all files in test/ folders.
 #
 # add_executable(theExe main.cpp non_covered.cpp)
-# target_code_coverage(theExe AUTO ALL EXCLUDE non_covered.cpp test/*) # As an executable target, adds to the 'ccov' and ccov-all' targets, and the reports will exclude the non-covered.cpp file, and any files in a test/ folder.
+# target_code_coverage(theExe AUTO ALL EXCLUDE non_covered.cpp test/*)
+#          # As an executable target, the above adds to the 'ccov' and ccov-all' targets,
+#          # and the reports will exclude the non-covered.cpp file, and any files in a test/ folder.
 # ~~~
 
 # Options
@@ -93,10 +95,10 @@ option(
 
 # Programs
 if (NOT LLVM_COV_PATH)
-    if (NOT LLVM_COV_NAME)
-        set(LLVM_COV_NAME llvm-cov)
-    endif()
-    find_program(LLVM_COV_PATH ${LLVM_COV_NAME})
+  if (NOT LLVM_COV_NAME)
+    set(LLVM_COV_NAME llvm-cov)
+  endif()
+  find_program(LLVM_COV_PATH ${LLVM_COV_NAME})
 endif()
 find_program(GCOV_PATH gcov)
 find_program(LCOV_PATH lcov)
@@ -134,8 +136,8 @@ if(CODE_COVERAGE AND NOT CODE_COVERAGE_ADDED)
       if(LLVM_COV_VERSION VERSION_LESS "7.0.0")
         message(
           WARNING
-            "target_code_coverage()/add_code_coverage_all_targets() 'EXCLUDE' option only available on llvm-cov >= 7.0.0"
-          )
+          "target_code_coverage()/add_code_coverage_all_targets() 'EXCLUDE' option only available on llvm-cov >= 7.0.0"
+        )
       endif()
     endif()
 
@@ -156,14 +158,14 @@ if(CODE_COVERAGE AND NOT CODE_COVERAGE_ADDED)
       if(NOT ${upper_build_type} STREQUAL "DEBUG")
         message(
           WARNING
-            "Code coverage results with an optimized (non-Debug) build may be misleading"
-          )
+          "Code coverage results with an optimized (non-Debug) build may be misleading"
+        )
       endif()
     else()
       message(
         WARNING
-          "Code coverage results with an optimized (non-Debug) build may be misleading"
-        )
+        "Code coverage results with an optimized (non-Debug) build may be misleading"
+      )
     endif()
     if(NOT LCOV_PATH)
       message(FATAL_ERROR "lcov not found! Aborting...")
@@ -337,7 +339,7 @@ function(target_code_coverage TARGET_NAME)
         COMMAND ;
         COMMENT
           "Open ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/${TARGET_NAME}/index.html in your browser to view the coverage report."
-        )
+      )
 
       # AUTO
       if(target_code_coverage_AUTO)
@@ -360,8 +362,8 @@ function(target_code_coverage TARGET_NAME)
         if(NOT TARGET ccov-all-processing)
           message(
             FATAL_ERROR
-              "Calling target_code_coverage with 'ALL' must be after a call to 'add_code_coverage_all_targets'."
-            )
+            "Calling target_code_coverage with 'ALL' must be after a call to 'add_code_coverage_all_targets'."
+          )
         endif()
 
         add_dependencies(ccov-all-processing ccov-run-${TARGET_NAME})
@@ -404,13 +406,13 @@ function(add_code_coverage_all_targets)
                         ${ARGN})
 
   if(${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
-      # This is the top level project, ie the CMakeLists.txt which cmake was run
-      # on directly, not a submodule/subproject. We can do some special things now.
-      # The option to enable code coverage will be enabled by default only for
-      # top level projects.
-      set(TOP_LEVEL_PROJECT ON)
+    # This is the top level project, ie the CMakeLists.txt which cmake was run
+    # on directly, not a submodule/subproject. We can do some special things now.
+    # The option to enable code coverage will be enabled by default only for
+    # top level projects.
+    set(TOP_LEVEL_PROJECT ON)
   else()
-      set(TOP_LEVEL_PROJECT OFF)
+    set(TOP_LEVEL_PROJECT OFF)
   endif()
 
   if(CODE_COVERAGE AND TOP_LEVEL_PROJECT)
@@ -502,6 +504,6 @@ function(add_code_coverage_all_targets)
       COMMAND ;
       COMMENT
         "Open ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/all-merged/index.html in your browser to view the coverage report."
-      )
+    )
   endif()
 endfunction()

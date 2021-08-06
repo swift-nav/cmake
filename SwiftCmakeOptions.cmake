@@ -27,7 +27,7 @@
 # - libsbp_ENABLE_TESTS
 # - albatross_ENABLE_EXAMPLES
 #
-# Options are enabled by default but can be set on the command line at 
+# Options are enabled by default but can be set on the command line at
 # configure time, eg
 #
 # cmake -Dlibsbp_ENABLE_TESTS=OFF <path>
@@ -40,7 +40,7 @@
 # ...
 #
 # Usage:
-# Import this module and call the function swift_create_project_options 
+# Import this module and call the function swift_create_project_options
 # specifying what features are available in the package. eg
 #
 # project(libsbp)
@@ -75,7 +75,7 @@
 # endif()
 # swift_create_project_options(HAS_TESTS DISABLE_TEST_COMPONENTS ${disable_tests})
 #
-# A list of dependencies for test components can be specified using the 
+# A list of dependencies for test components can be specified using the
 # TEST_PACKAGES option. Pass a list of packages which will be searched for
 # using the find_package() cmake function. If any of the packages is not
 # found the unit tests will be disabled
@@ -164,7 +164,6 @@ function(verify_test_dependencies)
   endif()
 endfunction()
 
-
 function(swift_create_project_options)
   set(argOptions "HAS_TESTS" "HAS_TEST_LIBS" "HAS_DOCS" "HAS_EXAMPLES" "SKIP_CROSS_COMPILING_CHECK")
   set(argSingleArguments "PROJECT" "DISABLE_TEST_COMPONENTS")
@@ -183,7 +182,10 @@ function(swift_create_project_options)
   if(NOT ${x_PROJECT}_BUILD_VARS_PROTECTED)
     foreach(feat "TESTS" "TEST_LIBS" "EXAMPLES" "DOCS")
       if(DEFINED ${x_PROJECT}_BUILD_${feat})
-        message(FATAL_ERROR "Something or someone has set ${x_PROJECT}_BUILD_${feat}. This is an internal option and must not be set from anywhere. Use ${x_PROJECT}_ENABLE_${feat} instead.")
+        message(
+          FATAL_ERROR
+          "Something or someone has set ${x_PROJECT}_BUILD_${feat}. This is an internal option and must not be set from anywhere. Use ${x_PROJECT}_ENABLE_${feat} instead."
+        )
       endif()
     endforeach()
     set(${x_PROJECT}_BUILD_VARS_PROTECTED ON CACHE BOOL "Checked that nothing has set any BUILD vars manually")
@@ -286,4 +288,3 @@ function(swift_create_project_options)
   endforeach()
 
 endfunction()
-  

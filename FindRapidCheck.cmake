@@ -21,4 +21,3 @@ GenericFindDependency(
     rapidcheck_gtest
   SYSTEM_INCLUDES
 )
-

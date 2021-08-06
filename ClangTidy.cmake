@@ -107,12 +107,12 @@ function(create_clang_tidy_targets)
       clang-tidy-all-${PROJECT_NAME}
       COMMAND ${x_ALL_COMMAND}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      )
+  )
   add_custom_target(
       clang-tidy-diff-${PROJECT_NAME}
       COMMAND ${x_DIFF_COMMAND}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-      )
+  )
 
   # Top level projects will create the targets clang-tidy-all and
   # clang-tidy-diff with the same commands as the namespaced targets
@@ -123,22 +123,22 @@ function(create_clang_tidy_targets)
         clang-tidy-all
         COMMAND ${x_ALL_COMMAND}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
+    )
     add_custom_target(
         clang-tidy-diff
         COMMAND ${x_DIFF_COMMAND}
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
+    )
     add_custom_target(clang-tidy-all-check
         COMMAND test ! -f fixes.yaml
         DEPENDS clang-tidy-all
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
+    )
     add_custom_target(clang-tidy-diff-check
         COMMAND test ! -f fixes.yaml
         DEPENDS clang-tidy-diff
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-        )
+    )
   endif()
 endfunction()
 
@@ -234,7 +234,7 @@ function(swift_setup_clang_tidy)
           TOP_LEVEL ${top_level_project}
           ALL_COMMAND ${x_SCRIPT} all
           DIFF_COMMAND ${x_SCRIPT} diff
-          )
+      )
       return()
     endif()
     message(FATAL_ERROR "Specified clang-tidy script ${x_SCRIPT} doesn't exist")
@@ -250,7 +250,7 @@ function(swift_setup_clang_tidy)
           TOP_LEVEL ${top_level_project}
           ALL_COMMAND ${script} all
           DIFF_COMMAND ${script} diff
-          )
+      )
       return()
     endif()
   endforeach()
@@ -269,7 +269,7 @@ function(swift_setup_clang_tidy)
         clang-tidy35 clang-tidy-3.5
         clang-tidy34 clang-tidy-3.4
         clang-tidy
-       )
+    )
   endif()
   find_program(CLANG_TIDY NAMES ${x_CLANG_TIDY_NAMES})
 
@@ -303,6 +303,6 @@ function(swift_setup_clang_tidy)
         git diff --diff-filter=ACMRTUXB --quiet --name-only master -- ${srcs} ||
         ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
           `git diff --diff-filter=ACMRTUXB --name-only master -- ${srcs}`
-        )
+    )
   endif()
 endfunction()

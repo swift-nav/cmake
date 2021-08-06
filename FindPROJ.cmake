@@ -18,4 +18,4 @@ option(BUILD_TESTING "" OFF)
 GenericFindDependency(
   TARGET proj
   SOURCE_DIR "PROJ"
-  )
+)
