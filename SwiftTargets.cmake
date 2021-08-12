@@ -96,6 +96,9 @@
 #  INTERFACE: this only works for library targets; it marks the library as an
 #  "interface" library (see: "add_library"'s INTERFACE keyword).
 #
+#  OBJECT: this only works for library targets; it marks the library as an
+#  "object" library (see: "add_library"'s OBJECT keyword).
+#
 #  STATIC|SHARED|MODULE: this only works for library targets; it specifies the
 #  type of library, mirrors the exact same options as the "add_library" uses.
 #
@@ -167,7 +170,7 @@ macro(swift_collate_arguments prefix name)
 endmacro()
 
 function(swift_add_target target type)
-  set(this_option INTERFACE STATIC SHARED MODULE)
+  set(this_option INTERFACE OBJECT STATIC SHARED MODULE)
   set(this_single "")
   set(this_multi SOURCES)
 
@@ -209,6 +212,10 @@ function(swift_add_target target type)
     list(APPEND language_standards_args CXX ${x_CXX_STANDARD})
   endif()
 
+  if (x_INTERFACE AND x_OBJECT)
+    message(FATAL_ERROR "Can't specify both INTERFACE and OBJECT when defining a target")
+  endif()
+
   if (x_INTERFACE)
     if (x_SOURCES)
       message(FATAL_ERROR "Can't create interface target with source files")
@@ -216,6 +223,10 @@ function(swift_add_target target type)
     if (x_STATIC OR x_SHARED OR x_MODULE)
       message(FATAL_ERROR "Can't create interface target with a specified library type (STATIC/SHARED/MODULE)")
     endif()
+  endif()
+
+  if (x_OBJECT AND (x_STATIC OR x_SHARED OR x_MODULE))
+    message(FATAL_ERROR "Can't create object target with a specified library type (STATIC/SHARED/MODULE)")
   endif()
 
   set(library_type)
@@ -234,12 +245,16 @@ function(swift_add_target target type)
   elseif(type STREQUAL "library")
     if (x_INTERFACE)
       add_library(${target} INTERFACE)
+    elseif(x_OBJECT)
+      add_library(${target} OBJECT ${x_SOURCES})
     else()
       add_library(${target} ${library_type} ${x_SOURCES})
     endif()
   elseif(type STREQUAL "test_library")
     if (x_INTERFACE)
       add_library(${target} INTERFACE)
+    elseif(x_OBJECT)
+      add_library(${target} OBJECT ${x_SOURCES})
     else()
       add_library(${target} ${library_type} ${x_SOURCES})
     endif()
@@ -248,6 +263,8 @@ function(swift_add_target target type)
   elseif(type STREQUAL "tool_library")
     if (x_INTERFACE)
       add_library(${target} INTERFACE)
+    elseif(x_OBJECT)
+      add_library(${target} OBJECT ${x_SOURCES})
     else()
       add_library(${target} ${library_type} ${x_SOURCES})
     endif()
