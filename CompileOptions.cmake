@@ -170,11 +170,8 @@ function(swift_set_compile_options)
        -Wunused-variable
        -Wvolatile-register-var
        -Wwrite-strings
+      ${x_EXTRA_FLAGS}
   )
-
-  if (x_EXTRA_FLAGS)
-    list(APPEND all_flags ${x_EXTRA_FLAGS})
-  endif()
 
   if(x_REMOVE)
     foreach(flag ${x_REMOVE})
