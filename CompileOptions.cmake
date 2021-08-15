@@ -58,6 +58,9 @@
 # function to set compiler flags and options rather than
 # target_compile_options()
 #
+# NOTE: user's can call on EXTRA_FLAGS to augment the default list of flags
+# before flags are removed with REMOVE and subsequently added with ADD.
+#
 
 include(CheckCCompilerFlag)
 include(CheckCXXCompilerFlag)
@@ -65,7 +68,7 @@ include(CheckCXXCompilerFlag)
 function(swift_set_compile_options)
   set(argOption "WARNING" "NO_EXCEPTIONS" "EXCEPTIONS" "NO_RTTI" "RTTI")
   set(argSingle "")
-  set(argMulti "ADD" "REMOVE")
+  set(argMulti "ADD" "REMOVE" "EXTRA_FLAGS")
 
   unset(x_EXCEPTIONS)
   unset(x_NO_EXCEPTIONS)
@@ -74,6 +77,7 @@ function(swift_set_compile_options)
   unset(x_WARNING)
   unset(x_ADD)
   unset(x_REMOVE)
+  unset(x_EXTRA_FLAGS)
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
   set(targets ${x_UNPARSED_ARGUMENTS})
@@ -166,6 +170,7 @@ function(swift_set_compile_options)
        -Wunused-variable
        -Wvolatile-register-var
        -Wwrite-strings
+      ${x_EXTRA_FLAGS}
   )
 
   if(x_REMOVE)
