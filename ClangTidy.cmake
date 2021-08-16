@@ -99,7 +99,7 @@
 function(create_clang_tidy_targets)
   set(argOption "")
   set(argSingle "TOP_LEVEL")
-  set(argMulti "ALL_COMMAND" "DIFF_COMMAND")
+  set(argMulti "ALL_COMMAND" "DIFF_COMMAND" "PARALLEL_ALL_COMMAND" "PARALLEL_DIFF_COMMAND")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
@@ -111,6 +111,16 @@ function(create_clang_tidy_targets)
   add_custom_target(
       clang-tidy-diff-${PROJECT_NAME}
       COMMAND ${x_DIFF_COMMAND}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+  add_custom_target(
+      parallel-clang-tidy-all-${PROJECT_NAME}
+      COMMAND ${x_PARALLEL_ALL_COMMAND}
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+  add_custom_target(
+      parallel-clang-tidy-diff-${PROJECT_NAME}
+      COMMAND ${x_PARALLEL_DIFF_COMMAND}
       WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
@@ -137,6 +147,26 @@ function(create_clang_tidy_targets)
     add_custom_target(clang-tidy-diff-check
         COMMAND test ! -f fixes.yaml
         DEPENDS clang-tidy-diff
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    add_custom_target(
+        parallel-clang-tidy-all
+        COMMAND ${x_PARALLEL_ALL_COMMAND}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    add_custom_target(
+        parallel-clang-tidy-diff
+        COMMAND ${x_PARALLEL_DIFF_COMMAND}
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    add_custom_target(parallel-clang-tidy-all-check
+        COMMAND test ! -f fixes.yaml
+        DEPENDS parallel-clang-tidy-all
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+    )
+    add_custom_target(parallel-clang-tidy-diff-check
+        COMMAND test ! -f fixes.yaml
+        DEPENDS parallel-clang-tidy-diff
         WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
     )
   endif()
@@ -299,9 +329,16 @@ function(swift_setup_clang_tidy)
         ALL_COMMAND
         ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
           `git ls-files ${srcs}`
+        PARALLEL_ALL_COMMAND
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary=${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} -export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixed.yaml
+          `git ls-files ${srcs}`
         DIFF_COMMAND
         git diff --diff-filter=ACMRTUXB --quiet --name-only master -- ${srcs} ||
         ${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} --export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
+          `git diff --diff-filter=ACMRTUXB --name-only master -- ${srcs}`
+        PARALLEL_DIFF_COMMAND
+        git diff --diff-filter=ACMRTUXB --quiet --name-only master -- ${srcs} ||
+        ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary=${${PROJECT_NAME}_CLANG_TIDY} ${x_EXTRA_ARGS} -p ${CMAKE_BINARY_DIR} -export-fixes=${CMAKE_CURRENT_SOURCE_DIR}/fixes.yaml
           `git diff --diff-filter=ACMRTUXB --name-only master -- ${srcs}`
     )
   endif()
