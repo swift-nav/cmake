@@ -302,6 +302,7 @@ function(swift_add_valgrind_memcheck target)
   _valgrind_arguments_setup(${target} ${valgrind_tool} "${argOption}" "${argSingle}" "${argMulti}" "${ARGN}")
 
   list(APPEND valgrind_tool_options --tool=${valgrind_tool})
+  list(APPEND valgrind_tool_options --track-origins=yes)
 
   if (x_TRACE_CHILDREN)
     list(APPEND valgrind_tool_options --xml=yes --xml-file=${output_file}.xml.%p)
@@ -311,10 +312,6 @@ function(swift_add_valgrind_memcheck target)
 
   if (x_SHOW_REACHABLE)
     list(APPEND valgrind_tool_options --show-reachable=yes)
-  endif()
-
-  if (x_TRACK_ORIGINS)
-    list(APPEND valgrind_tool_options --track-origins=yes)
   endif()
 
   if (x_UNDEF_VALUE_ERRORS)
