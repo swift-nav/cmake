@@ -1,9 +1,14 @@
 cmake_minimum_required(VERSION 3.7)
 
-function(get_all_targets result dir)
+function(get_all_targets result exclude_third_party dir)
   get_property(subdirs DIRECTORY "${dir}" PROPERTY SUBDIRECTORIES)
   foreach(subdir IN LISTS subdirs)
-    get_all_targets(${result} "${subdir}")
+    message("subdir ${subdir}")
+    if(${exclude_third_party} AND ${subdir} MATCHES "^${CMAKE_SOURCE_DIR}/third_party/.*")
+      message("Filtering out subdir ${subdir}")
+      continue()
+    endif()
+    get_all_targets(${result} ${exclude_third_party} "${subdir}")
   endforeach()
 
   get_directory_property(sub_targets DIRECTORY "${dir}" BUILDSYSTEM_TARGETS)
@@ -42,7 +47,7 @@ function(swift_filter_targets out_var)
 endfunction()
 
 function(swift_list_targets out_var)
-  set(argOption "")
+  set(argOption "EXCLUDE_THIRD_PARTY")
   set(argSingle "")
   set(argMulti "TYPE")
 
@@ -51,7 +56,11 @@ function(swift_list_targets out_var)
     message(FATAL_ERROR "Unparsed arguments to swift_list_targets ${x_UNPARSED_ARGUMENTS}")
   endif()
 
-  get_all_targets(all_targets ${CMAKE_CURRENT_SOURCE_DIR})
+  if(NOT x_EXCLUDE_THIRD_PARTY)
+    set(x_EXCLUDE_THIRD_PARTY FALSE)
+  endif()
+
+  get_all_targets(all_targets ${x_EXCLUDE_THIRD_PARTY} ${CMAKE_CURRENT_SOURCE_DIR})
   message("all_targets: ${all_targets}")
 
   if(x_TYPE)

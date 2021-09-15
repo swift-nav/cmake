@@ -16,28 +16,12 @@ function(swift_tidy_target target)
   set(SWIFT_TIDY_TARGETS "${targets_to_tidy}" CACHE STRING "" FORCE)
 endfunction()
 
-function(write_config file checks)
-  string(REPLACE ";" "," comma_checks "${checks}")
-  file(WRITE ${file} "# Automatically generated, do not edit\n")
-  file(APPEND ${file} "Checks: \"${comma_checks}\"\n")
-  file(APPEND ${file} "HeaderFilterRegex: '.*'\n")
-  file(APPEND ${file} "AnalyzeTemporaryDtors: true\n")
-endfunction()
-
 function(swift_create_tidy_targets)
-
   if(NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
     return()
   endif()
 
-  swift_list_targets(lintable_targets TYPE "EXECUTABLE" "DYNAMIC_LIBRARY" "STATIC_LIBRARY" "OBJECT_LIBRARY")
-
-  add_custom_target(create-full-clang-tidy-config
-    COMMAND cp ${CMAKE_BINARY_DIR}/.clang-tidy.full ${CMAKE_SOURCE_DIR}/.clang-tidy
-    )
-  add_custom_target(create-fast-clang-tidy-config
-    COMMAND cp ${CMAKE_BINARY_DIR}/.clang-tidy.fast ${CMAKE_SOURCE_DIR}/.clang-tidy
-    )
+  swift_list_targets(lintable_targets EXCLUDE_THIRD_PARTY TYPE "EXECUTABLE" "DYNAMIC_LIBRARY" "STATIC_LIBRARY" "OBJECT_LIBRARY")
 
   set(enabled_categories
     # bugprone could probably do with being turned on
@@ -66,10 +50,10 @@ function(swift_create_tidy_targets)
     # Function size is not enforced through clang-tidy, sonar cloud has its own check
     -readability-function-size
 
-    # Not using MPI
+    # No using MPI
     -clang-analyzer-optin.mpi*
 
-    # Not ObjC code anywhere
+    # No ObjC code anywhere
     -google-objc*
 
     # clang-format takes care of indentation
@@ -130,48 +114,17 @@ function(swift_create_tidy_targets)
     -readability-redundant-member-init
     )
 
-  # Checks which also exist in sonarcloud. These can be disabled during CI for
-  # a slight speed increase
-  set(sonarcloud_duplicates
-    -cert-dcl50-cpp
-    -cert-dcl54-cpp
-    -cert-dcl58-cpp
-    -cert-dcl59-cpp
-    -cert-err09-cpp
-    -cert-err34-c
-    -cert-err52-cpp
-    -clang-analyzer-cplusplus.SelfAssignment
-    -clang-analyzer-deadcode.DeadStores
-    -clang-analyzer-security.FloatLoopCounter
-    -clang-analyzer-unix.Vfork
-    -cppcoreguidelines-pro-type-const-cast
-    -cppcoreguidelines-pro-type-cstyle-cast
-    -cppcoreguidelines-pro-type-reinterpret-cast
-    -cppcoreguidelines-slicing
-    -misc-macro-parentheses
-    -modernize-replace-auto-ptr
-    -modernize-use-nullptr
-    -modernize-use-override
-    -performance-noexcept-move-constructor
-    -readability-braces-around-statements
-    -readability-implicit-bool-conversion
-    -readability-static-accessed-through-instance
-    -readability-static-definition-in-anonymous-namespace
-    )
-
   set(all_checks
     -*
     ${enabled_categories}
     ${disabled_checks}
     )
 
-  set(fast_checks
-    ${all_checks}
-    ${sonarcloud_duplicates}
-    )
-
-  write_config(${CMAKE_BINARY_DIR}/.clang-tidy.full "${all_checks}")
-  write_config(${CMAKE_BINARY_DIR}/.clang-tidy.fast "${fast_checks}")
+  string(REPLACE ";" "," comma_checks "${all_checks}")
+  file(WRITE ${CMAKE_SOURCE_DIR}/.clang-tidy "# Automatically generated, do not edit\n")
+  file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "Checks: \"${comma_checks}\"\n")
+  file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "HeaderFilterRegex: '.*'\n")
+  file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "AnalyzeTemporaryDtors: true\n")
 
   unset(all_abs_srcs)
 
@@ -194,13 +147,6 @@ function(swift_create_tidy_targets)
       ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary /usr/bin/clang-tidy-6.0 -p ${CMAKE_BINARY_DIR} -export-fixes=${CMAKE_SOURCE_DIR}/fixes-${target}.yaml ${abs_srcs}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       )
-    add_dependencies(clang-tidy-${target} create-full-clang-tidy-config)
-    add_custom_target(clang-tidy-${target}-fast
-      COMMAND 
-      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary /usr/bin/clang-tidy-6.0 -p ${CMAKE_BINARY_DIR} -export-fixes=${CMAKE_SOURCE_DIR}/fixes-${target}.yaml ${abs_srcs}
-      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-      )
-    add_dependencies(clang-tidy-${target}-fast create-fast-clang-tidy-config)
   endforeach()
 
   list(REMOVE_DUPLICATES all_abs_srcs)
@@ -210,13 +156,6 @@ function(swift_create_tidy_targets)
     ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary /usr/bin/clang-tidy-6.0 -p ${CMAKE_BINARY_DIR} -export-fixes ${CMAKE_SOURCE_DIR}/fixes.yaml ${all_abs_srcs}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
-  add_dependencies(clang-tidy-all create-full-clang-tidy-config)
-  add_custom_target(clang-tidy-all-fast
-    COMMAND
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary /usr/bin/clang-tidy-6.0 -p ${CMAKE_BINARY_DIR} -export-fixes ${CMAKE_SOURCE_DIR}/fixes.yaml ${all_abs_srcs}
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-    )
-  add_dependencies(clang-tidy-all-fast create-fast-clang-tidy-config)
 
   if(lintable_targets)
     message(WARNING "The following targets will not be linted: ${lintable_targets}")
