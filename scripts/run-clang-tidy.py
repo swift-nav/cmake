@@ -133,9 +133,6 @@ def merge_replacement_files(tmpdir, mergefile):
    output = {'MainSourceFile': '', mergekey: merged}
    with open(mergefile, 'w') as out:
      yaml.safe_dump(output, out)
- else:
-   # Empty the file:
-   open(mergefile, 'w').close()
 
 
 def check_clang_apply_replacements_binary(args):

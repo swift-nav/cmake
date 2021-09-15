@@ -5,6 +5,10 @@ set(SWIFT_CLANG_TIDY_INCLUDED TRUE)
 
 include(ListTargets)
 
+# This is required so that clang-tidy can work out what compiler options to use
+# for each file
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile commands" FORCE)
+
 function(swift_tidy_target target)
   if(NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
     return()
@@ -18,6 +22,14 @@ endfunction()
 
 function(swift_create_tidy_targets)
   if(NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
+    return()
+  endif()
+
+  # Currently only use clang-tidy-6.0
+  find_program(CLANG_TIDY NAMES clang-tidy-6.0)
+
+  if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
+    message(WARNING "Could not find clang-tidy-6.0, lint targets will not be created")
     return()
   endif()
 
@@ -121,7 +133,8 @@ function(swift_create_tidy_targets)
     )
 
   string(REPLACE ";" "," comma_checks "${all_checks}")
-  file(WRITE ${CMAKE_SOURCE_DIR}/.clang-tidy "# Automatically generated, do not edit\n")
+  file(WRITE  ${CMAKE_SOURCE_DIR}/.clang-tidy "# Automatically generated, do not edit\n")
+  file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "# Enabled checks are generated from SwiftClangTidy.cmake\n")
   file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "Checks: \"${comma_checks}\"\n")
   file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "HeaderFilterRegex: '.*'\n")
   file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "AnalyzeTemporaryDtors: true\n")
@@ -129,7 +142,7 @@ function(swift_create_tidy_targets)
   unset(all_abs_srcs)
 
   foreach(target IN LISTS SWIFT_TIDY_TARGETS)
-    message("Tidy ${target}")
+    #message("Tidy ${target}")
     list(REMOVE_ITEM lintable_targets ${target})
 
     get_target_property(target_srcs ${target} SOURCES)
@@ -141,10 +154,10 @@ function(swift_create_tidy_targets)
     endforeach()
     list(APPEND all_abs_srcs ${abs_srcs})
 
-    message("Linting ${target}")
+    #message("Linting ${target}")
     add_custom_target(clang-tidy-${target} 
       COMMAND 
-      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary /usr/bin/clang-tidy-6.0 -p ${CMAKE_BINARY_DIR} -export-fixes=${CMAKE_SOURCE_DIR}/fixes-${target}.yaml ${abs_srcs}
+      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} -export-fixes=${CMAKE_SOURCE_DIR}/fixes-${target}.yaml ${abs_srcs}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       )
   endforeach()
@@ -153,12 +166,12 @@ function(swift_create_tidy_targets)
 
   add_custom_target(clang-tidy-all
     COMMAND
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary /usr/bin/clang-tidy-6.0 -p ${CMAKE_BINARY_DIR} -export-fixes ${CMAKE_SOURCE_DIR}/fixes.yaml ${all_abs_srcs}
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} -export-fixes ${CMAKE_SOURCE_DIR}/fixes.yaml ${all_abs_srcs}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
 
   if(lintable_targets)
-    message(WARNING "The following targets will not be linted: ${lintable_targets}")
+    message(WARNING "The following targets defined in this repository will not be linted: ${lintable_targets}")
   endif()
 endfunction()
 
