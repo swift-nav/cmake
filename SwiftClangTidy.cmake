@@ -1,3 +1,5 @@
+cmake_minimum_required(VERSION 3.3)
+
 if(SWIFT_CLANG_TIDY_INCLUDED)
   return()
 endif()
