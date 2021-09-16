@@ -196,7 +196,7 @@ function(swift_create_tidy_targets)
 
     add_custom_target(clang-tidy-world
       COMMAND
-      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} -expect-fixes ${CMAKE_SOURCE_DIR}/fixes.yaml ${world_abs_srcs}
+      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} -export-fixes ${CMAKE_SOURCE_DIR}/fixes.yaml ${world_abs_srcs}
       WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
       )
     add_custom_target(clang-tidy-world-check
