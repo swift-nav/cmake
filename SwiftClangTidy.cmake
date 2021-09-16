@@ -12,9 +12,6 @@ include(ListTargets)
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile commands" FORCE)
 
 function(swift_tidy_target target)
-  if(NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
-    return()
-  endif()
   if(${target} IN_LIST SWIFT_TIDY_TARGETS)
     return()
   endif()
@@ -24,6 +21,7 @@ endfunction()
 
 function(swift_create_tidy_targets)
   if(NOT ${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
+    # Only create targets from top level project
     return()
   endif()
 
@@ -35,7 +33,8 @@ function(swift_create_tidy_targets)
     return()
   endif()
 
-  swift_list_targets(lintable_targets EXCLUDE_THIRD_PARTY TYPE "EXECUTABLE" "DYNAMIC_LIBRARY" "STATIC_LIBRARY" "OBJECT_LIBRARY")
+  swift_list_targets(lintable_targets_in_this_repository EXCLUDE_THIRD_PARTY TYPE "EXECUTABLE" "DYNAMIC_LIBRARY" "STATIC_LIBRARY" "OBJECT_LIBRARY")
+  message("lintable_targets_in_this_repository ${lintable_targets_in_this_repository}")
 
   set(enabled_categories
     # bugprone could probably do with being turned on
@@ -142,10 +141,10 @@ function(swift_create_tidy_targets)
   file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "AnalyzeTemporaryDtors: true\n")
 
   unset(all_abs_srcs)
+  unset(world_abs_srcs)
 
   foreach(target IN LISTS SWIFT_TIDY_TARGETS)
-    #message("Tidy ${target}")
-    list(REMOVE_ITEM lintable_targets ${target})
+    message("Tidy ${target}")
 
     get_target_property(target_srcs ${target} SOURCES)
     get_target_property(target_dir ${target} SOURCE_DIR)
@@ -154,7 +153,11 @@ function(swift_create_tidy_targets)
       get_filename_component(abs_file ${file} ABSOLUTE BASE_DIR ${target_dir})
       list(APPEND abs_srcs ${abs_file})
     endforeach()
-    list(APPEND all_abs_srcs ${abs_srcs})
+    list(APPEND world_abs_srcs ${abs_srcs})
+    if(${target} IN_LIST lintable_targets_in_this_repository)
+      list(APPEND all_abs_srcs ${abs_srcs})
+      list(REMOVE_ITEM lintable_targets_in_this_repository ${target})
+    endif()
 
     #message("Linting ${target}")
     add_custom_target(clang-tidy-${target} 
@@ -169,21 +172,42 @@ function(swift_create_tidy_targets)
     )
   endforeach()
 
-  list(REMOVE_DUPLICATES all_abs_srcs)
+  if(NOT all_abs_srcs)
+    message(WARNING "No sources to lint, that doesn't sound right")
+  else()
+    list(REMOVE_DUPLICATES all_abs_srcs)
 
-  add_custom_target(clang-tidy-all
-    COMMAND
-    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} -export-fixes ${CMAKE_SOURCE_DIR}/fixes.yaml ${all_abs_srcs}
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    add_custom_target(clang-tidy-all
+      COMMAND
+      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} -export-fixes ${CMAKE_SOURCE_DIR}/fixes.yaml ${all_abs_srcs}
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      )
+    add_custom_target(clang-tidy-all-check
+      COMMAND test ! -f ${CMAKE_SOURCE_DIR}/fixes.yaml
+      DEPENDS clang-tidy-all
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
     )
-  add_custom_target(clang-tidy-all-check
-    COMMAND test ! -f ${CMAKE_SOURCE_DIR}/fixes.yaml
-    DEPENDS clang-tidy-all
-    WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
-  )
+  endif()
 
-  if(lintable_targets AND REPORT_UNLINTED_TARGETS)
-    message(WARNING "The following targets defined in this repository will not be linted: ${lintable_targets}")
+  if(NOT world_abs_srcs)
+    messages(WARNING "No world sources to lint, that doesn't sound right")
+  else()
+    list(REMOVE_DUPLICATES world_abs_srcs)
+
+    add_custom_target(clang-tidy-world
+      COMMAND
+      ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} -expect-fixes ${CMAKE_SOURCE_DIR}/fixes.yaml ${world_abs_srcs}
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+      )
+    add_custom_target(clang-tidy-world-check
+      COMMAND test ! -f ${CMAKE_SOURCE_DIR}/fixes.yaml
+      DEPENDS clang-tidy-world
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR}
+    )
+  endif()
+
+  if(lintable_targets_in_this_repository AND REPORT_UNLINTED_TARGETS)
+    message(WARNING "The following targets defined in this repository will not be linted: ${lintable_targets_in_this_repository}")
   endif()
 endfunction()
 
