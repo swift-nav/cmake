@@ -66,7 +66,7 @@ function(swift_list_targets out_var)
   set(x_all_targets)
   get_all_targets(x_all_targets ${CMAKE_CURRENT_SOURCE_DIR})
 
-  set(${out_var})
+  set(all_targets)
 
   foreach(target IN LISTS x_all_targets)
     if(x_TYPES)
@@ -90,11 +90,11 @@ function(swift_list_targets out_var)
       endif()
     endif()
 
-    set(${out_var} ${${out_var}} ${target})
+    set(all_targets ${all_targets} ${target})
   endforeach()
 
   set(${out_var}
-      ${${out_var}}
+      ${all_targets}
       PARENT_SCOPE)
 endfunction()
 
