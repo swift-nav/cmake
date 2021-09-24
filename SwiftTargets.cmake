@@ -136,13 +136,25 @@
 #  that are enabled by "swift_set_compile_options" (see "CompileOptions.cmake"
 #  for details).
 #
+# At the end of the top level CMakeLists.txt for a repository call
+# swift_validate_targets. The function performs validation on all defined targets
+# to make sure they have been defined according to Swift policies. Currently
+# this only checks to make sure that all compilable targets were create with a
+# swift_add_* function (instead of built in add_* functions).
+#
 
 include(CodeCoverage)
 include(CompileOptions)
 include(LanguageStandards)
 include(TestTargets)
+include(ListTargets)
 
 cmake_policy(SET CMP0007 NEW)  # new behaviour list command no longer ignores empty elements
+
+define_property(TARGET
+  PROPERTY SWIFT_TYPE
+  BRIEF_DOCS "Swift target type"
+  FULL_DOCS "For use by other modules in this repository which need to know the classification of target. One of executable, library, tool, tool_library, test, test_library")
 
 macro(swift_collate_arguments prefix name)
   set(exclusion_list ${ARGN})
@@ -277,6 +289,7 @@ function(swift_add_target target type)
   endif()
 
   if (NOT x_INTERFACE)
+    set_target_properties(${target} PROPERTIES SWIFT_TYPE ${type})
     swift_set_compile_options(${target} ${compile_options_args} EXTRA_FLAGS ${extra_flags})
     swift_set_language_standards(${target} ${language_standards_args})
     target_code_coverage(${target} NO_RUN)
@@ -301,4 +314,15 @@ endfunction()
 
 function(swift_add_test_library target)
   swift_add_target("${target}" test_library ${ARGN})
+endfunction()
+
+function(swift_validate_targets)
+  swift_list_compilable_targets(all_targets ONLY_THIS_REPO SWIFT_TYPES "executable" "library")
+
+  foreach(target ${all_targets})
+    get_target_property(swift_type ${target} SWIFT_TYPE)
+    if(NOT swift_type)
+      message(FATAL_ERROR "Can't identify type of target ${target}, was it added with the correct Swift function (swift_add_*)?")
+    endif()
+  endforeach()
 endfunction()
