@@ -208,6 +208,7 @@ function(swift_create_clang_tidy_targets)
   else()
     list(REMOVE_DUPLICATES all_abs_srcs)
     create_clang_tidy_targets(all fixes.yaml ${all_abs_srcs})
+    create_clang_tidy_targets(diff fixes.yaml `git diff --diff-filter=ACMRTUXB --name-only master -- ${all_abs_srcs}`)
   endif()
 
   if(NOT world_abs_srcs)
