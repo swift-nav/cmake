@@ -16,7 +16,7 @@
 # Use the ONLY_THIS_REPO option to exclude targets which were created in submodules, returns a list of targets which were created in the caller's repository. This is fairly dumb
 # test which simply looks for 'third_party' anywhere in the path of the candidate target and excludes it
 #
-# Use the TYPES option to filter the returned list of targets based on the cmake target type (EXECUTABLE, DYNAMIC_LIBRARY and so on). Only targets which match one of the entries 
+# Use the TYPES option to filter the returned list of targets based on the cmake target type (EXECUTABLE, DYNAMIC_LIBRARY and so on). Only targets which match one of the entries
 # in this list will be returned
 #
 # Use the SWIFT_TYPES option to filter the returned list of targets based on the Swift target type. This should be a list of target types which match one of the 'swift_add_*'
