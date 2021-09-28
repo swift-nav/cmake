@@ -22,6 +22,7 @@
 #
 # swift_add_test(test-suite-name
 #    <UNIT_TEST|INTEGRATION_TEST>
+#    VALGRIND_MEMCHECK
 #    SRCS
 #      main.cc
 #      ...more source files
@@ -42,7 +43,25 @@
 # integration test. If either option is not specified, a cmake warning will be
 # raised. If both are specified, a cmake error will be raised.
 #
-# LINK, INCLUDE, and WORKING_DIRECTORY are optional parameters.
+# VALGRIND_MEMCHECK, LINK, INCLUDE, and WORKING_DIRECTORY are optional
+# parameters.
+#
+# VALGRIND_MEMCHECK is a convenience parameter that will call
+# swift_add_valgrind_memcheck with the following parameters:
+#
+# swift_add_valgrind_memcheck(${target}
+#   LEAK_CHECK full
+#   WORKING_DIRECTORY <path>
+#   SHOW_REACHABLE
+#   UNDEF_VALUE_ERRORS
+#   TRACK_ORIGINS
+#   CHILD_SILENT_AFTER_FORK
+#   TRACE_CHILDREN
+#   GENERATE_JUNIT_REPORT
+# )
+#
+# This parameter is not allowed to be set with INTEGRATION_TEST.
+# See Valgrind.cmake for the full documentation of this function.
 #
 # If WORKING_DIRECTORY is not specified the tests will be run in
 # ${CMAKE_CURRENT_BINARY_DIR}
@@ -237,7 +256,7 @@ function(swift_add_test_runner target)
 endfunction()
 
 function(swift_add_test target)
-  set(argOption "INTEGRATION_TEST" "PARALLEL" "POST_BUILD" "UNIT_TEST")
+  set(argOption "INTEGRATION_TEST" "PARALLEL" "POST_BUILD" "UNIT_TEST" "VALGRIND_MEMCHECK")
   set(argSingle "COMMENT" "WORKING_DIRECTORY")
   set(argMulti "SRCS" "LINK" "INCLUDE")
 
@@ -265,6 +284,8 @@ function(swift_add_test target)
     message(WARNING "Missing INTEGRATION_TEST or UNIT_TEST option")
   elseif(x_INTEGRATION_TEST AND x_UNIT_TEST)
     message(FATAL_ERROR "Both INTEGRATION_TEST and UNIT_TEST option were specified, you can only specify one")
+  elseif(x_INTEGRATION_TEST AND x_VALGRIND_MEMCHECK)
+    message(FATAL_ERROR "VALGRIND_MEMCHECK can only be specified with UNIT_TEST")
   endif()
 
   add_executable(${target} EXCLUDE_FROM_ALL ${x_SRCS})
@@ -324,6 +345,20 @@ function(swift_add_test target)
       add_dependencies(do-all-unit-tests parallel-${target})
     else()
       add_dependencies(do-all-unit-tests do-${target})
+    endif()
+
+    if (x_VALGRIND_MEMCHECK)
+      include(Valgrind)
+      swift_add_valgrind_memcheck(${target}
+        LEAK_CHECK full
+        ${wd}
+        SHOW_REACHABLE
+        UNDEF_VALUE_ERRORS
+        TRACK_ORIGINS
+        CHILD_SILENT_AFTER_FORK
+        TRACE_CHILDREN
+        GENERATE_JUNIT_REPORT
+      )
     endif()
   endif()
 
