@@ -166,11 +166,13 @@ function(swift_create_clang_tidy_targets)
     string(REPLACE ";" "," comma_checks "${all_checks}")
 
     # Generate .clang-tidy in project root dir
-    file(WRITE ${CMAKE_SOURCE_DIR}/.clang-tidy "# Automatically generated, do not edit\n")
-    file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "# Enabled checks are generated from SwiftClangTidy.cmake\n")
-    file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "Checks: \"${comma_checks}\"\n")
-    file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "HeaderFilterRegex: '.*'\n")
-    file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "AnalyzeTemporaryDtors: true\n")
+    file(WRITE ${CMAKE_SOURCE_DIR}/.clang-tidy "\
+# Automatically generated, do not edit
+# Enabled checks are generated from SwiftClangTidy.cmake
+Checks: \"${comma_checks}\"
+HeaderFilterRegex: '.*'
+AnalyzeTemporaryDtors: true
+")
   endif()
 
   # These two lists will ultimately contain the complete set of source files to pass to the clang-tidy-all and clang-tidy-world targets
