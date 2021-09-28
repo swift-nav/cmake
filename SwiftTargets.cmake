@@ -139,7 +139,7 @@
 # At the end of the top level CMakeLists.txt for a repository call
 # swift_validate_targets. The function performs validation on all defined targets
 # to make sure they have been defined according to Swift policies. Currently
-# this only checks to make sure that all compilable targets were create with a
+# this only checks to make sure that all compilable targets were created with a
 # swift_add_* function (instead of built in add_* functions).
 #
 

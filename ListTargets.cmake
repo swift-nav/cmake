@@ -16,7 +16,8 @@
 # Use the ONLY_THIS_REPO option to exclude targets which were created in submodules, returns a list of targets which were created in the caller's repository. This is fairly dumb
 # test which simply looks for 'third_party' anywhere in the path of the candidate target and excludes it
 #
-# Use the TYPES option to filter the returned list of targets based on the cmake target type. Only targets which match one of the entries in this list will be returned
+# Use the TYPES option to filter the returned list of targets based on the cmake target type (EXECUTABLE, DYNAMIC_LIBRARY and so on). Only targets which match one of the entries 
+# in this list will be returned
 #
 # Use the SWIFT_TYPES option to filter the returned list of targets based on the Swift target type. This should be a list of target types which match one of the 'swift_add_*'
 # functions from SwiftTargets.cmake and TestTargets.cmake (ie, "executable", "library", "test", and so on)
@@ -32,7 +33,7 @@
 # swift_list_targets(all_tests SWIFT_TYPE "test")
 #
 # A helper function swift_list_compilable_targets is provided which is equivalent to calling swift_list_targets with the option "TYPES EXECUTABLE DYNAMIC_LIBRARY STATIC_LIBRARY
-# OBJECT_LIBRARY", ie the set of all targets which can be compiled (not interface libraries). Other options can be passeed in to this function (ONLY_THIS_REPO, SWIFT_TYPES) as for
+# OBJECT_LIBRARY", ie the set of all targets which can be compiled (not interface libraries). Other options can be passed in to this function (ONLY_THIS_REPO, SWIFT_TYPES) as for
 # swift_list_targets
 #
 
