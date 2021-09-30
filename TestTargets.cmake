@@ -268,6 +268,7 @@ function(swift_add_test target)
   endif()
 
   add_executable(${target} EXCLUDE_FROM_ALL ${x_SRCS})
+  set_target_properties(${target} PROPERTIES SWIFT_TYPE "test")
   swift_set_language_standards(${target} C_EXTENSIONS_ON)
   if(x_INCLUDE)
     target_include_directories(${target} PRIVATE ${x_INCLUDE})
