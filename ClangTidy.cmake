@@ -83,7 +83,6 @@ function(swift_create_clang_tidy_targets)
   if(NOT x_DONT_GENERATE_CLANG_TIDY_CONFIG)
     # By default all clang-tidy are disabled. The following set of suites will be enabled in their entirety
     set(enabled_categories
-        # bugprone could probably do with being turned on
         bugprone*
         cert*
         clang-analyzer*
