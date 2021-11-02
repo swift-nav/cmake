@@ -160,6 +160,7 @@
 #
 
 include(LanguageStandards)
+include(CompileOptions)
 include(CodeCoverage)
 
 option(AUTORUN_TESTS "Automatically run post-build tests as part of 'all' target" ON)
@@ -291,6 +292,7 @@ function(swift_add_test target)
   add_executable(${target} EXCLUDE_FROM_ALL ${x_SRCS})
   set_target_properties(${target} PROPERTIES SWIFT_TYPE "test")
   swift_set_language_standards(${target} C_EXTENSIONS_ON)
+  swift_set_compile_options(${target})
   if(x_INCLUDE)
     target_include_directories(${target} PRIVATE ${x_INCLUDE})
   endif()
