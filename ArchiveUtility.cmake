@@ -126,10 +126,9 @@ function (add_static_library_bundle target)
   )
 
   add_custom_command (
+    OUTPUT ${output_directory}/${output_library}
     COMMAND bash ${mri_script_file} | ${CMAKE_AR} -M
     COMMAND_EXPAND_LISTS
-    OUTPUT
-      ${output_directory}/${output_library}
     WORKING_DIRECTORY
       ${output_directory}
     DEPENDS
