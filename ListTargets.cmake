@@ -107,7 +107,8 @@ function(swift_list_compilable_targets out_var)
     ${out_var}
     TYPES
     "EXECUTABLE"
-    "DYNAMIC_LIBRARY"
+    "MODULE_LIBRARY"
+    "SHARED_LIBRARY"
     "STATIC_LIBRARY"
     "OBJECT_LIBRARY"
     ${ARGN})
