@@ -24,7 +24,12 @@ function(write_metadata)
     OUTPUT_STRIP_TRAILING_WHITESPACE
   )
 
-  file(WRITE ${CMAKE_BINARY_DIR}/project.json " { \"project\": \"${CMAKE_PROJECT_NAME}\", \"sha\": \"${SHA}\" }")
+  set(project_data "\"project\": \"${CMAKE_PROJECT_NAME}\"")
+  set(sha_data "\"sha\": \"${SHA}\"")
+  set(compiler_data "\"compiler\": \"${CMAKE_C_COMPILER_ID}-${CMAKE_C_COMPILER_VERSION}\"")
+
+  set(payload "{ ${project_data}, ${sha_data}, ${compiler_data} }")
+
+  file(WRITE ${CMAKE_BINARY_DIR}/project.json ${payload})
 
 endfunction()
-
