@@ -16,7 +16,15 @@ function(write_metadata)
     return()
   endif()
 
-  file(WRITE ${CMAKE_BINARY_DIR}/project.json " { \"project\": \"${CMAKE_PROJECT_NAME}\" }")
+  # TODO: Make sure this executes successfully
+  execute_process(
+    COMMAND git rev-parse --short HEAD
+    WORKING_DIRECTORY ${CMAKE_SOURCE_DIR}
+    OUTPUT_VARIABLE SHA
+    OUTPUT_STRIP_TRAILING_WHITESPACE
+  )
+
+  file(WRITE ${CMAKE_BINARY_DIR}/project.json " { \"project\": \"${CMAKE_PROJECT_NAME}\", \"sha\": \"${SHA}\" }")
 
 endfunction()
 
