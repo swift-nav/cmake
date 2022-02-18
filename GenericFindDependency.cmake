@@ -277,6 +277,7 @@ macro(create_source_search_paths)
     list(APPEND x_SOURCE_SEARCH_PATHS "${PROJECT_SOURCE_DIR}/third_party/${CMAKE_FIND_PACKAGE_NAME}/${x_SOURCE_DIR}")
     list(APPEND x_SOURCE_SEARCH_PATHS "${PROJECT_SOURCE_DIR}/third_party/${x_TARGET}/${x_SOURCE_DIR}")
     list(APPEND x_SOURCE_SEARCH_PATHS "${PROJECT_SOURCE_DIR}/third_party/lib${x_TARGET}/${x_SOURCE_DIR}")
+    list(APPEND x_SOURCE_SEARCH_PATHS "${x_SOURCE_DIR}/${x_TARGET}")
   endif()
 endmacro()
 
