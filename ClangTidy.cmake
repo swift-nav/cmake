@@ -183,7 +183,7 @@ function(swift_create_clang_tidy_targets)
     string(REPLACE ";" "," comma_checks "${all_checks}")
 
     # Generate .clang-tidy in project root dir
-    file(WRITE ${CMAKE_BINARY_DIR}/.clang-tidy "\
+    file(WRITE ${CMAKE_SOURCE_DIR}/.clang-tidy "\
 # Automatically generated, do not edit
 # Enabled checks are generated from SwiftClangTidy.cmake
 Checks: \"${comma_checks}\"
