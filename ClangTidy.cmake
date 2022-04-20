@@ -104,11 +104,7 @@ function(swift_create_clang_tidy_targets)
   endif()
 
   # Create a cmake option to enable linting of this specific project
-  if(${PROJECT_NAME} STREQUAL ${CMAKE_PROJECT_NAME})
-    option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy for project ${PROJECT_NAME}" ON)
-  else()
-    option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy for project ${PROJECT_NAME}" OFF)
-  endif()
+option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy for project" ON)
 
   if(NOT ${PROJECT_NAME}_ENABLE_CLANG_TIDY)
     early_exit(STATUS "${PROJECT_NAME} clang-tidy support is DISABLED")
