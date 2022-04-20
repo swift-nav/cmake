@@ -83,6 +83,11 @@ function(create_clang_tidy_targets key fixes)
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
 endfunction()
 
+macro(early_exit level msg)
+  message(${level} "${msg}")
+  return()
+endmacro()
+
 function(swift_create_clang_tidy_targets)
   if(NOT ${CMAKE_PROJECT_NAME} STREQUAL ${PROJECT_NAME})
     return()
@@ -100,11 +105,11 @@ function(swift_create_clang_tidy_targets)
   # Global clang-tidy enable option, influences the default project specific enable option
   option(ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy globally" ON)
   if(NOT ENABLE_CLANG_TIDY)
-    early_exit(STATUS "auto-linting is disabled globally")
+    early_exit(STATUS "clang-tidy is disabled globally")
   endif()
 
   # Create a cmake option to enable linting of this specific project
-option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy for project" ON)
+  option(${PROJECT_NAME}_ENABLE_CLANG_TIDY "Enable auto-linting of code using clang-tidy for project" ON)
 
   if(NOT ${PROJECT_NAME}_ENABLE_CLANG_TIDY)
     early_exit(STATUS "${PROJECT_NAME} clang-tidy support is DISABLED")
