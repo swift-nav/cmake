@@ -13,6 +13,6 @@
 include("GenericFindDependency")
 option(optional_ENABLE_TESTS "" OFF)
 GenericFindDependency(
-  TARGET optional
+  TARGET akrzemi1::optional
   SYSTEM_INCLUDES
 )
