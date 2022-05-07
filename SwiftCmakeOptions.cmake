@@ -281,10 +281,4 @@ function(swift_create_project_options)
     endif()
   endif()
 
-  foreach(feat "TESTS" "TEST_LIBS" "DOCS" "EXAMPLES")
-    if(DEFINED ${x_PROJECT}_ENABLE_${feat} AND NOT x_HAS_${feat})
-      message(WARNING "${x_PROJECT}_ENABLE_${feat} is set but the package does not support it")
-    endif()
-  endforeach()
-
 endfunction()
