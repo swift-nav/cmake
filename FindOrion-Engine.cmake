@@ -12,12 +12,13 @@
 
 include("GenericFindDependency")
 
-option(orion_proto_ENABLE_DOCS "" false)
-option(orion_proto_ENABLE_EXAMPLES "" false)
-option(orion_proto_ENABLE_TESTS "" false)
-option(orion_proto_ENABLE_TEST_LIBS "" false)
+option(orion-engine_ENABLE_DOCS "" false)
+option(orion-engine_ENABLE_EXAMPLES "" false)
+option(orion-engine_ENABLE_TESTS "" false)
+option(orion-engine_ENABLE_TEST_LIBS "" false)
 
 GenericFindDependency(
-  TARGET orion-proto
-  SOURCE_DIR orion_proto
+  TARGET orion_engine
+  SOURCE_DIR orion-engine
+  SYSTEM_INCLUDES
 )
