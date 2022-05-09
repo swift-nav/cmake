@@ -13,37 +13,57 @@
 include(SwiftTargets) # expects global properties SWIFT_EXECUTABLE_TARGETS and SWIFT_LIBRARY_TARGETS to be defined
 include(TestTargets) # expects global properties SWIFT_UNIT_TEST_TARGETS and SWIFT_INTEGRATION_TEST_TARGETS to be defined
 
-function(generate_sonar_project_properties file_path)
+function(extract_sonarcloud_project_files output_variable)
+  unset(files)
+
+  foreach (target IN ITEMS ${ARGN})
+    get_target_property(swift_project ${target} SWIFT_PROJECT)
+    if(NOT swift_project STREQUAL ${PROJECT_NAME})
+      continue()
+    endif()
+
+    get_target_property(target_source_files ${target} SOURCES)
+    get_target_property(target_include_directories ${target} INCLUDE_DIRECTORIES)
+    get_target_property(target_interface_include_directories ${target} INTERFACE_INCLUDE_DIRECTORIES)
+
+    list(APPEND files ${target_source_files})
+    list(APPEND files ${target_include_directories})
+    list(APPEND files ${target_interface_include_directories})
+  endforeach()
+
+  set(${output_variable} ${files} PARENT_SCOPE)
+endfunction()
+
+function(generate_sonarcloud_project_properties file_path)
   if (NOT ${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
     return()
   endif()
 
   get_property(swift_executable_targets GLOBAL PROPERTY SWIFT_EXECUTABLE_TARGETS)
   get_property(swift_library_targets GLOBAL PROPERTY SWIFT_LIBRARY_TARGETS)
-
   get_property(swift_unit_test_targets GLOBAL PROPERTY SWIFT_UNIT_TEST_TARGETS)
   get_property(swift_integration_test_targets GLOBAL PROPERTY SWIFT_INTEGRATION_TEST_TARGETS)
 
-  set(swift_source_targets ${swift_executable_targets} ${swift_library_targets})
-  list(LENGTH swift_source_targets swift_source_targets_size)
+  extract_sonarcloud_project_files(source_files ${swift_executable_targets} ${swift_library_targets})
+  extract_sonarcloud_project_files(test_files ${swift_unit_test_targets} ${swift_integration_test_targets})
 
-  set(swift_test_targets ${swift_unit_test_targets} ${swift_integration_test_targets})
-  list(LENGTH swift_test_targets swift_test_targets_size)
+  list(LENGTH source_files source_files_size)
+  list(LENGTH test_files test_files_size)
 
-  if (swift_source_targets_size EQUAL 0)
+  if (source_files_size EQUAL 0)
     message(FATAL_ERROR "There are no registered swift source targets")
   endif()
 
-  if (swift_test_targets_size EQUAL 0)
+  if (test_files_size EQUAL 0)
     message(FATAL_ERROR "There are no registered swift test targets")
   endif()
 
   file(WRITE ${file_path} "sonar.sourceEncoding=UTF-8\n")
 
-  list(JOIN swift_source_targets ",\\\n  " sonar_sources)
+  list(JOIN source_files ",\\\n  " sonar_sources)
   file(APPEND ${file_path} "sonar.sources=\\\n${sonar_sources}\n")
 
-  list(JOIN swift_test_targets ",\\\n  " sonar_tests)
+  list(JOIN test_files ",\\\n  " sonar_tests)
   file(APPEND ${file_path} "sonar.tests=\\\n${sonar_tests}\n")
 
 endfunction()
