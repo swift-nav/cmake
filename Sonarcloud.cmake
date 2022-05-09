@@ -61,9 +61,9 @@ function(generate_sonarcloud_project_properties file_path)
   file(WRITE ${file_path} "sonar.sourceEncoding=UTF-8\n")
 
   list(JOIN source_files ",\\\n  " sonar_sources)
-  file(APPEND ${file_path} "sonar.sources=\\\n${sonar_sources}\n")
+  file(APPEND ${file_path} "sonar.sources=\\\n  ${sonar_sources}\n")
 
   list(JOIN test_files ",\\\n  " sonar_tests)
-  file(APPEND ${file_path} "sonar.tests=\\\n${sonar_tests}\n")
+  file(APPEND ${file_path} "sonar.tests=\\\n  ${sonar_tests}\n")
 
 endfunction()
