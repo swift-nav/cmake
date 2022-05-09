@@ -333,6 +333,9 @@ function(swift_add_test target)
   endif()
 
   if (x_INTEGRATION_TEST)
+    get_property(targets GLOBAL PROPERTY SWIFT_INTEGRATION_TEST_TARGETS)
+    set_property(GLOBAL PROPERTY SWIFT_INTEGRATION_TEST_TARGETS ${targets} ${target})
+
     if (NOT TARGET do-all-integration-tests)
       add_custom_target(do-all-integration-tests)
     endif()
@@ -345,6 +348,9 @@ function(swift_add_test target)
   endif()
 
   if (x_UNIT_TEST)
+    get_property(targets GLOBAL PROPERTY SWIFT_UNIT_TEST_TARGETS)
+    set_property(GLOBAL PROPERTY SWIFT_UNIT_TEST_TARGETS ${targets} ${target})
+
     if (NOT TARGET do-all-unit-tests)
       add_custom_target(do-all-unit-tests)
     endif()
