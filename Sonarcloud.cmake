@@ -13,6 +13,19 @@
 include(SwiftTargets) # expects global properties SWIFT_EXECUTABLE_TARGETS and SWIFT_LIBRARY_TARGETS to be defined
 include(TestTargets) # expects global properties SWIFT_UNIT_TEST_TARGETS and SWIFT_INTEGRATION_TEST_TARGETS to be defined
 
+function(sonarcloud_to_project_directory output_variable)
+  unset(paths)
+  foreach (path IN ITEMS ${ARGN})
+    if(IS_ABSOLUTE ${path})
+      file(RELATIVE_PATH path ${PROJECT_SOURCE_DIR} ${path})
+      list(APPEND paths ${path})
+    else()
+      list(APPEND paths ${path})
+    endif()
+  endforeach()
+  set(${output_variable} ${paths} PARENT_SCOPE)
+endfunction()
+
 function(extract_sonarcloud_project_files output_variable)
   unset(files)
 
@@ -26,10 +39,17 @@ function(extract_sonarcloud_project_files output_variable)
     get_target_property(target_include_directories ${target} INCLUDE_DIRECTORIES)
     get_target_property(target_interface_include_directories ${target} INTERFACE_INCLUDE_DIRECTORIES)
 
+    sonarcloud_to_project_directory(target_source_files ${target_source_files})
+    sonarcloud_to_project_directory(target_include_directories ${target_include_directories})
+    sonarcloud_to_project_directory(target_interface_include_directories ${target_interface_include_directories})
+
     list(APPEND files ${target_source_files})
     list(APPEND files ${target_include_directories})
     list(APPEND files ${target_interface_include_directories})
   endforeach()
+
+  list(SORT files)
+  list(REMOVE_DUPLICATES files)
 
   set(${output_variable} ${files} PARENT_SCOPE)
 endfunction()
