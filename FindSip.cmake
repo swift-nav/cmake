@@ -12,10 +12,7 @@
 
 include("GenericFindDependency")
 
-option(sip_ENABLE_DOCS "" false)
-option(sip_ENABLE_EXAMPLES "" false)
 option(sip_ENABLE_TESTS "" false)
-option(sip_ENABLE_TEST_LIBS "" false)
 
 GenericFindDependency(
   TARGET sip
