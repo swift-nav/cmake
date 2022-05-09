@@ -260,6 +260,10 @@ function(swift_add_target target type)
 
     get_property(targets GLOBAL PROPERTY SWIFT_EXECUTABLE_TARGETS)
     set_property(GLOBAL PROPERTY SWIFT_EXECUTABLE_TARGETS ${targets} ${target})
+    set_target_properties(${target}
+      PROPERTIES
+        SWIFT_PROJECT ${PROJECT_NAME}
+    )
   elseif(type STREQUAL "library")
     if (x_INTERFACE)
       add_library(${target} INTERFACE)
@@ -272,6 +276,10 @@ function(swift_add_target target type)
 
     get_property(targets GLOBAL PROPERTY SWIFT_LIBRARY_TARGETS)
     set_property(GLOBAL PROPERTY SWIFT_LIBRARY_TARGETS ${targets} ${target})
+    set_target_properties(${target}
+      PROPERTIES
+       SWIFT_PROJECT ${PROJECT_NAME}
+    )
   elseif(type STREQUAL "test_library")
     if (x_INTERFACE)
       add_library(${target} INTERFACE)
