@@ -182,7 +182,7 @@ macro(swift_collate_arguments prefix name)
 endmacro()
 
 function(swift_add_target target type)
-  set(this_option INTERFACE OBJECT STATIC SHARED MODULE)
+  set(this_option INTERFACE OBJECT STATIC SHARED MODULE SKIP_COMPILE_OPTIONS)
   set(this_single "")
   set(this_multi SOURCES)
 
@@ -304,9 +304,12 @@ function(swift_add_target target type)
 
   if (NOT x_INTERFACE)
     set_target_properties(${target} PROPERTIES SWIFT_TYPE ${type})
-    swift_set_compile_options(${target} ${compile_options_args} EXTRA_FLAGS ${extra_flags})
     swift_set_language_standards(${target} ${language_standards_args})
     target_code_coverage(${target} NO_RUN)
+
+    if (NOT x_SKIP_COMPILE_OPTIONS)
+      swift_set_compile_options(${target} ${compile_options_args} EXTRA_FLAGS ${extra_flags})
+    endif()
   endif()
 endfunction()
 
