@@ -53,7 +53,6 @@ function(transform_sonarcloud_source_files output_variable target)
     endif()
 
     message(WARNING "Sonarcloud is missing source file \"${source_file}\" for target ${target}")
-    list(APPEND source_files ${source_file})
   endforeach()
 
   set(${output_variable} ${source_files} PARENT_SCOPE)
@@ -80,7 +79,6 @@ function(transform_sonarcloud_include_directories output_variable target)
     endif()
 
     message(WARNING "Sonarcloud is missing include directory \"${include_directory}\" for target ${target}")
-    list(APPEND include_directories ${include_directory})
   endforeach()
 
   set(${output_variable} ${include_directories} PARENT_SCOPE)
