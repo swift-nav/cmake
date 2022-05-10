@@ -114,8 +114,10 @@ function(extract_sonarcloud_project_files output_variable)
     list(APPEND project_files ${target_interface_include_directories})
   endforeach()
 
-  list(SORT project_files)
-  list(REMOVE_DUPLICATES project_files)
+  if (project_files)
+    list(SORT project_files)
+    list(REMOVE_DUPLICATES project_files)
+  endif()
 
   set(${output_variable} ${project_files} PARENT_SCOPE)
 endfunction()
