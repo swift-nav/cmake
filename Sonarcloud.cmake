@@ -11,7 +11,7 @@
 #
 
 include(SwiftTargets) # expects global properties SWIFT_EXECUTABLE_TARGETS and SWIFT_LIBRARY_TARGETS to be defined
-include(TestTargets) # expects global properties SWIFT_UNIT_TEST_TARGETS and SWIFT_INTEGRATION_TEST_TARGETS to be defined
+include(TestTargets) # expects global properties SWIFT_TEST_TARGETS, SWIFT_UNIT_TEST_TARGETS and SWIFT_INTEGRATION_TEST_TARGETS to be defined
 
 function(transform_sonarcloud_source_files output_variable target)
   #
@@ -90,24 +90,37 @@ function(extract_sonarcloud_project_files output_variable)
   unset(project_files)
 
   foreach (target IN LISTS ARGN)
-    get_target_property(swift_project ${target} SWIFT_PROJECT)
+    get_target_property(target_type ${target} TYPE)
+    if (${target_type} STREQUAL "INTERFACE_LIBRARY")
+      get_target_property(swift_project ${target} INTERFACE_SWIFT_PROJECT)
+    else()
+      get_target_property(swift_project ${target} SWIFT_PROJECT)
+    endif()
+
     if(NOT ${swift_project} STREQUAL ${PROJECT_NAME})
       continue()
     endif()
 
-    get_target_property(target_source_files ${target} SOURCES)
-    get_target_property(target_include_directories ${target} INCLUDE_DIRECTORIES)
-    get_target_property(target_interface_include_directories ${target} INTERFACE_INCLUDE_DIRECTORIES)
+    unset(target_source_files)
+    unset(target_include_directories)
+    unset(target_interface_include_directories)
 
-    foreach(variable IN ITEMS target_source_files target_include_directories target_interface_include_directories)
-      if (NOT ${variable})
-        unset(${variable})
+    if (NOT ${target_type} STREQUAL "INTERFACE_LIBRARY")
+      get_target_property(target_source_files ${target} SOURCES)
+      if (target_source_files)
+        transform_sonarcloud_source_files(target_source_files ${target} ${target_source_files})
       endif()
-    endforeach()
 
-    transform_sonarcloud_source_files(target_source_files ${target} ${target_source_files})
-    transform_sonarcloud_include_directories(target_include_directories ${target} ${target_include_directories})
-    transform_sonarcloud_include_directories(target_interface_include_directories ${target} ${target_interface_include_directories})
+      get_target_property(target_include_directories ${target} INCLUDE_DIRECTORIES)
+      if (target_include_directories)
+        transform_sonarcloud_include_directories(target_include_directories ${target} ${target_include_directories})
+      endif()
+    endif()
+
+    get_target_property(target_interface_include_directories ${target} INTERFACE_INCLUDE_DIRECTORIES)
+    if (target_interface_include_directories)
+      transform_sonarcloud_include_directories(target_interface_include_directories ${target} ${target_interface_include_directories})
+    endif()
 
     list(APPEND project_files ${target_source_files})
     list(APPEND project_files ${target_include_directories})
@@ -134,11 +147,12 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
 
   get_property(swift_executable_targets GLOBAL PROPERTY SWIFT_EXECUTABLE_TARGETS)
   get_property(swift_library_targets GLOBAL PROPERTY SWIFT_LIBRARY_TARGETS)
+  get_property(swift_test_targets GLOBAL PROPERTY SWIFT_TEST_TARGETS)
   get_property(swift_unit_test_targets GLOBAL PROPERTY SWIFT_UNIT_TEST_TARGETS)
   get_property(swift_integration_test_targets GLOBAL PROPERTY SWIFT_INTEGRATION_TEST_TARGETS)
 
   extract_sonarcloud_project_files(source_files ${swift_executable_targets} ${swift_library_targets})
-  extract_sonarcloud_project_files(test_files ${swift_unit_test_targets} ${swift_integration_test_targets})
+  extract_sonarcloud_project_files(test_files ${swift_test_targets} ${swift_unit_test_targets} ${swift_integration_test_targets})
 
   #
   # In the case were we are directly compiling the source code for mocking, we

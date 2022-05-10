@@ -276,10 +276,25 @@ function(swift_add_target target type)
 
     get_property(targets GLOBAL PROPERTY SWIFT_LIBRARY_TARGETS)
     set_property(GLOBAL PROPERTY SWIFT_LIBRARY_TARGETS ${targets} ${target})
+
+    #
+    # This edge case is needed for cmake version < 3.19.0 where INTERFACE
+    # classes cannot contain any property other than those prefixed with
+    # "INTERFACE_".
+    #
+    # see: https://stackoverflow.com/questions/68502038/custom-properties-for-interface-libraries
+    #
     set_target_properties(${target}
       PROPERTIES
-       SWIFT_PROJECT ${PROJECT_NAME}
+        INTERFACE_SWIFT_PROJECT ${PROJECT_NAME}
     )
+
+    if (NOT x_INTERFACE)
+      set_target_properties(${target}
+        PROPERTIES
+          SWIFT_PROJECT ${PROJECT_NAME}
+      )
+    endif()
   elseif(type STREQUAL "test_library")
     if (x_INTERFACE)
       add_library(${target} INTERFACE)
@@ -287,6 +302,28 @@ function(swift_add_target target type)
       add_library(${target} OBJECT ${x_SOURCES})
     else()
       add_library(${target} ${library_type} ${x_SOURCES})
+    endif()
+
+    get_property(targets GLOBAL PROPERTY SWIFT_TEST_TARGETS)
+    set_property(GLOBAL PROPERTY SWIFT_TEST_TARGETS ${targets} ${target})
+
+    #
+    # This edge case is needed for cmake version < 3.19.0 where INTERFACE
+    # classes cannot contain any property other than those prefixed with
+    # "INTERFACE_".
+    #
+    # see: https://stackoverflow.com/questions/68502038/custom-properties-for-interface-libraries
+    #
+    set_target_properties(${target}
+      PROPERTIES
+        INTERFACE_SWIFT_PROJECT ${PROJECT_NAME}
+    )
+
+    if (NOT x_INTERFACE)
+      set_target_properties(${target}
+        PROPERTIES
+          SWIFT_PROJECT ${PROJECT_NAME}
+      )
     endif()
   elseif(type STREQUAL "tool")
     add_executable(${target} ${x_SOURCES})
