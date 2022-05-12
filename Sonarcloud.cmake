@@ -80,8 +80,9 @@ function(transform_sonarcloud_include_directories output_variable target)
   set(${output_variable} ${include_directories} PARENT_SCOPE)
 endfunction()
 
-function(extract_sonarcloud_project_files output_variable)
-  unset(project_files)
+function(extract_sonarcloud_project_files output_project_source_files output_project_include_directories)
+  unset(project_source_files)
+  unset(project_include_directories)
 
   foreach (target IN LISTS ARGN)
     get_target_property(target_type ${target} TYPE)
@@ -118,17 +119,23 @@ function(extract_sonarcloud_project_files output_variable)
       unset(target_interface_include_directories)
     endif()
 
-    list(APPEND project_files ${target_source_files})
-    list(APPEND project_files ${target_include_directories})
-    list(APPEND project_files ${target_interface_include_directories})
+    list(APPEND project_source_files ${target_source_files})
+    list(APPEND project_include_directories ${target_include_directories})
+    list(APPEND project_include_directories ${target_interface_include_directories})
   endforeach()
 
-  if (project_files)
-    list(SORT project_files)
-    list(REMOVE_DUPLICATES project_files)
+  if (project_source_files)
+    list(SORT project_source_files)
+    list(REMOVE_DUPLICATES project_source_files)
   endif()
 
-  set(${output_variable} ${project_files} PARENT_SCOPE)
+  if (project_include_directories)
+    list(SORT project_include_directories)
+    list(REMOVE_DUPLICATES project_include_directories)
+  endif()
+
+  set(${output_project_source_files} ${project_source_files} PARENT_SCOPE)
+  set(${output_project_include_directories} ${project_include_directories} PARENT_SCOPE)
 endfunction()
 
 function(generate_sonarcloud_project_properties sonarcloud_project_properties_path)
@@ -147,33 +154,20 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
   get_property(swift_unit_test_targets GLOBAL PROPERTY SWIFT_UNIT_TEST_TARGETS)
   get_property(swift_integration_test_targets GLOBAL PROPERTY SWIFT_INTEGRATION_TEST_TARGETS)
 
-  extract_sonarcloud_project_files(source_files ${swift_executable_targets} ${swift_library_targets})
-  extract_sonarcloud_project_files(test_files ${swift_test_targets} ${swift_unit_test_targets} ${swift_integration_test_targets})
-
-  #
-  # In the case were we are directly compiling the source code for mocking, we
-  # need to strip off the source files.
-  #
-  list(REMOVE_ITEM test_files ${source_files})
-
-  list(LENGTH source_files source_files_size)
-  list(LENGTH test_files test_files_size)
-
-  if (source_files_size EQUAL 0)
-    message(FATAL_ERROR "There are no registered swift source targets")
-  endif()
-
-  if (test_files_size EQUAL 0)
-    message(FATAL_ERROR "There are no registered swift test targets")
-  endif()
+  extract_sonarcloud_project_files(source_source_files source_include_directories ${swift_executable_targets} ${swift_library_targets})
+  extract_sonarcloud_project_files(test_source_files test_include_directories ${swift_test_targets} ${swift_unit_test_targets} ${swift_integration_test_targets})
 
   set(sonarcloud_project_properties_content "sonar.sourceEncoding=UTF-8\n")
+#  string(APPEND sonarcloud_project_properties_content "sonar.sources=${_sonarcloud_newline}${PROJECT_SOURCE_DIR},${_sonarcloud_newline}${PROJECT_BINARY_DIR}\n")
+#  string(APPEND sonarcloud_project_properties_content "sonar.tests=${_sonarcloud_newline}${PROJECT_SOURCE_DIR},${_sonarcloud_newline}${PROJECT_BINARY_DIR}\n")
 
+  set(source_files ${source_source_files})
   list(JOIN source_files ",${_sonarcloud_newline}" sonar_sources)
-  string(APPEND sonarcloud_project_properties_content "sonar.sources=${_sonarcloud_newline}${sonar_sources}\n")
+  string(APPEND sonarcloud_project_properties_content "sonar.sources.inclusions=${_sonarcloud_newline}${sonar_sources}\n")
 
+  set(test_files ${test_source_files})
   list(JOIN test_files ",${_sonarcloud_newline}" sonar_tests)
-  string(APPEND sonarcloud_project_properties_content "sonar.tests=${_sonarcloud_newline}${sonar_tests}\n")
+  string(APPEND sonarcloud_project_properties_content "sonar.tests.inclusions=${_sonarcloud_newline}${sonar_tests}\n")
 
   file(GENERATE
     OUTPUT "${sonarcloud_project_properties_path}"
