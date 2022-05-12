@@ -13,6 +13,8 @@
 include(SwiftTargets) # expects global properties SWIFT_EXECUTABLE_TARGETS and SWIFT_LIBRARY_TARGETS to be defined
 include(TestTargets) # expects global properties SWIFT_TEST_TARGETS, SWIFT_UNIT_TEST_TARGETS and SWIFT_INTEGRATION_TEST_TARGETS to be defined
 
+set(_sonarcloud_line_glue "\\\n  ")
+
 function(transform_sonarcloud_source_files output_variable target)
   #
   # Based off of https://cmake.org/cmake/help/latest/prop_tgt/SOURCES.html we
@@ -48,7 +50,7 @@ function(transform_sonarcloud_source_files output_variable target)
     endif()
 
     if (source_file MATCHES "^\\$<.+>$")
-      list(APPEND source_files ${source_file})
+      list(APPEND source_files "$<$<BOOL:${source_file}>:$<JOIN:${source_file},${_sonarcloud_line_glue}>>")
       continue()
     endif()
 
@@ -74,7 +76,7 @@ function(transform_sonarcloud_include_directories output_variable target)
     endif()
 
     if (include_directory MATCHES "^\\$<.+>$")
-      list(APPEND include_directories ${include_directory})
+      list(APPEND include_directories "$<$<BOOL:${include_directory}>:$<JOIN:${include_directory},${_sonarcloud_line_glue}>>")
       continue()
     endif()
 
@@ -171,11 +173,11 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
 
   set(sonarcloud_project_properties_content "sonar.sourceEncoding=UTF-8\n")
 
-  list(JOIN source_files ",\\\n  " sonar_sources)
-  string(APPEND sonarcloud_project_properties_content "sonar.sources=\\\n  ${sonar_sources}\n")
+  list(JOIN source_files ",${_sonarcloud_line_glue}" sonar_sources)
+  string(APPEND sonarcloud_project_properties_content "sonar.sources=${_sonarcloud_line_glue}${sonar_sources}\n")
 
-  list(JOIN test_files ",\\\n  " sonar_tests)
-  string(APPEND sonarcloud_project_properties_content "sonar.tests=\\\n  ${sonar_tests}\n")
+  list(JOIN test_files ",${_sonarcloud_line_glue}" sonar_tests)
+  string(APPEND sonarcloud_project_properties_content "sonar.tests=${_sonarcloud_line_glue}${sonar_tests}\n")
 
   file(GENERATE
     OUTPUT "${sonarcloud_project_properties_path}"
