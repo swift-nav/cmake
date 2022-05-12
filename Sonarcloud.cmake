@@ -158,12 +158,10 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
   extract_sonarcloud_project_files(test_source_files test_include_directories ${swift_test_targets} ${swift_unit_test_targets} ${swift_integration_test_targets})
 
   set(sonarcloud_project_properties_content "sonar.sourceEncoding=UTF-8\n")
-#  string(APPEND sonarcloud_project_properties_content "sonar.sources=${_sonarcloud_newline}${PROJECT_SOURCE_DIR},${_sonarcloud_newline}${PROJECT_BINARY_DIR}\n")
-#  string(APPEND sonarcloud_project_properties_content "sonar.tests=${_sonarcloud_newline}${PROJECT_SOURCE_DIR},${_sonarcloud_newline}${PROJECT_BINARY_DIR}\n")
 
-  set(source_files ${source_source_files})
+  set(source_files ${source_source_files} ${source_include_directories})
   list(JOIN source_files ",${_sonarcloud_newline}" sonar_sources)
-  string(APPEND sonarcloud_project_properties_content "sonar.sources.inclusions=${_sonarcloud_newline}${sonar_sources}\n")
+  string(APPEND sonarcloud_project_properties_content "sonar.inclusions=${_sonarcloud_newline}${sonar_sources}\n")
 
   set(test_files ${test_source_files})
   list(JOIN test_files ",${_sonarcloud_newline}" sonar_tests)
