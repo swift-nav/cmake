@@ -13,7 +13,7 @@
 include(SwiftTargets) # expects global properties SWIFT_EXECUTABLE_TARGETS and SWIFT_LIBRARY_TARGETS to be defined
 include(TestTargets) # expects global properties SWIFT_TEST_TARGETS, SWIFT_UNIT_TEST_TARGETS and SWIFT_INTEGRATION_TEST_TARGETS to be defined
 
-set(_sonarcloud_line_glue "\\\n  ")
+set(_sonarcloud_newline "\\\n  ")
 
 function(transform_sonarcloud_source_files output_variable target)
   #
@@ -45,7 +45,7 @@ function(transform_sonarcloud_source_files output_variable target)
     endif()
 
     if (source_file MATCHES "^\\$<.+>$")
-      list(APPEND source_files "$<$<BOOL:${source_file}>:$<JOIN:${source_file},${_sonarcloud_line_glue}>>")
+      list(APPEND source_files "$<$<BOOL:${source_file}>:$<JOIN:${source_file},$<COMMA>${_sonarcloud_newline}>>")
       continue()
     endif()
 
@@ -70,7 +70,7 @@ function(transform_sonarcloud_include_directories output_variable target)
     endif()
 
     if (include_directory MATCHES "^\\$<.+>$")
-      list(APPEND include_directories "$<$<BOOL:${include_directory}>:$<JOIN:${include_directory},${_sonarcloud_line_glue}>>")
+      list(APPEND include_directories "$<$<BOOL:${include_directory}>:$<JOIN:${include_directory},$<COMMA>${_sonarcloud_newline}>>")
       continue()
     endif()
 
@@ -95,25 +95,27 @@ function(extract_sonarcloud_project_files output_variable)
       continue()
     endif()
 
-    unset(target_source_files)
-    unset(target_include_directories)
-    unset(target_interface_include_directories)
-
     if (NOT ${target_type} STREQUAL "INTERFACE_LIBRARY")
       get_target_property(target_source_files ${target} SOURCES)
       if (target_source_files)
         transform_sonarcloud_source_files(target_source_files ${target} ${target_source_files})
+      else()
+        unset(target_source_files)
       endif()
 
       get_target_property(target_include_directories ${target} INCLUDE_DIRECTORIES)
       if (target_include_directories)
         transform_sonarcloud_include_directories(target_include_directories ${target} ${target_include_directories})
+      else()
+        unset(target_include_directories)
       endif()
     endif()
 
     get_target_property(target_interface_include_directories ${target} INTERFACE_INCLUDE_DIRECTORIES)
     if (target_interface_include_directories)
       transform_sonarcloud_include_directories(target_interface_include_directories ${target} ${target_interface_include_directories})
+    else()
+      unset(target_interface_include_directories)
     endif()
 
     list(APPEND project_files ${target_source_files})
@@ -167,11 +169,11 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
 
   set(sonarcloud_project_properties_content "sonar.sourceEncoding=UTF-8\n")
 
-  list(JOIN source_files ",${_sonarcloud_line_glue}" sonar_sources)
-  string(APPEND sonarcloud_project_properties_content "sonar.sources=${_sonarcloud_line_glue}${sonar_sources}\n")
+  list(JOIN source_files ",${_sonarcloud_newline}" sonar_sources)
+  string(APPEND sonarcloud_project_properties_content "sonar.sources=${_sonarcloud_newline}${sonar_sources}\n")
 
-  list(JOIN test_files ",${_sonarcloud_line_glue}" sonar_tests)
-  string(APPEND sonarcloud_project_properties_content "sonar.tests=${_sonarcloud_line_glue}${sonar_tests}\n")
+  list(JOIN test_files ",${_sonarcloud_newline}" sonar_tests)
+  string(APPEND sonarcloud_project_properties_content "sonar.tests=${_sonarcloud_newline}${sonar_tests}\n")
 
   file(GENERATE
     OUTPUT "${sonarcloud_project_properties_path}"
