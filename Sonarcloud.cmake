@@ -86,6 +86,9 @@ function(extract_sonarcloud_project_files output_project_source_files output_pro
   foreach (target IN LISTS ARGN)
     get_target_property(target_type ${target} TYPE)
 
+    unset(target_source_files)
+    unset(target_include_directories)
+
     if (NOT target_type STREQUAL "INTERFACE_LIBRARY")
       get_target_property(target_source_files ${target} SOURCES)
       if (target_source_files)
