@@ -332,12 +332,16 @@ function(swift_add_test target)
     add_dependencies(do-all-tests do-${target})
   endif()
 
+  set_target_properties(${target}
+    PROPERTIES
+      SWIFT_PROJECT ${PROJECT_NAME}
+      INTERFACE_SWIFT_PROJECT ${PROJECT_NAME}
+  )
+
   if (x_INTEGRATION_TEST)
-    get_property(targets GLOBAL PROPERTY SWIFT_INTEGRATION_TEST_TARGETS)
-    set_property(GLOBAL PROPERTY SWIFT_INTEGRATION_TEST_TARGETS ${targets} ${target})
     set_target_properties(${target}
       PROPERTIES
-        SWIFT_PROJECT ${PROJECT_NAME}
+        SWIFT_TEST_TYPE integration
     )
 
     if (NOT TARGET do-all-integration-tests)
@@ -352,11 +356,9 @@ function(swift_add_test target)
   endif()
 
   if (x_UNIT_TEST)
-    get_property(targets GLOBAL PROPERTY SWIFT_UNIT_TEST_TARGETS)
-    set_property(GLOBAL PROPERTY SWIFT_UNIT_TEST_TARGETS ${targets} ${target})
     set_target_properties(${target}
       PROPERTIES
-        SWIFT_PROJECT ${PROJECT_NAME}
+        SWIFT_TEST_TYPE unit
     )
 
     if (NOT TARGET do-all-unit-tests)

@@ -156,6 +156,26 @@ define_property(TARGET
   BRIEF_DOCS "Swift target type"
   FULL_DOCS "For use by other modules in this repository which need to know the classification of target. One of executable, library, tool, tool_library, test, test_library")
 
+define_property(TARGET
+  PROPERTY INTERFACE_SWIFT_TYPE
+  BRIEF_DOCS "Swift target type"
+  FULL_DOCS "Identical use as SWIFT_TYPE except that this applies to ALL target types, including INTERFACE")
+
+define_property(TARGET
+  PROPERTY SWIFT_PROJECT
+  BRIEF_DOCS "Swift project name"
+  FULL_DOCS "For use by other modules in this repository which need to know the project which this target belongs to")
+
+define_property(TARGET
+  PROPERTY INTERFACE_SWIFT_PROJECT
+  BRIEF_DOCS "Swift project name"
+  FULL_DOCS "Identical use as SWIFT_PROJECT except that this applies to ALL target types, including INTERFACE")
+
+define_property(TARGET
+  PROPERTY SWIFT_TEST_TYPE
+  BRIEF_DOCS "Swift test type"
+  FULL_DOCS "When target's SWIFT_PROJECT property is \"test\", this option, if set, will identify what type of test it is. Currently support \"unit\" or \"integration\"")
+
 macro(swift_collate_arguments prefix name)
   set(exclusion_list ${ARGN})
   set(${name}_args "")
@@ -257,13 +277,6 @@ function(swift_add_target target type)
   if (type STREQUAL "executable")
     add_executable(${target} ${x_SOURCES})
     list(APPEND extra_flags -pedantic)
-
-    get_property(targets GLOBAL PROPERTY SWIFT_EXECUTABLE_TARGETS)
-    set_property(GLOBAL PROPERTY SWIFT_EXECUTABLE_TARGETS ${targets} ${target})
-    set_target_properties(${target}
-      PROPERTIES
-        SWIFT_PROJECT ${PROJECT_NAME}
-    )
   elseif(type STREQUAL "library")
     if (x_INTERFACE)
       add_library(${target} INTERFACE)
@@ -273,28 +286,6 @@ function(swift_add_target target type)
       add_library(${target} ${library_type} ${x_SOURCES})
     endif()
     list(APPEND extra_flags -pedantic)
-
-    get_property(targets GLOBAL PROPERTY SWIFT_LIBRARY_TARGETS)
-    set_property(GLOBAL PROPERTY SWIFT_LIBRARY_TARGETS ${targets} ${target})
-
-    #
-    # This edge case is needed for cmake version < 3.19.0 where INTERFACE
-    # classes cannot contain any property other than those prefixed with
-    # "INTERFACE_".
-    #
-    # see: https://stackoverflow.com/questions/68502038/custom-properties-for-interface-libraries
-    #
-    set_target_properties(${target}
-      PROPERTIES
-        INTERFACE_SWIFT_PROJECT ${PROJECT_NAME}
-    )
-
-    if (NOT x_INTERFACE)
-      set_target_properties(${target}
-        PROPERTIES
-          SWIFT_PROJECT ${PROJECT_NAME}
-      )
-    endif()
   elseif(type STREQUAL "test_library")
     if (x_INTERFACE)
       add_library(${target} INTERFACE)
@@ -302,28 +293,6 @@ function(swift_add_target target type)
       add_library(${target} OBJECT ${x_SOURCES})
     else()
       add_library(${target} ${library_type} ${x_SOURCES})
-    endif()
-
-    get_property(targets GLOBAL PROPERTY SWIFT_TEST_TARGETS)
-    set_property(GLOBAL PROPERTY SWIFT_TEST_TARGETS ${targets} ${target})
-
-    #
-    # This edge case is needed for cmake version < 3.19.0 where INTERFACE
-    # classes cannot contain any property other than those prefixed with
-    # "INTERFACE_".
-    #
-    # see: https://stackoverflow.com/questions/68502038/custom-properties-for-interface-libraries
-    #
-    set_target_properties(${target}
-      PROPERTIES
-        INTERFACE_SWIFT_PROJECT ${PROJECT_NAME}
-    )
-
-    if (NOT x_INTERFACE)
-      set_target_properties(${target}
-        PROPERTIES
-          SWIFT_PROJECT ${PROJECT_NAME}
-      )
     endif()
   elseif(type STREQUAL "tool")
     add_executable(${target} ${x_SOURCES})
@@ -339,8 +308,31 @@ function(swift_add_target target type)
     message(FATAL_ERROR "Unknown Swift target type ${type}")
   endif()
 
+  #
+  # This edge case is needed for cmake version < 3.19.0 where INTERFACE
+  # classes cannot contain any property other than those prefixed with
+  # "INTERFACE_".
+  #
+  # see: https://stackoverflow.com/questions/68502038/custom-properties-for-interface-libraries
+  #
+  # Until we migrate the cmake scripts to require 3.19.0, we should use the
+  # "INTERFACE_*" properties. If you want to go the extra mile, make sure to
+  # check both `INTERFACE_` and non `INTERFACE_` properties, later on we can
+  # delete the `INTERFACE_` once this illogical constraint is removed.
+  #
+  set_target_properties(${target}
+    PROPERTIES
+      INTERFACE_SWIFT_PROJECT ${PROJECT_NAME}
+      INTERFACE_SWIFT_TYPE ${type}
+  )
+
   if (NOT x_INTERFACE)
-    set_target_properties(${target} PROPERTIES SWIFT_TYPE ${type})
+    set_target_properties(${target}
+      PROPERTIES
+        SWIFT_PROJECT ${PROJECT_NAME}
+        SWIFT_TYPE ${type}
+    )
+
     swift_set_language_standards(${target} ${language_standards_args})
     target_code_coverage(${target} NO_RUN)
 
