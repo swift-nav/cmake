@@ -17,9 +17,9 @@ set(_sonarcloud_newline "\\\n  ")
 function(transform_sonarcloud_source_files output_variable target)
   #
   # Based off of https://cmake.org/cmake/help/latest/prop_tgt/SOURCES.html we
-  # need to correcty interpret the SOURCES properties to be able to transform
-  # them into what sonarcloud project properties is comfortable with (ie. paths
-  # from project source directory
+  # need to correctly interpret the SOURCES properties to be able to transform
+  # them into what sonarcloud project properties is comfortable with (ie.
+  # relative path from project source directory).
   #
   get_target_property(target_binary_dir ${target} BUILD_DIR)
   get_target_property(target_source_dir ${target} SOURCE_DIR)
@@ -85,17 +85,8 @@ function(extract_sonarcloud_project_files output_project_source_files output_pro
 
   foreach (target IN LISTS ARGN)
     get_target_property(target_type ${target} TYPE)
-    if (${target_type} STREQUAL "INTERFACE_LIBRARY")
-      get_target_property(swift_project ${target} INTERFACE_SWIFT_PROJECT)
-    else()
-      get_target_property(swift_project ${target} SWIFT_PROJECT)
-    endif()
 
-    if(NOT ${swift_project} STREQUAL ${PROJECT_NAME})
-      continue()
-    endif()
-
-    if (NOT ${target_type} STREQUAL "INTERFACE_LIBRARY")
+    if (NOT target_type STREQUAL "INTERFACE_LIBRARY")
       get_target_property(target_source_files ${target} SOURCES)
       if (target_source_files)
         transform_sonarcloud_source_files(target_source_files ${target} ${target_source_files})
@@ -140,7 +131,7 @@ endfunction()
 function(generate_sonarcloud_project_properties sonarcloud_project_properties_path)
   if (NOT IS_ABSOLUTE ${sonarcloud_project_properties_path})
     message(FATAL_ERROR "Function \"generate_sonarcloud_project_properties\""
-           "only accepts sonarcloud project properties output as absolute paths")
+           "only accepts absolute paths to avoid ambiguity")
   endif()
 
   if (NOT ${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})

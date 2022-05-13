@@ -181,7 +181,6 @@ define_property(TARGET
   BRIEF_DOCS "Target's source directory"
   FULL_DOCS "Identical use as SOURCE_DIR except that this applies to ALL target types, including INTERFACE")
 
-
 macro(swift_collate_arguments prefix name)
   set(exclusion_list ${ARGN})
   set(${name}_args "")
