@@ -176,6 +176,12 @@ define_property(TARGET
   BRIEF_DOCS "Swift test type"
   FULL_DOCS "When target's SWIFT_PROJECT property is \"test\", this option, if set, will identify what type of test it is. Currently support \"unit\" or \"integration\"")
 
+define_property(TARGET
+  PROPERTY INTERFACE_SOURCE_DIR
+  BRIEF_DOCS "Target's source directory"
+  FULL_DOCS "Identical use as SOURCE_DIR except that this applies to ALL target types, including INTERFACE")
+
+
 macro(swift_collate_arguments prefix name)
   set(exclusion_list ${ARGN})
   set(${name}_args "")
@@ -324,6 +330,7 @@ function(swift_add_target target type)
     PROPERTIES
       INTERFACE_SWIFT_PROJECT ${PROJECT_NAME}
       INTERFACE_SWIFT_TYPE ${type}
+      INTERFACE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
   )
 
   if (NOT x_INTERFACE)

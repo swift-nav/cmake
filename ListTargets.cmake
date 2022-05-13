@@ -70,22 +70,32 @@ function(swift_list_targets out_var)
   set(all_targets)
 
   foreach(target IN LISTS x_all_targets)
+    get_target_property(type ${target} TYPE)
     if(x_TYPES)
-      get_target_property(type ${target} TYPE)
       if(NOT ${type} IN_LIST x_TYPES)
         continue()
       endif()
     endif()
 
     if(x_SWIFT_TYPES)
-      get_target_property(type ${target} SWIFT_TYPE)
+      if (type STREQUAL "INTERFACE_LIBRARY")
+        get_target_property(type ${target} INTERFACE_SWIFT_TYPE)
+      else()
+        get_target_property(type ${target} SWIFT_TYPE)
+      endif()
+
       if(NOT ${type} IN_LIST x_SWIFT_TYPES)
         continue()
       endif()
     endif()
 
     if(x_ONLY_THIS_REPO)
-      get_target_property(target_dir ${target} SOURCE_DIR)
+      if (type STREQUAL "INTERFACE_LIBRARY")
+        get_target_property(target_dir ${target} INTERFACE_SOURCE_DIR)
+      else()
+        get_target_property(target_dir ${target} SOURCE_DIR)
+      endif()
+
       # This replacement makes sure that we only filter out third_party subdirectories which actually exist in the root project source dir - ie, a git repo cloned in to a path
       # which just so happens to contain third_party should not break this function
       string(REPLACE ${CMAKE_SOURCE_DIR} "" target_dir ${target_dir})

@@ -10,8 +10,7 @@
 # WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 #
 
-include(SwiftTargets) # expects global properties SWIFT_EXECUTABLE_TARGETS and SWIFT_LIBRARY_TARGETS to be defined
-include(TestTargets) # expects global properties SWIFT_TEST_TARGETS, SWIFT_UNIT_TEST_TARGETS and SWIFT_INTEGRATION_TEST_TARGETS to be defined
+include(ListTargets)
 
 set(_sonarcloud_newline "\\\n  ")
 
@@ -148,14 +147,22 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
     return()
   endif()
 
-  get_property(swift_executable_targets GLOBAL PROPERTY SWIFT_EXECUTABLE_TARGETS)
-  get_property(swift_library_targets GLOBAL PROPERTY SWIFT_LIBRARY_TARGETS)
-  get_property(swift_test_targets GLOBAL PROPERTY SWIFT_TEST_TARGETS)
-  get_property(swift_unit_test_targets GLOBAL PROPERTY SWIFT_UNIT_TEST_TARGETS)
-  get_property(swift_integration_test_targets GLOBAL PROPERTY SWIFT_INTEGRATION_TEST_TARGETS)
+  swift_list_targets(source_targets
+    ONLY_THIS_REPO
+    SWIFT_TYPES
+      executable
+      library
+  )
 
-  extract_sonarcloud_project_files(source_source_files source_include_directories ${swift_executable_targets} ${swift_library_targets})
-  extract_sonarcloud_project_files(test_source_files test_include_directories ${swift_test_targets} ${swift_unit_test_targets} ${swift_integration_test_targets})
+  swift_list_targets(test_targets
+    ONLY_THIS_REPO
+    SWIFT_TYPES
+      test
+      test_library
+  )
+
+  extract_sonarcloud_project_files(source_source_files source_include_directories ${source_targets})
+  extract_sonarcloud_project_files(test_source_files test_include_directories ${test_targets})
 
   set(sonarcloud_project_properties_content "sonar.sourceEncoding=UTF-8\n")
 
