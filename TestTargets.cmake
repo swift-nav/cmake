@@ -198,8 +198,6 @@ function(swift_add_test_runner target)
     message(FATAL_ERROR "swift_add_test_runner unparsed arguments - ${x_UNPARSED_ARGUMENTS}")
   endif()
 
-  swift_create_test_targets()
-
   if(NOT x_COMMENT)
     set(x_COMMENT "test ${target}")
   endif()
@@ -213,6 +211,12 @@ function(swift_add_test_runner target)
   elseif(x_INTEGRATION_TEST AND x_UNIT_TEST)
     message(FATAL_ERROR "Both INTEGRATION_TEST and UNIT_TEST option were specified, you can only specify one")
   endif()
+
+  if (NOT ${PROJECT_NAME}_BUILD_TESTS)
+    return()
+  endif()
+
+  swift_create_test_targets()
 
   add_custom_target(
     do-${target}
@@ -267,8 +271,6 @@ function(swift_add_test target)
     message(FATAL_ERROR "swift_add_test unparsed arguments - ${x_UNPARSED_ARGUMENTS}")
   endif()
 
-  swift_create_test_targets()
-
   if(NOT x_SRCS)
     message(FATAL_ERROR "swift_add_test must be passed at least one source file")
   endif()
@@ -293,12 +295,19 @@ function(swift_add_test target)
   set_target_properties(${target} PROPERTIES SWIFT_TYPE "test")
   swift_set_language_standards(${target} C_EXTENSIONS_ON)
   swift_set_compile_options(${target})
+  target_code_coverage(${target} AUTO ALL)
   if(x_INCLUDE)
     target_include_directories(${target} PRIVATE ${x_INCLUDE})
   endif()
   if(x_LINK)
     target_link_libraries(${target} PRIVATE ${x_LINK})
   endif()
+
+  if (NOT ${PROJECT_NAME}_BUILD_TESTS)
+    return()
+  endif()
+
+  swift_create_test_targets()
 
   add_custom_target(
     do-${target}
@@ -307,7 +316,6 @@ function(swift_add_test target)
     COMMENT "Running ${x_COMMENT}"
   )
   add_dependencies(do-${target} ${target})
-  target_code_coverage(${target} AUTO ALL)
 
   if(x_PARALLEL)
     add_custom_target(parallel-${target}
@@ -326,7 +334,18 @@ function(swift_add_test target)
     add_dependencies(do-all-tests do-${target})
   endif()
 
+  set_target_properties(${target}
+    PROPERTIES
+      SWIFT_PROJECT ${PROJECT_NAME}
+      INTERFACE_SWIFT_PROJECT ${PROJECT_NAME}
+  )
+
   if (x_INTEGRATION_TEST)
+    set_target_properties(${target}
+      PROPERTIES
+        SWIFT_TEST_TYPE integration
+    )
+
     if (NOT TARGET do-all-integration-tests)
       add_custom_target(do-all-integration-tests)
     endif()
@@ -339,6 +358,11 @@ function(swift_add_test target)
   endif()
 
   if (x_UNIT_TEST)
+    set_target_properties(${target}
+      PROPERTIES
+        SWIFT_TEST_TYPE unit
+    )
+
     if (NOT TARGET do-all-unit-tests)
       add_custom_target(do-all-unit-tests)
     endif()

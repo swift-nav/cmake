@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2021 Swift Navigation Inc.
+# Copyright (C) 2022 Swift Navigation Inc.
 # Contact: Swift Navigation <dev@swift-nav.com>
 #
 # This source is subject to the license found in the file 'LICENSE' which must
@@ -11,8 +11,11 @@
 #
 
 include("GenericFindDependency")
-option(optional_ENABLE_TESTS "" OFF)
+
+option(albatross_ENABLE_EXAMPLES "" false)
+option(albatross_ENABLE_TESTS "" false)
+
 GenericFindDependency(
-  TARGET akrzemi1::optional
+  TARGET albatross
   SYSTEM_INCLUDES
 )

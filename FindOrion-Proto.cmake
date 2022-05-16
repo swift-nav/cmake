@@ -1,5 +1,5 @@
 #
-# Copyright (C) 2021 Swift Navigation Inc.
+# Copyright (C) 2022 Swift Navigation Inc.
 # Contact: Swift Navigation <dev@swift-nav.com>
 #
 # This source is subject to the license found in the file 'LICENSE' which must
@@ -11,7 +11,10 @@
 #
 
 include("GenericFindDependency")
+
+option(orion_proto_ENABLE_TESTS "" false)
+
 GenericFindDependency(
   TARGET orion-proto
-  SOURCE_DIR "orion_proto"
+  SOURCE_DIR orion_proto
 )

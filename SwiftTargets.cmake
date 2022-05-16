@@ -115,6 +115,9 @@
 #  C_EXTENSIONS_ON: C extensions are disabled by default, adding this keyword
 #  enables C extensions.
 #
+#  SKIP_COMPILE_OPTIONS: will forgo invoking the swift_set_compile_options on
+#  the target.
+#
 # SINGLE VALUE KEYWORDS
 #
 #  C_STANDARD: allow uses to override the default C standard used in a target,
@@ -156,6 +159,31 @@ define_property(TARGET
   BRIEF_DOCS "Swift target type"
   FULL_DOCS "For use by other modules in this repository which need to know the classification of target. One of executable, library, tool, tool_library, test, test_library")
 
+define_property(TARGET
+  PROPERTY INTERFACE_SWIFT_TYPE
+  BRIEF_DOCS "Swift target type"
+  FULL_DOCS "Identical use as SWIFT_TYPE except that this applies to ALL target types, including INTERFACE")
+
+define_property(TARGET
+  PROPERTY SWIFT_PROJECT
+  BRIEF_DOCS "Swift project name"
+  FULL_DOCS "For use by other modules in this repository which need to know the project which this target belongs to")
+
+define_property(TARGET
+  PROPERTY INTERFACE_SWIFT_PROJECT
+  BRIEF_DOCS "Swift project name"
+  FULL_DOCS "Identical use as SWIFT_PROJECT except that this applies to ALL target types, including INTERFACE")
+
+define_property(TARGET
+  PROPERTY SWIFT_TEST_TYPE
+  BRIEF_DOCS "Swift test type"
+  FULL_DOCS "When target's SWIFT_PROJECT property is \"test\", this option, if set, will identify what type of test it is. Currently support \"unit\" or \"integration\"")
+
+define_property(TARGET
+  PROPERTY INTERFACE_SOURCE_DIR
+  BRIEF_DOCS "Target's source directory"
+  FULL_DOCS "Identical use as SOURCE_DIR except that this applies to ALL target types, including INTERFACE")
+
 macro(swift_collate_arguments prefix name)
   set(exclusion_list ${ARGN})
   set(${name}_args "")
@@ -182,7 +210,7 @@ macro(swift_collate_arguments prefix name)
 endmacro()
 
 function(swift_add_target target type)
-  set(this_option INTERFACE OBJECT STATIC SHARED MODULE)
+  set(this_option INTERFACE OBJECT STATIC SHARED MODULE SKIP_COMPILE_OPTIONS)
   set(this_single "")
   set(this_multi SOURCES)
 
@@ -288,11 +316,38 @@ function(swift_add_target target type)
     message(FATAL_ERROR "Unknown Swift target type ${type}")
   endif()
 
+  #
+  # This edge case is needed for cmake version < 3.19.0 where INTERFACE
+  # classes cannot contain any property other than those prefixed with
+  # "INTERFACE_".
+  #
+  # see: https://stackoverflow.com/questions/68502038/custom-properties-for-interface-libraries
+  #
+  # Until we migrate the cmake scripts to require 3.19.0, we should use the
+  # "INTERFACE_*" properties. If you want to go the extra mile, make sure to
+  # check both `INTERFACE_` and non `INTERFACE_` properties, later on we can
+  # delete the `INTERFACE_` once this illogical constraint is removed.
+  #
+  set_target_properties(${target}
+    PROPERTIES
+      INTERFACE_SWIFT_PROJECT ${PROJECT_NAME}
+      INTERFACE_SWIFT_TYPE ${type}
+      INTERFACE_SOURCE_DIR ${CMAKE_CURRENT_SOURCE_DIR}
+  )
+
   if (NOT x_INTERFACE)
-    set_target_properties(${target} PROPERTIES SWIFT_TYPE ${type})
-    swift_set_compile_options(${target} ${compile_options_args} EXTRA_FLAGS ${extra_flags})
+    set_target_properties(${target}
+      PROPERTIES
+        SWIFT_PROJECT ${PROJECT_NAME}
+        SWIFT_TYPE ${type}
+    )
+
     swift_set_language_standards(${target} ${language_standards_args})
     target_code_coverage(${target} NO_RUN)
+
+    if (NOT x_SKIP_COMPILE_OPTIONS)
+      swift_set_compile_options(${target} ${compile_options_args} EXTRA_FLAGS ${extra_flags})
+    endif()
   endif()
 endfunction()
 
