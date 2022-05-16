@@ -115,6 +115,9 @@
 #  C_EXTENSIONS_ON: C extensions are disabled by default, adding this keyword
 #  enables C extensions.
 #
+#  SKIP_COMPILE_OPTIONS: will forgo invoking the swift_set_compile_options on
+#  the target.
+#
 # SINGLE VALUE KEYWORDS
 #
 #  C_STANDARD: allow uses to override the default C standard used in a target,
