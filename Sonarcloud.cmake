@@ -10,11 +10,51 @@
 # WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 #
 
+#
+# OVERVIEW
+# ========
+#
+# Offers a way to generate the necessary Sonarcloud project file from the
+# information available via cmake build system. User can call on
+# "generate_sonarcloud_project_properties" to produce this project file which
+# outlines to Sonarcloud what files/directories are deemed source files and
+# which files are test files.
+#
+# This module will work in conjunction with "TestTargets" and "SwiftTargets",
+# and "ListTargets" to identify all Swift production source/test code through.
+# This means that only targets created via "swift_add_*" functions that are
+# categorized as "production" code will be included in the analysis. No other
+# none C/C++ source code will be included in the Sonarcloud project properties
+# file (at the moment).
+#
+# USAGE
+# =====
+#
+# To generate the Sonarcloud project file, simply call the following method at
+# the end of your projects CMakeLists.txt file:
+#
+#   generate_sonarcloud_project_properties(${CMAKE_BINARY_DIR}/sonar-project.properties)
+#
+# This will generate a sonar project file in your root build directory (please
+# don't ever write this to your source directory). Prior to uploading the
+# results to Sonarcloud, you will need to manually transform all absolute path
+# references to relative paths. This manual step can be done easily with the
+# following Linux command:
+#
+#   sed -i -E "s|^(\s+)(${PWD}/)|\1|g" 'sonar-project.properties'
+#
+# The reason why this extra step is required and was not taken care by cmake,
+# is because targets have generator expressions to them which can only be
+# evaluated at the end of the configuration stage. At that point there is no
+# find/replace functionality.
+#
+
+
 include(ListTargets)
 
 set(_sonarcloud_newline "\\\n  ")
 
-function(transform_sonarcloud_source_files output_variable target)
+function(_transform_sonarcloud_source_files output_variable target)
   #
   # Based off of https://cmake.org/cmake/help/latest/prop_tgt/SOURCES.html we
   # need to correctly interpret the SOURCES properties to be able to transform
@@ -54,7 +94,7 @@ function(transform_sonarcloud_source_files output_variable target)
   set(${output_variable} ${source_files} PARENT_SCOPE)
 endfunction()
 
-function(transform_sonarcloud_include_directories output_variable target)
+function(_transform_sonarcloud_include_directories output_variable target)
   unset(include_directories)
 
   foreach (include_directory IN LISTS ARGN)
@@ -79,7 +119,7 @@ function(transform_sonarcloud_include_directories output_variable target)
   set(${output_variable} ${include_directories} PARENT_SCOPE)
 endfunction()
 
-function(extract_sonarcloud_project_files output_project_source_files output_project_include_directories)
+function(_extract_sonarcloud_project_files output_project_source_files output_project_include_directories)
   unset(project_source_files)
   unset(project_include_directories)
 
@@ -92,14 +132,14 @@ function(extract_sonarcloud_project_files output_project_source_files output_pro
     if (NOT target_type STREQUAL "INTERFACE_LIBRARY")
       get_target_property(target_source_files ${target} SOURCES)
       if (target_source_files)
-        transform_sonarcloud_source_files(target_source_files ${target} ${target_source_files})
+        _transform_sonarcloud_source_files(target_source_files ${target} ${target_source_files})
       else()
         unset(target_source_files)
       endif()
 
       get_target_property(target_include_directories ${target} INCLUDE_DIRECTORIES)
       if (target_include_directories)
-        transform_sonarcloud_include_directories(target_include_directories ${target} ${target_include_directories})
+        _transform_sonarcloud_include_directories(target_include_directories ${target} ${target_include_directories})
       else()
         unset(target_include_directories)
       endif()
@@ -107,7 +147,7 @@ function(extract_sonarcloud_project_files output_project_source_files output_pro
 
     get_target_property(target_interface_include_directories ${target} INTERFACE_INCLUDE_DIRECTORIES)
     if (target_interface_include_directories)
-      transform_sonarcloud_include_directories(target_interface_include_directories ${target} ${target_interface_include_directories})
+      _transform_sonarcloud_include_directories(target_interface_include_directories ${target} ${target_interface_include_directories})
     else()
       unset(target_interface_include_directories)
     endif()
@@ -155,8 +195,8 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
       test_library
   )
 
-  extract_sonarcloud_project_files(source_source_files source_include_directories ${source_targets})
-  extract_sonarcloud_project_files(test_source_files test_include_directories ${test_targets})
+  _extract_sonarcloud_project_files(source_source_files source_include_directories ${source_targets})
+  _extract_sonarcloud_project_files(test_source_files test_include_directories ${test_targets})
 
   set(sonarcloud_project_properties_content "sonar.sourceEncoding=UTF-8\n")
 
