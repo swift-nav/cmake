@@ -49,7 +49,6 @@
 # find/replace functionality.
 #
 
-
 include(ListTargets)
 
 set(_sonarcloud_newline "\\\n  ")
