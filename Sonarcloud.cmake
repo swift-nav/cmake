@@ -176,7 +176,7 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
            "only accepts absolute paths to avoid ambiguity")
   endif()
 
-  if (NOT ${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_CURRENT_SOURCE_DIR})
+  if (NOT ${PROJECT_SOURCE_DIR} STREQUAL ${CMAKE_SOURCE_DIR})
     return()
   endif()
 
