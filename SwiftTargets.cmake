@@ -214,7 +214,7 @@ function(swift_add_target target type)
   set(this_single "")
   set(this_multi SOURCES)
 
-  set(compile_options_option WARNING EXCEPTIONS RTTI)
+  set(compile_options_option WARNING NO_EXCEPTIONS EXCEPTIONS NO_RTTI RTTI)
   set(compile_options_single "")
   set(compile_options_multi ADD_COMPILE_OPTIONS REMOVE_COMPILE_OPTIONS)
 
