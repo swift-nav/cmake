@@ -98,8 +98,11 @@ function(swift_list_targets out_var)
 
       # This replacement makes sure that we only filter out third_party subdirectories which actually exist in the root project source dir - ie, a git repo cloned in to a path
       # which just so happens to contain third_party should not break this function
-      string(REPLACE ${CMAKE_SOURCE_DIR} "" target_dir ${target_dir})
+      message("a : ${target} ${target_dir}")
+      string(REPLACE ${PROJECT_SOURCE_DIR} "" target_dir ${target_dir})
+      message("b : ${PROJECT_SOURCE_DIR} ${target_dir}")
       if(${target_dir} MATCHES ".*third_party.*")
+        message("c: skip")
         continue()
       endif()
     endif()
@@ -115,6 +118,7 @@ endfunction()
 function(swift_list_compilable_targets out_var)
   swift_list_targets(
     ${out_var}
+    ${ARGN}
     TYPES
     "EXECUTABLE"
     "MODULE_LIBRARY"
