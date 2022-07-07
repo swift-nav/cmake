@@ -201,7 +201,7 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
 
   set(source_files ${source_source_files})
   foreach (dir in ${source_include_directories})
-    set(source_files ${source_source_files} ${dir}/*.h ${dir}/**/*.h)
+    set(source_files ${source_files} ${dir}/*.h ${dir}/**/*.h)
   endforeach()
   list(JOIN source_files ",${_sonarcloud_newline}" sonar_sources)
   string(APPEND sonarcloud_project_properties_content "sonar.inclusions=${_sonarcloud_newline}${sonar_sources}\n")
