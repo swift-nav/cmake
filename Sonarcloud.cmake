@@ -195,7 +195,7 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
   )
 
   _extract_sonarcloud_project_files(source_source_files source_include_directories ${source_targets})
-  _extract_sonarcloud_project_files(test_source_files test_include_directories ${test_targets})
+  #_extract_sonarcloud_project_files(test_source_files test_include_directories ${test_targets})
 
   set(sonarcloud_project_properties_content "sonar.sourceEncoding=UTF-8\n")
 
