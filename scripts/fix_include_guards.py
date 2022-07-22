@@ -36,7 +36,6 @@ def FixHeaderGuard(filename):
     if re.match(r'^\s*#pragma\s+once', i):
       return
 
-  print("filename %s" % filename)
   if re.match(r'.*/include/.*', filename):
     expected_guard = re.sub(r'^.*/include/', '', filename)
   elif re.match(r'^include/.*', filename):
@@ -47,8 +46,6 @@ def FixHeaderGuard(filename):
 
     components = filename.split('/')
     parent_dir = components[-2:][0]
-    print("parent_dir %s" % parent_dir)
-    print(components)
     if parent_dir == "src":
         # In the case where we're in a directory called 'src' start two levels up
         expected_guard = '_'.join(components[-3:])
@@ -58,8 +55,6 @@ def FixHeaderGuard(filename):
 
   expected_guard = re.sub(r'\+\+', 'cpp', expected_guard)
   expected_guard = re.sub(r'[/\.-]', '_', expected_guard).upper()
-
-  sys.stdout.write('Expected guard: %s\n' % expected_guard)
 
   ifndef = ''
   ifndef_linenum = -1
