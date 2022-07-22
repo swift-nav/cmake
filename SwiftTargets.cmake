@@ -316,6 +316,10 @@ function(swift_add_target target type)
     message(FATAL_ERROR "Unknown Swift target type ${type}")
   endif()
 
+  if((type STREQUAL "library") OR (type STREQUAL "test_library") OR (type STREQUAL "tool_library"))
+    add_library(swift::${target} ALIAS ${target})
+  endif()
+
   #
   # This edge case is needed for cmake version < 3.19.0 where INTERFACE
   # classes cannot contain any property other than those prefixed with
