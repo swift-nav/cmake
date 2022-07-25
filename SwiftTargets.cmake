@@ -184,6 +184,8 @@ define_property(TARGET
   BRIEF_DOCS "Target's source directory"
   FULL_DOCS "Identical use as SOURCE_DIR except that this applies to ALL target types, including INTERFACE")
 
+set(project_alias  "swiftnav" CACHE STRING "Alias for project")
+
 macro(swift_collate_arguments prefix name)
   set(exclusion_list ${ARGN})
   set(${name}_args "")
@@ -316,7 +318,6 @@ function(swift_add_target target type)
     message(FATAL_ERROR "Unknown Swift target type ${type}")
   endif()
 
-  set(project_alias "swift")
   if((type STREQUAL "library") OR (type STREQUAL "test_library") OR (type STREQUAL "tool_library"))
     add_library(${project_alias}::${target} ALIAS ${target})
   endif()
