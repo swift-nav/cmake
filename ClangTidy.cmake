@@ -137,12 +137,17 @@ function(swift_create_clang_tidy_targets)
         cppcoreguidelines*
         google*
         misc*
+        modernize*
         performance*
         readability*)
 
     # The set of specific tests which will be disabled. All checks in this list should have a reason for being disabled placed in a comment along side. Use wildcards with care, in
     # general try to disabled the minimum set of checks required and provide a reason for doing so.
     set(disabled_checks
+        -clang-analyzer-core.StackAddressEscape
+        -clang-analyzer-cplusplus.NewDeleteLeaks
+        -clang-analyzer-deadcode.DeadStores
+        -clang-analyzer-optin.cplusplus.UninitializedObject
         # Don't need OSX checks
         -clang-analyzer-osx*
         -clang-analyzer-optin.osx.*
@@ -168,8 +173,13 @@ function(swift_create_clang_tidy_targets)
         # endorsement of anything.
         -cert-dcl03-c
         -cert-dcl21-cpp
+        -cert-err33-c
         -cert-err34-c
+        -cert-dcl37-c
+        -cert-dcl51-cpp
         -cert-err58-cpp
+        -cert-oop54-cpp
+        -cert-str34-c
         -clang-analyzer-alpha*
         -clang-analyzer-core.CallAndMessage
         -clang-analyzer-core.UndefinedBinaryOperatorResult
@@ -177,7 +187,16 @@ function(swift_create_clang_tidy_targets)
         -clang-analyzer-core.uninitialized.UndefReturn
         -clang-analyzer-optin.cplusplus.VirtualCall
         -clang-analyzer-optin.performance.Padding
+        -cppcoreguidelines-avoid-c-arrays
+        -cppcoreguidelines-avoid-goto
+        -cppcoreguidelines-avoid-magic-numbers
+        -cppcoreguidelines-avoid-non-const-global-variables
+        -cppcoreguidelines-init-variables
+        -cppcoreguidelines-macro-usage
+        -cppcoreguidelines-narrowing-conversions
+        -cppcoreguidelines-non-private-member-variables-in-classes
         -cppcoreguidelines-owning-memory
+        -cppcoreguidelines-prefer-member-initializer
         -cppcoreguidelines-pro-bounds-array-to-pointer-decay
         -cppcoreguidelines-pro-bounds-constant-array-index
         -cppcoreguidelines-pro-bounds-pointer-arithmetic
@@ -186,7 +205,10 @@ function(swift_create_clang_tidy_targets)
         -cppcoreguidelines-pro-type-union-access
         -cppcoreguidelines-pro-type-vararg
         -cppcoreguidelines-special-member-functions
+        -cppcoreguidelines-virtual-class-destructor
         -google-runtime-references
+        -misc-non-private-member-variables-in-classes
+        -misc-no-recursion
         -misc-static-assert
         -modernize-deprecated-headers
         -modernize-pass-by-value
@@ -198,12 +220,25 @@ function(swift_create_clang_tidy_targets)
         -modernize-use-emplace
         -modernize-use-equals-default
         -modernize-use-equals-delete
+        -modernize-use-trailing-return-type //
         -modernize-use-using
         -performance-unnecessary-value-param
         -readability-avoid-const-params-in-decls
+        -readability-const-return-type
+        -readability-container-data-pointer
+        -readability-convert-member-functions-to-static
+        -readability-duplicate-include
+        -readability-function-cognitive-complexity
+        -readability-identifier-length
+        -readability-isolate-declaration
+        -readability-make-member-function-const
         -readability-non-const-parameter
+        -readability-qualified-auto
+        -readability-redundant-access-specifiers
         -readability-redundant-declaration
-        -readability-redundant-member-init)
+        -readability-redundant-member-init
+        -readability-uppercase-literal-suffix
+        -readability-use-anyofallof)
 
     # Final list of checks to enable/disable
     set(all_checks -* ${enabled_categories} ${disabled_checks})
