@@ -210,6 +210,7 @@ function(swift_create_clang_tidy_targets)
         -misc-non-private-member-variables-in-classes
         -misc-no-recursion
         -misc-static-assert
+        -modernize-avoid-c-arrays
         -modernize-deprecated-headers
         -modernize-pass-by-value
         -modernize-redundant-void-arg
@@ -232,6 +233,7 @@ function(swift_create_clang_tidy_targets)
         -readability-identifier-length
         -readability-isolate-declaration
         -readability-make-member-function-const
+        -readability-magic-numbers
         -readability-non-const-parameter
         -readability-qualified-auto
         -readability-redundant-access-specifiers
