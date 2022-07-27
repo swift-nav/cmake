@@ -137,7 +137,6 @@ function(swift_create_clang_tidy_targets)
         cppcoreguidelines*
         google*
         misc*
-        modernize*
         performance*
         readability*)
 
