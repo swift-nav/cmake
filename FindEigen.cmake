@@ -23,3 +23,19 @@ else()
   target_include_directories(eigen SYSTEM INTERFACE
       ${PROJECT_SOURCE_DIR}/third_party/eigen/)
 endif()
+
+
+check_c_source_compiles("
+  #if !defined(__ARM_EABI__)
+  #error \"Not ARM EABI Compiler\"
+  #endif
+  int main() { return 0;}
+  "
+  HAS_ARM_EABI_COMPILER)
+
+# Eigen Vector data types are sketchy on arm-eabi compilers
+# https://github.com/swift-nav/estimation_team_planning/issues/223
+if (HAS_ARM_EABI_COMPILER)
+  message(STATUS "ARM EABI compiler detected, disabling EIGEN VECTORIZE")
+  target_compile_definitions(eigen INTERFACE EIGEN_DONT_VECTORIZE)
+endif()
