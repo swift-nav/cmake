@@ -187,6 +187,7 @@ function(swift_create_clang_tidy_targets)
         -clang-analyzer-core.uninitialized.UndefReturn
         -clang-analyzer-optin.cplusplus.VirtualCall
         -clang-analyzer-optin.performance.Padding
+        -clang-diagnostic-unused-command-line-argument
         -cppcoreguidelines-avoid-c-arrays
         -cppcoreguidelines-avoid-goto
         -cppcoreguidelines-avoid-magic-numbers
@@ -223,6 +224,7 @@ function(swift_create_clang_tidy_targets)
         -modernize-use-equals-delete
         -modernize-use-trailing-return-type //
         -modernize-use-using
+        -performance-no-int-to-ptr
         -performance-unnecessary-value-param
         -readability-avoid-const-params-in-decls
         -readability-const-return-type
@@ -239,6 +241,7 @@ function(swift_create_clang_tidy_targets)
         -readability-redundant-access-specifiers
         -readability-redundant-declaration
         -readability-redundant-member-init
+        -readability-suspicious-call-argument
         -readability-uppercase-literal-suffix
         -readability-use-anyofallof)
 
