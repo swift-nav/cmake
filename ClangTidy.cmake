@@ -264,7 +264,7 @@ AnalyzeTemporaryDtors: true
 
   # Only lint targets created in this repository. Later on we will create 2 targets: clang-tidy-all will lint all "core" targets, executables and libraries clang-tidy-world will
   # lint everything including test suites
-  swift_list_compilable_targets(all_targets ONLY_THIS_REPO SWIFT_TYPES "executable" "library")
+  swift_list_compilable_targets(all_targets ONLY_THIS_REPO TYPES "EXECUTABLE" "STATIC_LIBRARY" "SHARED_LIBRARY" "OBJECT_LIBRARY")
   swift_list_compilable_targets(world_targets ONLY_THIS_REPO)
 
   foreach(target IN LISTS world_targets)
