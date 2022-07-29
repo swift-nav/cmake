@@ -200,11 +200,8 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
   set(sonarcloud_project_properties_content "sonar.sourceEncoding=UTF-8\n")
 
   set(source_files ${source_source_files} ${source_include_directories} ${test_source_files})
-  foreach (dir ${source_include_directories})
-    set(source_files ${source_files} ${dir}/*.h ${dir}/**/*.h)
-  endforeach()
   list(JOIN source_files ",${_sonarcloud_newline}" sonar_sources)
-  string(APPEND sonarcloud_project_properties_content "sonar.inclusions=${_sonarcloud_newline}${sonar_sources}\n")
+  string(APPEND sonarcloud_project_properties_content "sonar.sources=${_sonarcloud_newline}${sonar_sources}\n")
 
   file(GENERATE
     OUTPUT "${sonarcloud_project_properties_path}"
