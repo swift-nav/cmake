@@ -256,7 +256,7 @@ function(swift_create_clang_tidy_targets)
 # Automatically generated, do not edit
 # Enabled checks are generated from SwiftClangTidy.cmake
 Checks: \"${comma_checks}\"
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '!.*/third_party/.*'
 AnalyzeTemporaryDtors: true
 ")
   endif()
