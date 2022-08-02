@@ -304,6 +304,7 @@ AnalyzeTemporaryDtors: true
   else()
     list(FILTER world_abs_srcs EXCLUDE REGEX "pb.cc")
     list(REMOVE_DUPLICATES world_abs_srcs)
+    message(WARNING world_abs_srcs>>${world_abs_srcs})
     create_clang_tidy_targets(world fixes.yaml ${world_abs_srcs})
   endif()
 endfunction()
