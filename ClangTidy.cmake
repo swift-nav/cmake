@@ -302,6 +302,7 @@ AnalyzeTemporaryDtors: true
   if(NOT world_abs_srcs)
     message(WARNING "No sources to lint for clang-tidy-world, that doesn't sound right")
   else()
+    list(FILTER world_abs_srcs EXCLUDE REGEX "pb.cc")
     list(REMOVE_DUPLICATES world_abs_srcs)
     create_clang_tidy_targets(world fixes.yaml ${world_abs_srcs})
   endif()
