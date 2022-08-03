@@ -71,9 +71,11 @@ function(swift_list_targets out_var)
 
   foreach(target IN LISTS x_all_targets)
     get_target_property(type ${target} TYPE)
+    set(correct_type FALSE)
+
     if(x_TYPES)
-      if(NOT ${type} IN_LIST x_TYPES)
-        continue()
+      if(${type} IN_LIST x_TYPES)
+        set(correct_type TRUE)
       endif()
     endif()
 
@@ -83,10 +85,13 @@ function(swift_list_targets out_var)
       else()
         get_target_property(swift_type ${target} SWIFT_TYPE)
       endif()
-
-      if(NOT ${swift_type} IN_LIST x_SWIFT_TYPES)
-        continue()
+      if(${swift_type} IN_LIST x_SWIFT_TYPES)
+        set(correct_type TRUE)
       endif()
+    endif()
+
+    if(NOT correct_type)
+      continue()
     endif()
 
     if(x_ONLY_THIS_REPO)

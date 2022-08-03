@@ -185,6 +185,11 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
     SWIFT_TYPES
       executable
       library
+    TYPES
+      MODULE_LIBRARY
+      SHARED_LIBRARY
+      STATIC_LIBRARY
+      OBJECT_LIBRARY
   )
 
   swift_list_targets(test_targets
