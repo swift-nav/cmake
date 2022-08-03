@@ -199,7 +199,7 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
 
   set(sonarcloud_project_properties_content "sonar.sourceEncoding=UTF-8\n")
 
-  set(source_files ${source_source_files})
+  set(source_files ${source_source_files} ${test_source_files})
   foreach(dir ${source_include_directories})
     file(GLOB_RECURSE headers ${dir}/*.h)
     set(source_files ${source_files} ${headers})
@@ -207,10 +207,6 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
   list(REMOVE_DUPLICATES source_files)
   list(JOIN source_files ",${_sonarcloud_newline}" sonar_sources)
   string(APPEND sonarcloud_project_properties_content "sonar.inclusions=${_sonarcloud_newline}${sonar_sources}\n")
-
-  set(test_files ${test_source_files})
-  list(JOIN test_files ",${_sonarcloud_newline}" sonar_tests)
-  string(APPEND sonarcloud_project_properties_content "sonar.tests.inclusions=${_sonarcloud_newline}${sonar_tests}\n")
 
   file(GENERATE
     OUTPUT "${sonarcloud_project_properties_path}"
