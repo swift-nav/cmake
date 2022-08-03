@@ -96,10 +96,11 @@ option(
 # Programs
 if (NOT LLVM_COV_PATH)
   if (NOT LLVM_COV_NAME)
-    set(LLVM_COV_NAME llvm-cov)
+    set(LLVM_COV_NAME NAMES llvm-cov-11 llvm-cov-6.0 llvm-cov-6 llvm-cov)
   endif()
-  find_program(LLVM_COV_PATH ${LLVM_COV_NAME})
 endif()
+find_program(LLVM_COV_PATH NAMES llvm-cov-11 llvm-cov-6.0 llvm-cov-6 llvm-cov)
+find_program(LLVM_PROFDATA_PATH NAMES llvm-profdata llvm-profdata-11 llvm-profdata-6.0 llvm-profdata-6)
 find_program(GCOV_PATH gcov)
 find_program(LCOV_PATH lcov)
 find_program(GENHTML_PATH genhtml)
@@ -257,7 +258,7 @@ function(target_code_coverage TARGET_NAME)
           DEPENDS ccov-preprocessing ${TARGET_NAME})
 
         add_custom_target(ccov-processing-${TARGET_NAME}
-                          COMMAND llvm-profdata merge -sparse
+          COMMAND ${LLVM_PROFDATA_PATH} merge -sparse
                                   ${TARGET_NAME}.profraw -o
                                   ${TARGET_NAME}.profdata
                           DEPENDS ccov-run-${TARGET_NAME})
@@ -272,6 +273,8 @@ function(target_code_coverage TARGET_NAME)
         add_custom_target(ccov-show-${TARGET_NAME}
                           COMMAND ${LLVM_COV_PATH} show $<TARGET_FILE:${TARGET_NAME}>
                                   -instr-profile=${TARGET_NAME}.profdata
+                                  --show-branches=count
+                                  --show-expansions
                                   -show-line-counts-or-regions ${EXCLUDE_REGEX}
                           DEPENDS ccov-processing-${TARGET_NAME})
 
@@ -421,7 +424,7 @@ function(add_code_coverage_all_targets)
       # Targets
       add_custom_target(
         ccov-all-processing
-        COMMAND llvm-profdata merge -o
+        COMMAND ${LLVM_PROFDATA_PATH} merge -o
                 ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/all-merged.profdata -sparse
                 `cat ${CMAKE_COVERAGE_OUTPUT_DIRECTORY}/profraw.list`)
 
