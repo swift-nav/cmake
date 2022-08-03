@@ -180,17 +180,23 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
     return()
   endif()
 
-  swift_list_targets(source_targets
+  swift_list_targets(swift_source_targets
     ONLY_THIS_REPO
     SWIFT_TYPES
       executable
       library
+  )
+
+  swift_list_targets(source_targets
+    ONLY_THIS_REPO
     TYPES
       MODULE_LIBRARY
       SHARED_LIBRARY
       STATIC_LIBRARY
       OBJECT_LIBRARY
   )
+
+  list(APPEND source_targets ${swift_source_targets})
 
   swift_list_targets(test_targets
     ONLY_THIS_REPO
