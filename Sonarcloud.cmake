@@ -180,24 +180,12 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
     return()
   endif()
 
-  swift_list_targets(swift_source_targets
+  swift_list_targets(source_targets
     ONLY_THIS_REPO
     SWIFT_TYPES
       executable
       library
   )
-  swift_list_targets(source_targets
-    ONLY_THIS_REPO
-    TYPES
-      EXECUTABLE
-      MODULE_LIBRARY
-      SHARED_LIBRARY
-      STATIC_LIBRARY
-      OBJECT_LIBRARY
-  )
-
-  list(APPEND source_targets ${swift_source_targets})
-  list(REMOVE_DUPLICATES source_targets)
 
   swift_list_targets(test_targets
     ONLY_THIS_REPO
@@ -205,20 +193,6 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
       test
       test_library
   )
-
-  foreach(test_target ${test_targets})
-    list(REMOVE_ITEM source_targets ${test_target})
-  endforeach()
-
-  foreach(source_target ${source_targets})
-    get_target_property(target_type ${source_target} TYPE)
-    if (NOT target_type STREQUAL "INTERFACE_LIBRARY")
-      get_target_property(link_libs ${source_target} LINK_LIBRARIES)
-      if("gtest" IN_LIST link_libs)
-        list(REMOVE_ITEM source_targets ${source_target})
-      endif()
-    endif()
-  endforeach()
 
   _extract_sonarcloud_project_files(source_source_files source_include_directories ${source_targets})
   _extract_sonarcloud_project_files(test_source_files test_include_directories ${test_targets})
