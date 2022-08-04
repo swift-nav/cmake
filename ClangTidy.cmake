@@ -93,7 +93,7 @@ function(swift_create_clang_tidy_targets)
     return()
   endif()
 
-  set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG")
+  set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG" "WITHOUT_SWIFT_TYPES")
   set(argSingle "")
   set(argMulti "")
 
