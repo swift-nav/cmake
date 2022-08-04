@@ -221,7 +221,7 @@ function(swift_create_clang_tidy_targets)
         -modernize-use-emplace
         -modernize-use-equals-default
         -modernize-use-equals-delete
-        -modernize-use-trailing-return-type //
+        -modernize-use-trailing-return-type
         -modernize-use-using
         -performance-unnecessary-value-param
         -readability-avoid-const-params-in-decls
@@ -253,7 +253,7 @@ function(swift_create_clang_tidy_targets)
 # Automatically generated, do not edit
 # Enabled checks are generated from SwiftClangTidy.cmake
 Checks: \"${comma_checks}\"
-HeaderFilterRegex: '.*'
+HeaderFilterRegex: '!.*/third_party/.*'
 AnalyzeTemporaryDtors: true
 ")
   endif()
@@ -265,6 +265,11 @@ AnalyzeTemporaryDtors: true
   # Only lint targets created in this repository. Later on we will create 2 targets: clang-tidy-all will lint all "core" targets, executables and libraries clang-tidy-world will
   # lint everything including test suites
   swift_list_compilable_targets(all_targets ONLY_THIS_REPO SWIFT_TYPES "executable" "library")
+  if(x_WITHOUT_SWIFT_TYPES)
+    swift_list_compilable_targets(all_targets_without_swift_types ONLY_THIS_REPO)
+    list(APPEND all_targets ${all_targets_without_swift_types})
+    list(REMOVE_DUPLICATES all_targets)
+  endif()
   swift_list_compilable_targets(world_targets ONLY_THIS_REPO)
 
   foreach(target IN LISTS world_targets)
@@ -292,6 +297,7 @@ AnalyzeTemporaryDtors: true
     message(WARNING "No sources to lint for clang-tidy-all, that doesn't sound right")
   else()
     list(REMOVE_DUPLICATES all_abs_srcs)
+    list(FILTER all_abs_srcs EXCLUDE REGEX "pb.cc")
     create_clang_tidy_targets(all fixes.yaml ${all_abs_srcs})
     create_clang_tidy_targets(diff fixes.yaml `git diff --diff-filter=ACMRTUXB --name-only master -- ${all_abs_srcs}`)
   endif()
