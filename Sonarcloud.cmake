@@ -130,6 +130,14 @@ function(_extract_sonarcloud_project_files output_project_source_files output_pr
 
     if (NOT target_type STREQUAL "INTERFACE_LIBRARY")
       get_target_property(target_source_files ${target} SOURCES)
+      # message(>>>>TARGET>>${target}>>target_source_files>>${target_source_files})
+      # if("io_swiftlet_config.cc" IN_LIST ${target_source_files})
+      if(${target} STREQUAL "unit-test-user-io-swiftlet")
+        message(>>unit-test-user-io-swiftlet>>${target_source_files})
+      endif()
+      if(${target} STREQUAL "unit-test-starling-config-parser")
+        message(>>unit-test-user-io-swiftlet>>${target_source_files})
+      endif()
       if (target_source_files)
         _transform_sonarcloud_source_files(target_source_files ${target} ${target_source_files})
       else()
@@ -186,10 +194,10 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
       executable
       library
   )
-
   swift_list_targets(source_targets
     ONLY_THIS_REPO
     TYPES
+      EXECUTABLE
       MODULE_LIBRARY
       SHARED_LIBRARY
       STATIC_LIBRARY
@@ -197,6 +205,7 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
   )
 
   list(APPEND source_targets ${swift_source_targets})
+  list(REMOVE_DUPLICATES source_targets)
 
   swift_list_targets(test_targets
     ONLY_THIS_REPO
@@ -204,6 +213,18 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
       test
       test_library
   )
+
+  foreach(test_target ${test_targets})
+    list(REMOVE_ITEM source_targets ${test_target})
+  endforeach()
+
+  foreach(source_target ${source_targets})
+    get_target_property(link_libs ${source_target} LINK_LIBRARIES)
+    if("gtest" IN_LIST link_libs)
+      message(WARNING FOUND_GTEST>>${source_target})
+      list(REMOVE_ITEM source_targets ${source_target})
+    endif()
+  endforeach()
 
   _extract_sonarcloud_project_files(source_source_files source_include_directories ${source_targets})
   _extract_sonarcloud_project_files(test_source_files test_include_directories ${test_targets})
@@ -221,11 +242,8 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
   foreach(source_file ${source_source_files})
     list(REMOVE_ITEM test_files ${source_file})
   endforeach()
-  foreach (dir ${test_include_directories})
-    set(test_files ${test_files} ${dir}/*.h ${dir}/**/*.h)
-  endforeach()
-  list(JOIN test_files ",${_sonarcloud_newline}" sonar_tests)
-  string(APPEND sonarcloud_project_properties_content "sonar.coverage.exclusions=${_sonarcloud_newline}${sonar_tests}\n")
+  list(JOIN test_files ",${_sonarcloud_newline}" sonar_test_files)
+  string(APPEND sonarcloud_project_properties_content "sonar.coverage.exclusions=${_sonarcloud_newline}${sonar_test_files}\n")
 
   file(GENERATE
     OUTPUT "${sonarcloud_project_properties_path}"
