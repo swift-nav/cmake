@@ -211,7 +211,7 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
   endforeach()
 
   foreach(source_target ${source_targets})
-    get_target_property(target_type ${target} TYPE)
+    get_target_property(target_type ${source_target} TYPE)
     if (NOT target_type STREQUAL "INTERFACE_LIBRARY")
       get_target_property(link_libs ${source_target} LINK_LIBRARIES)
       if("gtest" IN_LIST link_libs)
