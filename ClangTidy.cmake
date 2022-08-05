@@ -204,7 +204,7 @@ function(swift_create_clang_tidy_targets)
         -readability-avoid-const-params-in-decls
         -readability-non-const-parameter
         -readability-redundant-declaration
-        -readability-use-anyofallof
+        -readability-uppercase-literal-suffix
         # Disable all new checks introduced between clang-6 and clang-14
         -clang-analyzer-core.StackAddressEscape
         -clang-analyzer-cplusplus.NewDeleteLeaks
@@ -241,7 +241,7 @@ function(swift_create_clang_tidy_targets)
         -readability-qualified-auto
         -readability-redundant-access-specifiers
         -readability-redundant-member-init
-        -readability-uppercase-literal-suffix)
+        -readability-use-anyofallof)
 
     # Final list of checks to enable/disable
     set(all_checks -* ${enabled_categories} ${disabled_checks})
