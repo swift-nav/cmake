@@ -144,10 +144,6 @@ function(swift_create_clang_tidy_targets)
     # The set of specific tests which will be disabled. All checks in this list should have a reason for being disabled placed in a comment along side. Use wildcards with care, in
     # general try to disabled the minimum set of checks required and provide a reason for doing so.
     set(disabled_checks
-        -clang-analyzer-core.StackAddressEscape
-        -clang-analyzer-cplusplus.NewDeleteLeaks
-        -clang-analyzer-deadcode.DeadStores
-        -clang-analyzer-optin.cplusplus.UninitializedObject
         # Don't need OSX checks
         -clang-analyzer-osx*
         -clang-analyzer-optin.osx.*
@@ -173,13 +169,8 @@ function(swift_create_clang_tidy_targets)
         # endorsement of anything.
         -cert-dcl03-c
         -cert-dcl21-cpp
-        -cert-err33-c
         -cert-err34-c
-        -cert-dcl37-c
-        -cert-dcl51-cpp
         -cert-err58-cpp
-        -cert-oop54-cpp
-        -cert-str34-c
         -clang-analyzer-alpha*
         -clang-analyzer-core.CallAndMessage
         -clang-analyzer-core.UndefinedBinaryOperatorResult
@@ -187,16 +178,7 @@ function(swift_create_clang_tidy_targets)
         -clang-analyzer-core.uninitialized.UndefReturn
         -clang-analyzer-optin.cplusplus.VirtualCall
         -clang-analyzer-optin.performance.Padding
-        -cppcoreguidelines-avoid-c-arrays
-        -cppcoreguidelines-avoid-goto
-        -cppcoreguidelines-avoid-magic-numbers
-        -cppcoreguidelines-avoid-non-const-global-variables
-        -cppcoreguidelines-init-variables
-        -cppcoreguidelines-macro-usage
-        -cppcoreguidelines-narrowing-conversions
-        -cppcoreguidelines-non-private-member-variables-in-classes
         -cppcoreguidelines-owning-memory
-        -cppcoreguidelines-prefer-member-initializer
         -cppcoreguidelines-pro-bounds-array-to-pointer-decay
         -cppcoreguidelines-pro-bounds-constant-array-index
         -cppcoreguidelines-pro-bounds-pointer-arithmetic
@@ -205,12 +187,8 @@ function(swift_create_clang_tidy_targets)
         -cppcoreguidelines-pro-type-union-access
         -cppcoreguidelines-pro-type-vararg
         -cppcoreguidelines-special-member-functions
-        -cppcoreguidelines-virtual-class-destructor
         -google-runtime-references
-        -misc-non-private-member-variables-in-classes
-        -misc-no-recursion
         -misc-static-assert
-        -modernize-avoid-c-arrays
         -modernize-deprecated-headers
         -modernize-pass-by-value
         -modernize-redundant-void-arg
@@ -221,10 +199,36 @@ function(swift_create_clang_tidy_targets)
         -modernize-use-emplace
         -modernize-use-equals-default
         -modernize-use-equals-delete
-        -modernize-use-trailing-return-type
         -modernize-use-using
         -performance-unnecessary-value-param
         -readability-avoid-const-params-in-decls
+        -readability-non-const-parameter
+        -readability-redundant-declaration
+        -readability-use-anyofallof
+        # Disable all new checks introduced between clang-6 and clang-14
+        -clang-analyzer-core.StackAddressEscape
+        -clang-analyzer-cplusplus.NewDeleteLeaks
+        -clang-analyzer-deadcode.DeadStores
+        -clang-analyzer-optin.cplusplus.UninitializedObject
+        -cert-err33-c
+        -cert-dcl37-c
+        -cert-dcl51-cpp
+        -cert-oop54-cpp
+        -cert-str34-c
+        -cppcoreguidelines-avoid-c-arrays
+        -cppcoreguidelines-avoid-goto
+        -cppcoreguidelines-avoid-magic-numbers
+        -cppcoreguidelines-avoid-non-const-global-variables
+        -cppcoreguidelines-init-variables
+        -cppcoreguidelines-macro-usage
+        -cppcoreguidelines-narrowing-conversions
+        -cppcoreguidelines-non-private-member-variables-in-classes
+        -cppcoreguidelines-prefer-member-initializer
+        -cppcoreguidelines-virtual-class-destructor
+        -misc-non-private-member-variables-in-classes
+        -misc-no-recursion
+        -modernize-avoid-c-arrays
+        -modernize-use-trailing-return-type
         -readability-const-return-type
         -readability-container-data-pointer
         -readability-convert-member-functions-to-static
@@ -234,13 +238,10 @@ function(swift_create_clang_tidy_targets)
         -readability-isolate-declaration
         -readability-make-member-function-const
         -readability-magic-numbers
-        -readability-non-const-parameter
         -readability-qualified-auto
         -readability-redundant-access-specifiers
-        -readability-redundant-declaration
         -readability-redundant-member-init
-        -readability-uppercase-literal-suffix
-        -readability-use-anyofallof)
+        -readability-uppercase-literal-suffix)
 
     # Final list of checks to enable/disable
     set(all_checks -* ${enabled_categories} ${disabled_checks})
@@ -253,7 +254,7 @@ function(swift_create_clang_tidy_targets)
 # Automatically generated, do not edit
 # Enabled checks are generated from SwiftClangTidy.cmake
 Checks: \"${comma_checks}\"
-HeaderFilterRegex: '!.*/third_party/.*'
+HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: true
 ")
   endif()
@@ -264,11 +265,10 @@ AnalyzeTemporaryDtors: true
 
   # Only lint targets created in this repository. Later on we will create 2 targets: clang-tidy-all will lint all "core" targets, executables and libraries clang-tidy-world will
   # lint everything including test suites
-  swift_list_compilable_targets(all_targets ONLY_THIS_REPO SWIFT_TYPES "executable" "library")
-  if(x_WITHOUT_SWIFT_TYPES)
-    swift_list_compilable_targets(all_targets_without_swift_types ONLY_THIS_REPO)
-    list(APPEND all_targets ${all_targets_without_swift_types})
-    list(REMOVE_DUPLICATES all_targets)
+  if (x_WITHOUT_SWIFT_TYPES)
+    swift_list_compilable_targets(all_targets ONLY_THIS_REPO)
+  else()
+    swift_list_compilable_targets(all_targets ONLY_THIS_REPO SWIFT_TYPES "executable" "library")
   endif()
   swift_list_compilable_targets(world_targets ONLY_THIS_REPO)
 
