@@ -184,7 +184,7 @@ define_property(TARGET
   BRIEF_DOCS "Target's source directory"
   FULL_DOCS "Identical use as SOURCE_DIR except that this applies to ALL target types, including INTERFACE")
 
-set(project_alias  "swiftnav" CACHE STRING "Alias for project")
+set(SWIFTNAV_ALIAS swiftnav)
 
 macro(swift_collate_arguments prefix name)
   set(exclusion_list ${ARGN})
@@ -319,7 +319,7 @@ function(swift_add_target target type)
   endif()
 
   if((type STREQUAL "library") OR (type STREQUAL "test_library") OR (type STREQUAL "tool_library"))
-    add_library(${project_alias}::${target} ALIAS ${target})
+    add_library(${SWIFTNAV_ALIAS}::${target} ALIAS ${target})
   endif()
 
   #
@@ -396,23 +396,29 @@ function(swift_validate_targets)
     endif()
 
     foreach(target_dependency ${target_dependencies})
-      if (TARGET ${target_dependency})
-        get_target_property(swift_dep_alias ${target_dependency} ALIASED_TARGET)
-        if (NOT swift_dep_alias)
-          get_target_property(target_dep_type ${target_dependency} TYPE)
-          if (target_dep_type STREQUAL "INTERFACE_LIBRARY")
-            get_target_property(swift_dep_type ${target_dependency} INTERFACE_SWIFT_TYPE)
-          else()
-            get_target_property(swift_dep_type ${target_dependency} SWIFT_TYPE)
-          endif()
+      if (NOT TARGET ${target_dependency})
+        continue()
+      endif()
 
-          if (swift_dep_type)
-            get_target_property(_swift_dep_alias ${project_alias}::${target_dependency} ALIASED_TARGET)
-            if (${_swift_dep_alias} STREQUAL ${target_dependency})
-              message(WARNING "Linking \"${target_dependency}\" as a dependency of target \"${target}\". Please use alias \"${project_alias}::${target_dependency}\" instead.")
-            endif()
-          endif()
-        endif()
+      get_target_property(swift_dep_alias ${target_dependency} ALIASED_TARGET)
+      if (swift_dep_alias)
+        continue()
+      endif()
+
+      get_target_property(target_dep_type ${target_dependency} TYPE)
+      if (target_dep_type STREQUAL "INTERFACE_LIBRARY")
+        get_target_property(swift_dep_type ${target_dependency} INTERFACE_SWIFT_TYPE)
+      else()
+        get_target_property(swift_dep_type ${target_dependency} SWIFT_TYPE)
+      endif()
+
+      if (NOT swift_dep_type)
+        continue()
+      endif()
+
+      get_target_property(_swift_dep_alias ${SWIFTNAV_ALIAS}::${target_dependency} ALIASED_TARGET)
+      if (${_swift_dep_alias} STREQUAL ${target_dependency})
+        message(WARNING "Linking \"${target_dependency}\" as a dependency of target \"${target}\". Please use alias \"${SWIFTNAV_ALIAS}::${target_dependency}\" instead.")
       endif()
     endforeach()
   endforeach()
