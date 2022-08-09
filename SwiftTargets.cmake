@@ -416,7 +416,16 @@ function(swift_validate_targets)
         continue()
       endif()
 
+      # Check if swift's ${target_dependency} has an ALIAS following the pattern ${SWIFTNAV_ALIAS}::${target_dependency}
+      if (NOT TARGET ${SWIFTNAV_ALIAS}::${target_dependency})
+        continue()
+      endif()
+
       get_target_property(_swift_dep_alias ${SWIFTNAV_ALIAS}::${target_dependency} ALIASED_TARGET)
+      if (NOT _swift_dep_alias)
+        continue()
+      endif()
+
       if (${_swift_dep_alias} STREQUAL ${target_dependency})
         message(WARNING "Linking \"${target_dependency}\" as a dependency of target \"${target}\". Please use alias \"${SWIFTNAV_ALIAS}::${target_dependency}\" instead.")
       endif()
