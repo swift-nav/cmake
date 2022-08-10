@@ -184,7 +184,7 @@ define_property(TARGET
   BRIEF_DOCS "Target's source directory"
   FULL_DOCS "Identical use as SOURCE_DIR except that this applies to ALL target types, including INTERFACE")
 
-set(SWIFTNAV_ALIAS swiftnav)
+set(SWIFTNAV_ALIAS  "swiftnav" CACHE STRING "Alias for Swiftnav's projects")
 
 macro(swift_collate_arguments prefix name)
   set(exclusion_list ${ARGN})
