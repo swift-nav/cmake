@@ -184,6 +184,8 @@ define_property(TARGET
   BRIEF_DOCS "Target's source directory"
   FULL_DOCS "Identical use as SOURCE_DIR except that this applies to ALL target types, including INTERFACE")
 
+set(SWIFTNAV_ALIAS  "swiftnav" CACHE STRING "Alias for Swiftnav's projects")
+
 macro(swift_collate_arguments prefix name)
   set(exclusion_list ${ARGN})
   set(${name}_args "")
@@ -316,6 +318,10 @@ function(swift_add_target target type)
     message(FATAL_ERROR "Unknown Swift target type ${type}")
   endif()
 
+  if((type STREQUAL "library") OR (type STREQUAL "test_library") OR (type STREQUAL "tool_library"))
+    add_library(${SWIFTNAV_ALIAS}::${target} ALIAS ${target})
+  endif()
+
   #
   # This edge case is needed for cmake version < 3.19.0 where INTERFACE
   # classes cannot contain any property other than those prefixed with
@@ -380,4 +386,50 @@ function(swift_validate_targets)
       message(FATAL_ERROR "Can't identify type of target ${target}, was it added with the correct Swift function (swift_add_*)?")
     endif()
   endforeach()
+
+  # Check for the use of alias for swift dependencies.
+  swift_list_compilable_targets(all_targets ONLY_THIS_REPO SWIFT_TYPES)
+  foreach(target ${all_targets})
+    get_target_property(target_dependencies ${target} LINK_LIBRARIES)
+    if (NOT target_dependencies)
+      continue()
+    endif()
+
+    foreach(target_dependency ${target_dependencies})
+      if (NOT TARGET ${target_dependency})
+        continue()
+      endif()
+
+      get_target_property(swift_dep_alias ${target_dependency} ALIASED_TARGET)
+      if (swift_dep_alias)
+        continue()
+      endif()
+
+      get_target_property(target_dep_type ${target_dependency} TYPE)
+      if (target_dep_type STREQUAL "INTERFACE_LIBRARY")
+        get_target_property(swift_dep_type ${target_dependency} INTERFACE_SWIFT_TYPE)
+      else()
+        get_target_property(swift_dep_type ${target_dependency} SWIFT_TYPE)
+      endif()
+
+      if (NOT swift_dep_type)
+        continue()
+      endif()
+
+      # Check if swift's ${target_dependency} has an ALIAS following the pattern ${SWIFTNAV_ALIAS}::${target_dependency}
+      if (NOT TARGET ${SWIFTNAV_ALIAS}::${target_dependency})
+        continue()
+      endif()
+
+      get_target_property(_swift_dep_alias ${SWIFTNAV_ALIAS}::${target_dependency} ALIASED_TARGET)
+      if (NOT _swift_dep_alias)
+        continue()
+      endif()
+
+      if (${_swift_dep_alias} STREQUAL ${target_dependency})
+        message(WARNING "Linking \"${target_dependency}\" as a dependency of target \"${target}\". Please use alias \"${SWIFTNAV_ALIAS}::${target_dependency}\" instead.")
+      endif()
+    endforeach()
+  endforeach()
+
 endfunction()
