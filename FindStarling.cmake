@@ -30,6 +30,7 @@ GenericFindDependency(
     pvt-version
     starling-build-config
     starling-util
+    starling-replay
   SOURCE_DIR starling
   SYSTEM_HEADER_FILE "pvt_driver/runner/pvt_runner.h"
   SYSTEM_INCLUDES
