@@ -17,5 +17,4 @@ option(orion_proto_ENABLE_TESTS "" false)
 GenericFindDependency(
   TARGET orion-proto
   SOURCE_DIR orion_proto
-  SYSTEM_INCLUDES
 )
