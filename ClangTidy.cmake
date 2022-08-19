@@ -212,6 +212,7 @@ function(swift_create_clang_tidy_targets)
         -clang-analyzer-deadcode.DeadStores
         -clang-analyzer-optin.cplusplus.UninitializedObject
         -cert-err33-c
+        -cert-exp42-c
         -cert-dcl37-c
         -cert-dcl51-cpp
         -cert-oop54-cpp
@@ -230,6 +231,7 @@ function(swift_create_clang_tidy_targets)
         -misc-no-recursion
         -modernize-avoid-c-arrays
         -modernize-use-trailing-return-type
+        -performance-no-int-to-ptr
         -readability-const-return-type
         -readability-container-data-pointer
         -readability-convert-member-functions-to-static
