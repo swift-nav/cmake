@@ -215,6 +215,7 @@ function(swift_create_clang_tidy_targets)
         -cert-exp42-c
         -cert-dcl37-c
         -cert-dcl51-cpp
+        -cert-flp37-c
         -cert-oop54-cpp
         -cert-str34-c
         -cppcoreguidelines-avoid-c-arrays
