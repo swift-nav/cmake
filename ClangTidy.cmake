@@ -120,7 +120,7 @@ function(swift_create_clang_tidy_targets)
       ON
       CACHE BOOL "Export compile commands" FORCE)
 
-  find_program(CLANG_TIDY NAMES clang-tidy-6.0 clang-tidy)
+  find_program(CLANG_TIDY NAMES clang-tidy-14 clang-tidy)
 
   if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
     message(WARNING "Could not find clang-tidy, link targets will not be created")

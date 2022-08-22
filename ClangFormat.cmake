@@ -212,16 +212,7 @@ function(swift_setup_clang_format)
   # First try to find clang-format
   if(NOT x_CLANG_FORMAT_NAMES)
     set(x_CLANG_FORMAT_NAMES
-        clang-format11 clang-format-11
-        clang-format60 clang-format-6.0
-        clang-format40 clang-format-4.0
-        clang-format39 clang-format-3.9
-        clang-format38 clang-format-3.8
-        clang-format37 clang-format-3.7
-        clang-format36 clang-format-3.6
-        clang-format35 clang-format-3.5
-        clang-format34 clang-format-3.4
-        clang-format
+        clang-format-14 clang-format
     )
   endif()
   find_program(CLANG_FORMAT NAMES ${x_CLANG_FORMAT_NAMES})
