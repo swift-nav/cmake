@@ -69,6 +69,8 @@
 # will explicitly disable these targets from the command line at configure time
 #
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile commands" FORCE)
+
 # Helper function to actually create the targets, not to be used outside this file
 function(create_clang_tidy_targets key fixes)
   add_custom_target(
@@ -114,11 +116,6 @@ function(swift_create_clang_tidy_targets)
   if(NOT ${PROJECT_NAME}_ENABLE_CLANG_TIDY)
     early_exit(STATUS "${PROJECT_NAME} clang-tidy support is DISABLED")
   endif()
-
-  # This is required so that clang-tidy can work out what compiler options to use for each file
-  set(CMAKE_EXPORT_COMPILE_COMMANDS
-      ON
-      CACHE BOOL "Export compile commands" FORCE)
 
   find_program(CLANG_TIDY NAMES clang-tidy-14 clang-tidy)
 
