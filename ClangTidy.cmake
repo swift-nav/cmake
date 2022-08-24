@@ -69,6 +69,8 @@
 # will explicitly disable these targets from the command line at configure time
 #
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile commands" FORCE)
+
 # Helper function to actually create the targets, not to be used outside this file
 function(create_clang_tidy_targets key fixes)
   add_custom_target(
@@ -93,7 +95,7 @@ function(swift_create_clang_tidy_targets)
     return()
   endif()
 
-  set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG")
+  set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG" "WITHOUT_SWIFT_TYPES")
   set(argSingle "")
   set(argMulti "")
 
@@ -115,12 +117,7 @@ function(swift_create_clang_tidy_targets)
     early_exit(STATUS "${PROJECT_NAME} clang-tidy support is DISABLED")
   endif()
 
-  # This is required so that clang-tidy can work out what compiler options to use for each file
-  set(CMAKE_EXPORT_COMPILE_COMMANDS
-      ON
-      CACHE BOOL "Export compile commands" FORCE)
-
-  find_program(CLANG_TIDY NAMES clang-tidy-6.0 clang-tidy)
+  find_program(CLANG_TIDY NAMES clang-tidy-14 clang-tidy)
 
   if("${CLANG_TIDY}" STREQUAL "CLANG_TIDY-NOTFOUND")
     message(WARNING "Could not find clang-tidy, link targets will not be created")
@@ -204,7 +201,49 @@ function(swift_create_clang_tidy_targets)
         -readability-avoid-const-params-in-decls
         -readability-non-const-parameter
         -readability-redundant-declaration
-        -readability-redundant-member-init)
+        -readability-redundant-member-init
+        # Disable all new checks introduced between clang-6 and clang-14
+        -clang-analyzer-core.StackAddressEscape
+        -clang-analyzer-core.VLASize
+        -clang-analyzer-cplusplus.NewDeleteLeaks
+        -clang-analyzer-deadcode.DeadStores
+        -clang-analyzer-optin.cplusplus.UninitializedObject
+        -cert-err33-c
+        -cert-exp42-c
+        -cert-dcl37-c
+        -cert-dcl51-cpp
+        -cert-flp37-c
+        -cert-oop54-cpp
+        -cert-str34-c
+        -cppcoreguidelines-avoid-c-arrays
+        -cppcoreguidelines-avoid-goto
+        -cppcoreguidelines-avoid-magic-numbers
+        -cppcoreguidelines-avoid-non-const-global-variables
+        -cppcoreguidelines-init-variables
+        -cppcoreguidelines-macro-usage
+        -cppcoreguidelines-narrowing-conversions
+        -cppcoreguidelines-non-private-member-variables-in-classes
+        -cppcoreguidelines-prefer-member-initializer
+        -cppcoreguidelines-virtual-class-destructor
+        -misc-non-private-member-variables-in-classes
+        -misc-no-recursion
+        -modernize-avoid-c-arrays
+        -modernize-use-trailing-return-type
+        -performance-no-int-to-ptr
+        -readability-const-return-type
+        -readability-container-data-pointer
+        -readability-convert-member-functions-to-static
+        -readability-duplicate-include
+        -readability-function-cognitive-complexity
+        -readability-identifier-length
+        -readability-isolate-declaration
+        -readability-make-member-function-const
+        -readability-magic-numbers
+        -readability-qualified-auto
+        -readability-redundant-access-specifiers
+        -readability-suspicious-call-argument
+        -readability-uppercase-literal-suffix
+        -readability-use-anyofallof)
 
     # Final list of checks to enable/disable
     set(all_checks -* ${enabled_categories} ${disabled_checks})
@@ -228,7 +267,11 @@ AnalyzeTemporaryDtors: true
 
   # Only lint targets created in this repository. Later on we will create 2 targets: clang-tidy-all will lint all "core" targets, executables and libraries clang-tidy-world will
   # lint everything including test suites
-  swift_list_compilable_targets(all_targets ONLY_THIS_REPO SWIFT_TYPES "executable" "library")
+  if (x_WITHOUT_SWIFT_TYPES)
+    swift_list_compilable_targets(all_targets ONLY_THIS_REPO)
+  else()
+    swift_list_compilable_targets(all_targets ONLY_THIS_REPO SWIFT_TYPES "executable" "library")
+  endif()
   swift_list_compilable_targets(world_targets ONLY_THIS_REPO)
 
   foreach(target IN LISTS world_targets)
@@ -256,6 +299,7 @@ AnalyzeTemporaryDtors: true
     message(WARNING "No sources to lint for clang-tidy-all, that doesn't sound right")
   else()
     list(REMOVE_DUPLICATES all_abs_srcs)
+    list(FILTER all_abs_srcs EXCLUDE REGEX "pb.cc")
     create_clang_tidy_targets(all fixes.yaml ${all_abs_srcs})
     create_clang_tidy_targets(diff fixes.yaml `git diff --diff-filter=ACMRTUXB --name-only master -- ${all_abs_srcs}`)
   endif()
