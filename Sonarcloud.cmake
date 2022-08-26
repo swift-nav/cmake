@@ -199,13 +199,23 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
 
   set(sonarcloud_project_properties_content "sonar.sourceEncoding=UTF-8\n")
 
-  set(source_files ${source_source_files} ${source_include_directories})
+  set(source_files ${source_source_files} ${source_include_directories} ${test_source_files})
+  foreach (dir ${source_include_directories})
+    if(${dir} MATCHES "/$")
+      set(source_files ${source_files} ${dir}*.h ${dir}**/*.h)
+    else()
+      set(source_files ${source_files} ${dir}/*.h ${dir}/**/*.h)
+    endif()
+  endforeach()
   list(JOIN source_files ",${_sonarcloud_newline}" sonar_sources)
   string(APPEND sonarcloud_project_properties_content "sonar.inclusions=${_sonarcloud_newline}${sonar_sources}\n")
 
   set(test_files ${test_source_files})
-  list(JOIN test_files ",${_sonarcloud_newline}" sonar_tests)
-  string(APPEND sonarcloud_project_properties_content "sonar.tests.inclusions=${_sonarcloud_newline}${sonar_tests}\n")
+  foreach(source_file ${source_source_files})
+    list(REMOVE_ITEM test_files ${source_file})
+  endforeach()
+  list(JOIN test_files ",${_sonarcloud_newline}" sonar_test_files)
+  string(APPEND sonarcloud_project_properties_content "sonar.coverage.exclusions=${_sonarcloud_newline}${sonar_test_files}\n")
 
   file(GENERATE
     OUTPUT "${sonarcloud_project_properties_path}"
