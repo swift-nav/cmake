@@ -3,9 +3,9 @@ option(ENABLE_TESTING "Build tests" OFF)
 option(ENABLE_PUSH "Build prometheus-cpp push library" OFF)
 option(ENABLE_COMPRESSION "Enable gzip compression" ON)
 GenericFindDependency(
-    TARGET prometheus-cpp::core
-    SOURCE_DIR "prometheus-cpp"
-    )
+  TARGET prometheus-cpp::core
+  SOURCE_DIR "prometheus-cpp"
+)
 
 # Change all of Prometheus's include directories to be system includes, to avoid
 # compiler errors. The generalised version of this in GenericFindDependency won't
