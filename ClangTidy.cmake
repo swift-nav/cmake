@@ -97,7 +97,7 @@ function(swift_create_clang_tidy_targets)
 
   set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG" "WITHOUT_SWIFT_TYPES")
   set(argSingle "")
-  set(argMulti "")
+  set(argMulti "FLAGS_TO_ENABLE")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
   if(x_UNPARSED_ARGUMENTS)
@@ -244,6 +244,10 @@ function(swift_create_clang_tidy_targets)
         -readability-suspicious-call-argument
         -readability-uppercase-literal-suffix
         -readability-use-anyofallof)
+
+    foreach(flag IN LISTS x_FLAGS_TO_ENABLE)
+      list(FILTER disabled_checks EXCLUDE REGEX ${flag})
+    endforeach()
 
     # Final list of checks to enable/disable
     set(all_checks -* ${enabled_categories} ${disabled_checks})
