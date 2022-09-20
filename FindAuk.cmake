@@ -16,4 +16,3 @@ option(BUILD_TESTS "" FALSE)
 
 GenericFindDependency(TARGET swiftnav::ssr-client
                       SOURCE_DIR auk/ssr2los)
-
