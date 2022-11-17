@@ -11,7 +11,8 @@
 #
 
 include("GenericFindDependency")
-
+option(LIBUV_BUILD_TESTS "" OFF)
+option(LIBUV_BUILD_BENCH "" OFF)
 GenericFindDependency(
   TARGET uv
   SOURCE_DIR libuv
