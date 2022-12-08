@@ -234,9 +234,9 @@ function(swift_setup_clang_format)
 
   create_clang_format_targets(
       TOP_LEVEL ${top_level_project}
-      ALL_COMMAND git ls-files ${patterns} | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
+      ALL_COMMAND git ls-files ${patterns} | xargs -r ${${PROJECT_NAME}_CLANG_FORMAT} -i
       DIFF_COMMAND git describe --tags --abbrev=0 --always
-                   | xargs -I % git diff --diff-filter=ACMRTUXB --name-only --line-prefix=`git rev-parse --show-toplevel`/ % -- ${patterns}
-                   | xargs ${${PROJECT_NAME}_CLANG_FORMAT} -i
+                   | xargs -rI % git diff --diff-filter=ACMRTUXB --name-only --line-prefix=`git rev-parse --show-toplevel`/ % -- ${patterns}
+                   | xargs -r ${${PROJECT_NAME}_CLANG_FORMAT} -i
   )
 endfunction()
