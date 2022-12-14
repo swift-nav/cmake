@@ -35,6 +35,16 @@
 # target described above and then return an error code if any warning/errors
 # were generated
 #
+# If the variable SWIFT_CLANG_TIDY_RATCHET_FILE is defined, then a
+# third target will be created: 'clang-tidy-${target}-ratchet-check'.
+# This target pipes the output of clang-tidy through
+# scripts/clang_tidy_ratchet.py and compares the output to the check
+# counts supplied in the filename in SWIFT_CLANG_TIDY_RATCHET_FILE,
+# returning failure only if the ratchet check script fails.  This
+# feature can be used to (approximately) mask existing clang-tidy
+# warnings without fixing them, so that development going forward
+# can still benefit from clang-tidy checking
+#
 # In addition there are two other targets created which lint multiple targets
 # at the same time
 #
@@ -83,6 +93,13 @@ function(create_clang_tidy_targets key fixes)
     COMMAND test ! -f ${CMAKE_SOURCE_DIR}/${fixes}
     DEPENDS clang-tidy-${key}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  if(DEFINED SWIFT_CLANG_TIDY_RATCHET_FILE)
+    add_custom_target(
+      clang-tidy-${key}-ratchet-check
+      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR}
+              ${ARGN} 2>/dev/null | ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/clang_tidy_ratchet.py --reference ${SWIFT_CLANG_TIDY_RATCHET_FILE}
+      WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+  endif()
 endfunction()
 
 macro(early_exit level msg)
