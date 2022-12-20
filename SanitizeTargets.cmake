@@ -8,6 +8,18 @@ option(SWIFT_SANITIZE_UNDEFINED "Enable undefined behavior sanitizer." OFF)
 option(SWIFT_SANITIZE_DATAFLOW "Enable dataflow sanitizer." OFF)
 option(SWIFT_SANITIZE_DISABLE_SUPPRESSION "Disable suppression of checks." OFF)
 
+if (SWIFT_SANITIZE_ADDRESS OR
+    SWIFT_SANITIZE_LEAK OR
+    SWIFT_SANITIZE_MEMORY OR
+    SWIFT_SANITIZE_THREAD OR
+    SWIFT_SANITIZE_UNDEFINED OR
+    SWIFT_SANITIZE_DATAFLOW)
+  set(_SWIFT_SANITIZE TRUE)
+else ()
+  set(_SWIFT_SANITIZE FALSE)
+endif()
+
+
 # Some of these options can't be used simultaneously.
 #
 if (SWIFT_SANITIZE_ADDRESS AND SWIFT_SANITIZE_MEMORY )
@@ -54,12 +66,14 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
     set(SWIFT_SANITIZE_FLAGS  "${SWIFT_SANITIZE_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
   endif ()
 
-  # Suppression files are supported at build time only by clang, not GCC.
-  if (NOT DEFINED SWIFT_SANITIZE_SUPPRESSION_FILE)
-    if (EXISTS "${PROJECT_ROOT}/sanitizers.supp")
-      set(SWIFT_SANITIZE_SUPPRESSION_FILE "${PROJECT_ROOT}/sanitizers.supp")
-    endif()
-  endif ()
+  if (_SWIFT_SANITIZE)
+    # Suppression files are supported at build time only by clang, not GCC.
+    if (NOT DEFINED SWIFT_SANITIZE_SUPPRESSION_FILE)
+      if (EXISTS "${PROJECT_ROOT}/sanitizers.supp")
+        set(SWIFT_SANITIZE_SUPPRESSION_FILE "${PROJECT_ROOT}/sanitizers.supp")
+      endif()
+    endif ()
+  endif()
 
   # According to the clang docs, we have to pass this file at build
   # time; the sanitizers that support runtime suppression can only use
@@ -75,7 +89,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   #
   # TODO(@peddie): I'm not sure how to make all targets that use this
   # depend on the suppression file contents.
-  if (NOT SWIFT_SANITIZE_DISABLE_SUPPRESSION AND (DEFINED SWIFT_SANITIZE_SUPPRESSION_FILE))
+  if (_SWIFT_SANITIZE AND NOT SWIFT_SANITIZE_DISABLE_SUPPRESSION AND (DEFINED SWIFT_SANITIZE_SUPPRESSION_FILE))
     message(STATUS "Building with sanitizer ignore list ${SWIFT_SANITIZE_SUPPRESSION_FILE}")
     message("    Note that this file is NOT CORRECTLY TRACKED as a dependency; if you modify its contents, you will have to force recompilation some other way.")
     set(SWIFT_SANITIZE_FLAGS "${SWIFT_SANITIZE_FLAGS} -fsanitize-ignorelist=${SWIFT_SANITIZE_SUPPRESSION_FILE}")
@@ -110,15 +124,17 @@ elseif (CMAKE_CXX_COMPILER_ID MATCHES "GNU" AND CMAKE_CXX_COMPILER_VERSION VERSI
     set(SWIFT_SANITIZE_FLAGS  "${SWIFT_SANITIZE_FLAGS} -fsanitize=undefined -fno-sanitize=vptr")
   endif ()
 
-  if(DEFINED SWIFT_SANITIZE_SUPPRESSION_FILE)
-    message(WARNING "You are compiling with GCC, which does not support masking of sanitizer issues via `-fsanitize-ignorelist=`.")
-    message(WARNING "If you don't want the issues in ${SWIFT_SANITIZE_SUPPRESSION_FILE} to be flagged, please build with clang instead.")
+  if (_SWIFT_SANITIZE)
+    if(DEFINED SWIFT_SANITIZE_SUPPRESSION_FILE)
+      message(WARNING "You are compiling with GCC, which does not support masking of sanitizer issues via `-fsanitize-ignorelist=`.")
+      message(WARNING "If you don't want the issues in ${SWIFT_SANITIZE_SUPPRESSION_FILE} to be flagged, please build with clang instead.")
+    endif()
   endif()
 else ()
   message(FATAL_ERROR "Oh noes! We don't support your compiler.")
 endif ()
 
-if (SWIFT_SANITIZE_ADDRESS OR SWIFT_SANITIZE_MEMORY OR SWIFT_SANITIZE_THREAD OR SWIFT_SANITIZE_LEAK OR SWIFT_SANITIZE_UNDEFINED)
+if (_SWIFT_SANITIZE)
   message(STATUS "Enabling runtime analysis sanitizers!")
   message("    Consider the appropriate runtime options for your sanitizer(s):")
   message("    https://github.com/google/sanitizers/wiki/AddressSanitizerFlags#run-time-flags")
