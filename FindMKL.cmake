@@ -130,12 +130,12 @@ else()
   set(MKL_INTERFACE_LIBRARY "")
   set(MKL_SEQUENTIAL_LAYER_LIBRARY "")
   set(MKL_CORE_LIBRARY "")
-
 endif()
 
 # Handle the QUIETLY and REQUIRED arguments and set MKL_FOUND to TRUE if
 # all listed variables are TRUE.
 include(FindPackageHandleStandardArgs)
+# TODO add required
 find_package_handle_standard_args(
   MKL
   DEFAULT_MSG
@@ -145,4 +145,12 @@ find_package_handle_standard_args(
   MKL_SEQUENTIAL_LAYER_LIBRARY
   MKL_CORE_LIBRARY)
 
-mark_as_advanced(MKL_INCLUDE_DIRS MKL_LIBRARIES MKL_INTERFACE_LIBRARY MKL_SEQUENTIAL_LAYER_LIBRARY MKL_CORE_LIBRARY)
+if (MKL_FOUND)
+    mark_as_advanced(MKL_INCLUDE_DIRS MKL_LIBRARIES MKL_INTERFACE_LIBRARY MKL_SEQUENTIAL_LAYER_LIBRARY MKL_CORE_LIBRARY)
+    add_library(intel::mkl UNKNOWN IMPORTED)
+    set_target_properties(intel::mkl PROPERTIES
+        IMPORTED_LOCATION ${MKL_INTERFACE_LIBRARY}
+        INTERFACE_INCLUDE_DIRECTORIES ${MKL_INCLUDE_DIRS}
+        INTERFACE_LINK_OPTIONS ${MKL_LIBRARIES},--no-as-needed
+    )
+endif()
