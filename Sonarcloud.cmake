@@ -216,6 +216,14 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
     foreach(source_file ${source_source_files})
       list(REMOVE_ITEM test_files ${source_file})
     endforeach()
+
+    # Exclude any headers in sub-directories of test folder from coverage reporting
+    foreach(test_file ${test_files})
+      get_filename_component(test_directory "${test_file}" DIRECTORY)
+      set(test_files ${test_files} "${test_directory}/*.h")
+    endforeach()
+    list(REMOVE_DUPLICATES test_files)
+
     list(JOIN test_files ",${_sonarcloud_newline}" sonar_test_files)
     string(APPEND sonarcloud_project_properties_content "sonar.coverage.exclusions=${_sonarcloud_newline}${sonar_test_files}\n")
   endif()
