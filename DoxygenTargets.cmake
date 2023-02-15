@@ -96,6 +96,10 @@ function(swift_add_doxygen target)
     set(DOXYGEN_SOURCE_DIRECTORIES ${x_SOURCE_DIRECTORIES})
   endif()
 
+  if(NOT DEFINED PLANTUML_JAR_PATH)
+    set(PLANTUML_JAR_PATH /usr/local/bin/plantuml.jar)
+  endif()
+
   string(REPLACE ";" "\" \"" DOXYGEN_SOURCE_DIRECTORIES "${DOXYGEN_SOURCE_DIRECTORIES}")
 
   configure_file(${DOXYGEN_CONFIGURE_FILE} ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
