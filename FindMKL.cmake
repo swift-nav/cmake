@@ -74,7 +74,6 @@ if(${CMAKE_VERSION} VERSION_LESS "3.13")
   message(FATAL_ERROR "The minimum supported CMake version is 3.13. You are running version ${CMAKE_VERSION}")
 endif()
 
-include_guard()
 include(FindPackageHandleStandardArgs)
 
 if(NOT MKL_LIBRARIES)
@@ -86,6 +85,7 @@ if(NOT MKL_LIBRARIES)
   # Compiler checks
   # ================
 
+  include(CMakeDetermineCCompiler)
   if(CMAKE_C_COMPILER)
     get_filename_component(C_COMPILER_NAME ${CMAKE_C_COMPILER} NAME)
   endif()
@@ -98,7 +98,7 @@ if(NOT MKL_LIBRARIES)
   elseif(CMAKE_C_COMPILER_ID STREQUAL "GNU")
     set(GNU_C_COMPILER ON)
   else()
-    message(FATAL_ERROR "Only clang or gnu compilers supported.")
+    message(FATAL_ERROR "Only clang or gnu compilers supported. Name=${C_COMPILER_NAME} - Id=${CMAKE_C_COMPILER_ID}")
   endif()
 
   # ================
