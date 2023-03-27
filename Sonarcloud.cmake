@@ -226,6 +226,7 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
 
     list(JOIN test_files ",${_sonarcloud_newline}" sonar_test_files)
     string(APPEND sonarcloud_project_properties_content "sonar.coverage.exclusions=${_sonarcloud_newline}${sonar_test_files}\n")
+    string(APPEND sonarcloud_project_properties_content "sonar.cpd.exclusions=${_sonarcloud_newline}${sonar_test_files}\n")
   endif()
 
   file(GENERATE
