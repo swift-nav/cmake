@@ -70,11 +70,18 @@
 #     Link line for C API
 #===============================================================================
 
+if(TARGET MKL::MKL)
+  message(STATUS "MKL::MKL target has already been loaded.")
+  return()
+endif()
+
 if(${CMAKE_VERSION} VERSION_LESS "3.13")
   message(FATAL_ERROR "The minimum supported CMake version is 3.13. You are running version ${CMAKE_VERSION}")
 endif()
 
 include(FindPackageHandleStandardArgs)
+
+set(MKLROOT_DEFAULT "/opt/intel/oneapi/mkl/latest")
 
 if(NOT MKL_LIBRARIES)
 
@@ -124,10 +131,14 @@ if(NOT MKL_LIBRARIES)
   if(NOT DEFINED MKL_ROOT)
     if(DEFINED ENV{MKLROOT})
       set(MKL_ROOT $ENV{MKLROOT})
+    elseif(EXISTS ${MKLROOT_DEFAULT})
+      set(MKL_ROOT ${MKLROOT_DEFAULT})
     else()
       message(FATAL_ERROR "MKLROOT environment variable is not defined.")
     endif()
   endif()
+
+  set(MKL_INCLUDE "${MKL_ROOT}/include")
 
   # Define MKL_LINK
   set(MKL_LINK static)
@@ -209,12 +220,12 @@ if(NOT MKL_LIBRARIES)
   target_compile_options(
     MKL::MKL INTERFACE $<$<STREQUAL:$<TARGET_PROPERTY:LINKER_LANGUAGE>,C>:${MKL_C_COPT}>
                        $<$<STREQUAL:$<TARGET_PROPERTY:LINKER_LANGUAGE>,CXX>:${MKL_CXX_COPT}>)
+  target_compile_definitions(MKL::MKL INTERFACE EIGEN_USE_MKL_ALL)
   target_link_libraries(MKL::MKL INTERFACE ${MKL_LINK_LINE} ${MKL_THREAD_LIB} ${MKL_SUPP_LINK})
   list(APPEND LINK_TYPES MKL::MKL)
-
   foreach(link ${LINK_TYPES})
     # Set properties on all INTERFACE targets
-    target_include_directories(${link} BEFORE INTERFACE "${MKL_INCLUDE}")
+    target_include_directories(${link} BEFORE INTERFACE ${MKL_INCLUDE})
     list(APPEND MKL_IMPORTED_TARGETS ${link})
   endforeach(link) # LINK_TYPES
 
