@@ -72,6 +72,7 @@
 
 if(TARGET MKL::MKL)
   message(STATUS "MKL::MKL target has already been loaded.")
+  set(MKL_FOUND TRUE)
   return()
 endif()
 
