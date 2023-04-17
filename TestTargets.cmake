@@ -397,4 +397,17 @@ function(swift_add_test target)
     add_dependencies(build-post-build-tests ${target})
     add_dependencies(post-build-${target} build-post-build-tests)
   endif()
+
+  foreach(src ${x_SRCS})
+    get_filename_component(absolute_src ${src} ABSOLUTE)
+    if(${absolute_src} MATCHES "${CMAKE_BINARY_DIR}.*")
+      continue()
+    endif()
+    string(REPLACE ${PROJECT_SOURCE_DIR}/ "" relative_src ${absolute_src})
+
+    set_property(GLOBAL
+      APPEND_STRING
+      PROPERTY TEST_SRCS "\\n${relative_src}")
+  endforeach()
+
 endfunction()
