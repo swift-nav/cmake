@@ -41,11 +41,6 @@ endif()
 
 include(FindPackageHandleStandardArgs)
 
-set(MKLROOT_DEFAULT "/opt/intel/oneapi/mkl/latest")
-set(MKL_ARCH intel64)
-set(MKL_INTERFACE_FULL intel_lp64)
-set(MKL_THREADING gnu_thread)
-
 if(NOT MKL_LIBRARIES)
 
   # Set CMake policies for well-defined behavior across CMake versions
@@ -88,6 +83,7 @@ if(NOT MKL_LIBRARIES)
   # ==========
 
   # Set MKL_ROOT directory
+  set(MKLROOT_DEFAULT "/opt/intel/oneapi/mkl/latest")
   if(NOT DEFINED MKL_ROOT)
     if(DEFINED ENV{MKLROOT})
       set(MKL_ROOT $ENV{MKLROOT})
@@ -108,26 +104,17 @@ if(NOT MKL_LIBRARIES)
   list(APPEND MKL_INCLUDE ${MKL_H})
 
   # Checkpoint - Verify if required options are defined
-  find_package_handle_standard_args(MKL REQUIRED_VARS MKL_ROOT MKL_ARCH MKL_INCLUDE MKL_THREADING MKL_INTERFACE_FULL)
-
-  # Provides a list of IMPORTED targets for the project
-  if(NOT DEFINED MKL_IMPORTED_TARGETS)
-    set(MKL_IMPORTED_TARGETS "")
-  endif()
-
-  # Clear temporary variables
-  set(MKL_SUPP_LINK "") # Other link options. Usually at the end of the link-line.
-  set(MKL_LINK_LINE) # For MPI only
-
-  set(MKL_IFACE_LIB mkl_${MKL_INTERFACE_FULL})
-  set(MKL_CORE mkl_core)
-  set(MKL_THREAD mkl_${MKL_THREADING})
+  find_package_handle_standard_args(MKL REQUIRED_VARS MKL_ROOT MKL_INCLUDE)
 
   # Create a list of requested libraries, based on input options (MKL_LIBRARIES) Create full link-line in MKL_LINK_LINE
-  list(APPEND MKL_LINK_LINE "-Wl,--start-group")
-  list(APPEND MKL_LIBRARIES ${MKL_IFACE_LIB} ${MKL_THREAD} ${MKL_CORE})
-  list(APPEND MKL_LINK_LINE MKL::${MKL_IFACE_LIB} MKL::${MKL_THREAD} MKL::${MKL_CORE})
-  list(APPEND MKL_LINK_LINE "-Wl,--end-group")
+  set(MKL_LINK_LINE "")
+  set(MKL_LIBRARIES "")
+  set(MKL_SUPP_LINK "")
+  list(APPEND MKL_LINK_LINE "-Wl,--start-group" MKL::mkl_intel_lp64 MKL::mkl_gnu_thread MKL::mkl_core "-Wl,--end-group")
+  list(APPEND MKL_LIBRARIES mkl_intel_lp64 mkl_gnu_thread mkl_core)
+  list(APPEND MKL_SUPP_LINK -lgomp -fopenmp -lm -ldl -lpthread)
+
+  set(MKL_IMPORTED_TARGETS "")
 
   # Find all requested libraries
   foreach(lib ${MKL_LIBRARIES})
@@ -135,7 +122,7 @@ if(NOT MKL_LIBRARIES)
     find_library(
       ${lib}_file ${LIB_PREFIX}${lib}${LIB_EXT}
       PATHS ${MKL_ROOT}
-      PATH_SUFFIXES "lib" "lib/${MKL_ARCH}")
+      PATH_SUFFIXES "lib" "lib/intel64")
     add_library(MKL::${lib} STATIC IMPORTED)
     find_package_handle_standard_args(MKL REQUIRED_VARS ${lib}_file)
     # CMP0111, implemented in CMake 3.20+ requires a shared library target on Windows to be defined with IMPLIB and
@@ -145,22 +132,11 @@ if(NOT MKL_LIBRARIES)
     list(APPEND MKL_IMPORTED_TARGETS MKL::${lib})
   endforeach()
 
-  # Threading selection
-  list(APPEND MKL_SUPP_LINK -lgomp -fopenmp)
-  list(APPEND MKL_SUPP_LINK -lm -ldl -lpthread)
-
-  # Setup link types based on input options
-  set(LINK_TYPES "")
-
   # Single target for all C, Fortran link-lines
   add_library(MKL::MKL INTERFACE IMPORTED GLOBAL)
   target_compile_options(MKL::MKL INTERFACE -m64)
   target_compile_definitions(MKL::MKL INTERFACE EIGEN_USE_MKL_ALL)
-  target_link_libraries(MKL::MKL INTERFACE ${MKL_LINK_LINE} ${MKL_THREAD_LIB} ${MKL_SUPP_LINK})
-  list(APPEND LINK_TYPES MKL::MKL)
-  foreach(link ${LINK_TYPES})
-    # Set properties on all INTERFACE targets
-    target_include_directories(${link} BEFORE INTERFACE ${MKL_INCLUDE})
-    list(APPEND MKL_IMPORTED_TARGETS ${link})
-  endforeach(link) # LINK_TYPES
+  target_link_libraries(MKL::MKL INTERFACE ${MKL_LINK_LINE} ${MKL_SUPP_LINK})
+  target_include_directories(MKL::MKL BEFORE INTERFACE ${MKL_INCLUDE})
+  list(APPEND MKL_IMPORTED_TARGETS MKL::MKL)
 endif() # MKL_LIBRARIES
