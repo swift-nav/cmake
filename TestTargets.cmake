@@ -397,4 +397,27 @@ function(swift_add_test target)
     add_dependencies(build-post-build-tests ${target})
     add_dependencies(post-build-${target} build-post-build-tests)
   endif()
+
+  foreach(src ${x_SRCS})
+    get_filename_component(absolute_src ${src} ABSOLUTE)
+    if(${absolute_src} MATCHES "${CMAKE_BINARY_DIR}.*")
+      continue()
+    endif()
+    string(REPLACE ${PROJECT_SOURCE_DIR}/ "" relative_src ${absolute_src})
+
+    set_property(GLOBAL
+      APPEND_STRING
+      PROPERTY TEST_SRCS "\\n${relative_src}")
+  endforeach()
+
 endfunction()
+
+macro(swift_add_test_srcs_target)
+  get_property(test_srcs GLOBAL PROPERTY TEST_SRCS)
+
+  string (REPLACE ";" "\\n" test_srcs_str "${test_srcs}")
+
+  add_custom_target(test_srcs
+    COMMAND echo "'${test_srcs_str}'" | tail -n +2 | sort > cmake_test_srcs.txt
+  )
+endmacro()
