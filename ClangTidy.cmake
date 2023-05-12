@@ -112,7 +112,7 @@ function(swift_create_clang_tidy_targets)
     return()
   endif()
 
-  set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG" "WITHOUT_SWIFT_TYPES")
+  set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG" "WITHOUT_SWIFT_TYPES" "WARNINGS_AS_ERRORS")
   set(argSingle "")
   set(argMulti "FLAGS_TO_ENABLE")
 
@@ -280,6 +280,12 @@ Checks: \"${comma_checks}\"
 HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: true
 ")
+
+    if (x_WARNINGS_AS_ERRORS)
+      file(APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "\
+WarningsAsErrors: '*'
+")
+    endif ()
   endif()
 
   # These two lists will ultimately contain the complete set of source files to pass to the clang-tidy-all and clang-tidy-world targets
