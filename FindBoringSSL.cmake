@@ -13,6 +13,7 @@
 include("GenericFindDependency")
 GenericFindDependency(
   TARGET ssl
+  ADDITIONAL_TARGETS crypto
   SOURCE_DIR boringssl
   SYSTEM_INCLUDES
 )
