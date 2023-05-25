@@ -403,7 +403,7 @@ function(swift_add_test target)
     if(${absolute_src} MATCHES "${CMAKE_BINARY_DIR}.*")
       continue()
     endif()
-    string(REPLACE ${PROJECT_SOURCE_DIR}/ "" relative_src ${absolute_src})
+    string(REPLACE ${CMAKE_SOURCE_DIR}/ "" relative_src ${absolute_src})
 
     set_property(GLOBAL
       APPEND_STRING
