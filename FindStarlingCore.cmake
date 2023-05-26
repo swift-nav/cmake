@@ -16,6 +16,6 @@ option(starling-core_ENABLE_TESTS "" OFF)
 option(starling-core_ENABLE_TEST_LIBS "" OFF)
 
 GenericFindDependency(
-  TARGET starling-core-utils
+  TARGET internal-utils
   SOURCE_DIR starling-core
 )
