@@ -113,7 +113,7 @@ function(swift_create_clang_tidy_targets)
   endif()
 
   set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG" "WITHOUT_SWIFT_TYPES")
-  set(argSingle "")
+  set(argSingle "INTEGRITY")
   set(argMulti "FLAGS_TO_ENABLE")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
@@ -280,6 +280,32 @@ Checks: \"${comma_checks}\"
 HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: true
 ")
+
+    if (x_INTEGRITY)
+      file (APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "\
+WarningsAsErrors: "*"
+CheckOptions:
+  - { key: readability-identifier-naming.NamespaceCase,          value: lower_case }
+  - { key: readability-identifier-naming.ClassCase,              value: CamelCase  }
+  - { key: readability-identifier-naming.StructCase,             value: CamelCase  }
+  - { key: readability-identifier-naming.TemplateParameterCase,  value: CamelCase  }
+  - { key: readability-identifier-naming.FunctionCase,           value: lower_case }
+  - { key: readability-identifier-naming.VariableCase,           value: lower_case }
+  - { key: readability-identifier-naming.ClassMemberCase,        value: lower_case }
+  - { key: readability-identifier-naming.ClassMemberSuffix,      value: _          }
+  - { key: readability-identifier-naming.PrivateMemberSuffix,    value: _          }
+  - { key: readability-identifier-naming.ProtectedMemberSuffix,  value: _          }
+  - { key: readability-identifier-naming.EnumConstantCase,         value: UPPER_CASE }
+  - { key: readability-identifier-naming.ConstexprVariableCase,    value: CamelCase }
+  - { key: readability-identifier-naming.ConstexprVariablePrefix,  value: c         }
+  - { key: readability-identifier-naming.GlobalConstantCase,       value: CamelCase }
+  - { key: readability-identifier-naming.GlobalConstantPrefix,     value: c         }
+  - { key: readability-identifier-naming.MemberConstantCase,       value: CamelCase }
+  - { key: readability-identifier-naming.MemberConstantPrefix,     value: c         }
+  - { key: readability-identifier-naming.StaticConstantCase,       value: CamelCase }
+  - { key: readability-identifier-naming.StaticConstantPrefix,     value: c         }
+")
+    endif ()
   endif()
 
   # These two lists will ultimately contain the complete set of source files to pass to the clang-tidy-all and clang-tidy-world targets
