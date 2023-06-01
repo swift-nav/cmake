@@ -261,7 +261,6 @@ function(swift_create_clang_tidy_targets)
         -readability-use-anyofallof)
 
     if (NOT x_INTEGRITY)
-      # Doesn't appear to be functional, even if it were appropriate
       list(APPEND disabled_checks -readability-identifier-naming)
     endif()
 
