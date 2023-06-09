@@ -1,0 +1,5 @@
+if("^${CMAKE_SOURCE_DIR}$" STREQUAL "^${PROJECT_SOURCE_DIR}$")
+  set(IS_SUBPROJECT FALSE)
+else()
+  set(IS_SUBPROJECT TRUE)
+endif()
