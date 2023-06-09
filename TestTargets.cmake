@@ -416,8 +416,7 @@ macro(swift_add_test_srcs_target)
   get_property(test_srcs GLOBAL PROPERTY TEST_SRCS)
 
   string (REPLACE ";" "\\n" test_srcs_str "${test_srcs}")
-
-  add_custom_target(test_srcs
+  add_custom_target(${PROJECT_NAME}_test_srcs
     COMMAND echo "'${test_srcs_str}'" | tail -n +2 | sort > cmake_test_srcs.txt
   )
 endmacro()
