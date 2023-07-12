@@ -309,7 +309,7 @@ function(swift_add_test target)
 
   add_custom_target(
     do-${target}
-    COMMAND ${target}
+    COMMAND ${target} --gtest_output=xml:${CMAKE_BINARY_DIR}/test_reports/${target}.xml
     ${wd}
     COMMENT "Running ${x_COMMENT}"
   )
