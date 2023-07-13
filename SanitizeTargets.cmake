@@ -40,7 +40,7 @@ if (CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   # See http://clang.llvm.org/docs and
   # http://clang.llvm.org/docs/UsersManual.html#controlling-code-generation
   # for more details.
-  set(SWIFT_SANITIZE_FLAGS  "-g -fno-omit-frame-pointer")
+  set(SWIFT_SANITIZE_FLAGS  "-g -fno-omit-frame-pointer -Wno-error=disabled-optimization")
   if (SWIFT_SANITIZE_ADDRESS)
     message(STATUS "Enabling address sanitizer.")
     set(SWIFT_SANITIZE_FLAGS  "${SWIFT_SANITIZE_FLAGS} -fsanitize=address")
