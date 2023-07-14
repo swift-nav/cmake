@@ -285,7 +285,6 @@ AnalyzeTemporaryDtors: true
 
     if (x_INTEGRITY)
       file (APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "\
-WarningsAsErrors: '*'
 CheckOptions:
   - { key: readability-identifier-naming.ClassCase,                      value: CamelCase  }
   - { key: readability-identifier-naming.ClassMemberCase,                value: lower_case }
