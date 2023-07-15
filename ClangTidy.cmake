@@ -112,7 +112,7 @@ function(swift_create_clang_tidy_targets)
     return()
   endif()
 
-  set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG" "INTEGRITY" "WITHOUT_SWIFT_TYPES")
+  set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG" "STYLE_GUIDE" "WITHOUT_SWIFT_TYPES")
   set(argSingle "")
   set(argMulti "FLAGS_TO_ENABLE")
 
@@ -260,7 +260,7 @@ function(swift_create_clang_tidy_targets)
         -readability-uppercase-literal-suffix
         -readability-use-anyofallof)
 
-    if (NOT x_INTEGRITY)
+    if (NOT x_STYLE_GUIDE)
       list(APPEND disabled_checks -readability-identifier-naming)
     endif()
 
@@ -283,7 +283,7 @@ HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: true
 ")
 
-    if (x_INTEGRITY)
+    if (x_STYLE_GUIDE)
       file (APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "\
 CheckOptions:
   - { key: readability-identifier-naming.ClassCase,                      value: CamelCase  }
