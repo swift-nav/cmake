@@ -112,7 +112,7 @@ function(swift_create_clang_tidy_targets)
     return()
   endif()
 
-  set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG" "WITHOUT_SWIFT_TYPES")
+  set(argOption "DONT_GENERATE_CLANG_TIDY_CONFIG" "STYLE_GUIDE" "WITHOUT_SWIFT_TYPES")
   set(argSingle "")
   set(argMulti "FLAGS_TO_ENABLE")
 
@@ -173,8 +173,6 @@ function(swift_create_clang_tidy_targets)
         -google-objc*
         # clang-format takes care of indentation
         -readability-misleading-indentation
-        # Doesn't appear to be functional, even if it were appropriate
-        -readability-identifier-naming
         # Caught by compiler, -Wunused-parameter
         -misc-unused-parameters
         # We have a external function blacklist which is much faster, don't need clang to do it
@@ -262,6 +260,10 @@ function(swift_create_clang_tidy_targets)
         -readability-uppercase-literal-suffix
         -readability-use-anyofallof)
 
+    if (NOT x_STYLE_GUIDE)
+      list(APPEND disabled_checks -readability-identifier-naming)
+    endif()
+
     foreach(flag IN LISTS x_FLAGS_TO_ENABLE)
       list(FILTER disabled_checks EXCLUDE REGEX ${flag})
     endforeach()
@@ -280,6 +282,33 @@ Checks: \"${comma_checks}\"
 HeaderFilterRegex: '.*'
 AnalyzeTemporaryDtors: true
 ")
+
+    if (x_STYLE_GUIDE)
+      file (APPEND ${CMAKE_SOURCE_DIR}/.clang-tidy "\
+CheckOptions:
+  - { key: readability-identifier-naming.ClassCase,                      value: CamelCase  }
+  - { key: readability-identifier-naming.ClassMemberCase,                value: lower_case }
+  - { key: readability-identifier-naming.ClassMemberSuffix,              value: _          }
+  - { key: readability-identifier-naming.ConstexprVariableCase,          value: CamelCase  }
+  - { key: readability-identifier-naming.ConstexprVariablePrefix,        value: c          }
+  - { key: readability-identifier-naming.EnumCase,                       value: CamelCase  }
+  - { key: readability-identifier-naming.EnumConstantCase,               value: UPPER_CASE }
+  - { key: readability-identifier-naming.FunctionCase,                   value: lower_case }
+  - { key: readability-identifier-naming.GlobalConstantCase,             value: CamelCase  }
+  - { key: readability-identifier-naming.GlobalConstantPrefix,           value: c          }
+  - { key: readability-identifier-naming.MemberConstantCase,             value: CamelCase  }
+  - { key: readability-identifier-naming.MemberConstantPrefix,           value: c          }
+  - { key: readability-identifier-naming.NamespaceCase,                  value: lower_case }
+  - { key: readability-identifier-naming.PrivateMemberSuffix,            value: _          }
+  - { key: readability-identifier-naming.ProtectedMemberSuffix,          value: _          }
+  - { key: readability-identifier-naming.StaticConstantCase,             value: CamelCase  }
+  - { key: readability-identifier-naming.StaticConstantPrefix,           value: c          }
+  - { key: readability-identifier-naming.StructCase,                     value: CamelCase  }
+  - { key: readability-identifier-naming.TemplateParameterCase,          value: CamelCase  }
+  - { key: readability-identifier-naming.VariableCase,                   value: lower_case }
+  - { key: readability-identifier-naming.TemplateParameterIgnoredRegexp, value: 'expr-type'}
+")
+    endif ()
   endif()
 
   # These two lists will ultimately contain the complete set of source files to pass to the clang-tidy-all and clang-tidy-world targets
