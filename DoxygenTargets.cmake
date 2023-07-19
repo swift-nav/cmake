@@ -39,6 +39,7 @@
 #     DOXYGEN_CONFIGURE_FILE: path specified within the CONFIGURE_FILE option
 #     DOXYGEN_OUTPUT_DIRECTORY: path specified within the OUTPUT_DIRECTORY option
 #     DOXYGEN_SOURCE_DIRECTORIES: paths specified within the SOURCE_DIRECTORIES option
+#     DOXYGEN_EXCLUDE: paths specified within the EXCLUDE option
 #
 #   Please note that whenever you wish to use the above variables within the
 #   Doxygen configuration file, make sure they are surrounded by quotes, so for
@@ -61,6 +62,11 @@
 #   configuration file's INPUT variable for it to be useful. Default value is
 #   set to "${CMAKE_CURRENT_SOURCE_DIR}".
 #
+#   EXCLUDE: specifies the files which doxygen will not look through to
+#   extract the documentation from. This variable will be exposed
+#   as DOXYGEN_EXCLUDE and should be assigned to the doxygen configuration
+#   file's EXCLUDE variable for it to be useful. Default value is empty.
+#
 
 function(swift_add_doxygen target)
   find_package(Doxygen)
@@ -72,7 +78,7 @@ function(swift_add_doxygen target)
 
   set(argOptions)
   set(argSingleArguments CONFIGURE_FILE OUTPUT_DIRECTORY)
-  set(argMultiArguments SOURCE_DIRECTORIES)
+  set(argMultiArguments SOURCE_DIRECTORIES EXCLUDE)
 
   cmake_parse_arguments(x "${argOptions}" "${argSingleArguments}" "${argMultiArguments}" ${ARGN})
 
@@ -94,6 +100,11 @@ function(swift_add_doxygen target)
 
   if(x_SOURCE_DIRECTORIES)
     set(DOXYGEN_SOURCE_DIRECTORIES ${x_SOURCE_DIRECTORIES})
+  endif()
+
+  if(x_EXCLUDE)
+    set(DOXYGEN_EXCLUDE ${x_EXCLUDE})
+    string(REPLACE ";" "\" \"" DOXYGEN_EXCLUDE "${DOXYGEN_EXCLUDE}")
   endif()
 
   if(NOT DEFINED PLANTUML_JAR_PATH)
