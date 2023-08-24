@@ -12,14 +12,13 @@
 # WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 #
 
-import codecs
 import sys
 import re
 
 
 def FixHeaderGuard(filename):
     try:
-        with codecs.open(filename, "r", "utf8", "replace") as target_file:
+        with open(filename, "r") as target_file:
             lines = target_file.read().split("\n")
 
         # Remove trailing '\r'.
@@ -27,10 +26,8 @@ def FixHeaderGuard(filename):
         for linenum in range(len(lines) - 1):
             if lines[linenum].endswith("\r"):
                 lines[linenum] = lines[linenum].rstrip("\r")
-
     except IOError:
-        sys.stderr.write("Skipping input '%s': Can't open for reading\n" % filename)
-        return
+        sys.stderr.write("Error opening {}\n".format(filename))
 
     # Don't check for header guards if there are error suppression
     # comments somewhere in this file.
@@ -123,7 +120,7 @@ def FixHeaderGuard(filename):
         # Generate a default copyright notice
         lines.insert(0, default_copyright)
 
-    with codecs.open(filename, "w", "utf8", "replace") as output_file:
+    with open(filename, "w") as output_file:
         output_file.write("\n".join(lines))
 
 
