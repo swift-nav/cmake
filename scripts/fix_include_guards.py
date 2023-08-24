@@ -28,23 +28,7 @@ def can_ignore_file(lines):
         return True
     return False
 
-def FixHeaderGuard(filename):
-    try:
-        with open(filename, "r") as target_file:
-            lines = target_file.read().split("\n")
-
-        # Remove trailing '\r'.
-        # The -1 accounts for the extra trailing blank line we get from split()
-        for linenum in range(len(lines) - 1):
-            if lines[linenum].endswith("\r"):
-                lines[linenum] = lines[linenum].rstrip("\r")
-    except IOError:
-        sys.stderr.write("Error opening {}\n".format(filename))
-        return
-
-    if can_ignore_file(lines):
-        return
-
+def get_expected_guard(filename):
     if re.match(r".*/include/.*", filename):
         expected_guard = re.sub(r"^.*/include/", "", filename)
     elif re.match(r"^include/.*", filename):
@@ -64,6 +48,26 @@ def FixHeaderGuard(filename):
 
     expected_guard = re.sub(r"\+\+", "cpp", expected_guard)
     expected_guard = re.sub(r"[/\.-]", "_", expected_guard).upper()
+    return expected_guard
+
+def FixHeaderGuard(filename):
+    try:
+        with open(filename, "r") as target_file:
+            lines = target_file.read().split("\n")
+
+        # Remove trailing '\r'.
+        # The -1 accounts for the extra trailing blank line we get from split()
+        for linenum in range(len(lines) - 1):
+            if lines[linenum].endswith("\r"):
+                lines[linenum] = lines[linenum].rstrip("\r")
+    except IOError:
+        sys.stderr.write("Error opening {}\n".format(filename))
+        return
+
+    if can_ignore_file(lines):
+        return
+
+    expected_guard = get_expected_guard(filename)
 
     ifndef = ""
     ifndef_linenum = -1
