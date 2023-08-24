@@ -14,6 +14,7 @@
 
 import sys
 import re
+from pathlib import Path
 
 '''
 Don't check for header guards if there are error suppression
@@ -29,25 +30,23 @@ def can_ignore_file(lines):
     return False
 
 def get_expected_guard(filename):
-    if re.match(r".*/include/.*", filename):
-        expected_guard = re.sub(r"^.*/include/", "", filename)
-    elif re.match(r"^include/.*", filename):
-        expected_guard = re.sub(r"^include/", "", filename)
+    file_path = Path(filename)
+
+    # Check if "include" is a direct part of the path
+    if "include" in file_path.parts:
+        include_index = file_path.parts.index("include")
+        expected_guard_parts = file_path.parts[include_index+1:]
     else:
-        # header is probably just loose in a source directory so we'll have to use
-        # something else
-
-        components = filename.split("/")
-        parent_dir = components[-2:][0]
-        if parent_dir == "src":
-            # In the case where we're in a directory called 'src' start two levels up
-            expected_guard = "_".join(components[-3:])
+        # For files outside "include" directory
+        if file_path.parent.name == "src":
+            expected_guard_parts = file_path.parts[-3:]
         else:
-            # otherwise just use the parent directory name
-            expected_guard = "_".join(components[-2:])
+            expected_guard_parts = file_path.parts[-2:]
 
-    expected_guard = re.sub(r"\+\+", "cpp", expected_guard)
+    expected_guard = "_".join(expected_guard_parts)
+    expected_guard = expected_guard.replace("++", "cpp")
     expected_guard = re.sub(r"[/\.-]", "_", expected_guard).upper()
+
     return expected_guard
 
 def FixHeaderGuard(filename):
