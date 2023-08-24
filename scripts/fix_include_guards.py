@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 #
-# Copyright (C) 2021 Swift Navigation Inc.
+# Copyright (C) 2023 Swift Navigation Inc.
 # Contact: Swift Navigation <dev@swift-nav.com>
 #
 # This source is subject to the license found in the file 'LICENSE' which must
@@ -15,6 +15,7 @@
 import sys
 import re
 from pathlib import Path
+from datetime import datetime
 
 """
 Don't check for header guards if there are error suppression
@@ -24,8 +25,6 @@ Because this is silencing a warning for a nonexistent line, we
 only support the very specific NOLINT(build/header_guard) syntax,
 and not the general NOLINT or NOLINT(*) syntax.
 """
-
-
 def can_ignore_file(lines):
     if any("NOLINT(build/header_guard)" in line for line in lines) or any(
         "#pragma once" in line for line in lines
@@ -111,8 +110,8 @@ def fix_header_guard(filename):
             lines[define_linenum] = "#define " + expected_guard
 
     # Check for copyright notice
-    default_copyright = """/**
- * Copyright (C) 2022 Swift Navigation Inc.
+    default_copyright = f"""/**
+ * Copyright (C) {datetime.now().year} Swift Navigation Inc.
  * Contact: Swift Navigation <dev@swiftnav.com>
  *
  * This source is subject to the license found in the file 'LICENSE' which must
@@ -129,8 +128,6 @@ def fix_header_guard(filename):
         if re.search(r"Copyright", lines[line], re.I):
             break
     else:  # means no copyright line was found
-        # Generate a default copyright notice
-
         lines.insert(0, default_copyright)
 
     with open(filename, "w") as output_file:
