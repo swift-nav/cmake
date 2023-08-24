@@ -15,6 +15,18 @@
 import sys
 import re
 
+'''
+Don't check for header guards if there are error suppression
+comments somewhere in this file.
+
+Because this is silencing a warning for a nonexistent line, we
+only support the very specific NOLINT(build/header_guard) syntax,
+and not the general NOLINT or NOLINT(*) syntax.
+'''
+def can_ignore_file(lines):
+    if any("NOLINT(build/header_guard)" in line for line in lines) or any("#pragma once" in line for line in lines):
+        return True
+    return False
 
 def FixHeaderGuard(filename):
     try:
@@ -28,22 +40,10 @@ def FixHeaderGuard(filename):
                 lines[linenum] = lines[linenum].rstrip("\r")
     except IOError:
         sys.stderr.write("Error opening {}\n".format(filename))
+        return
 
-    # Don't check for header guards if there are error suppression
-    # comments somewhere in this file.
-    #
-    # Because this is silencing a warning for a nonexistent line, we
-    # only support the very specific NOLINT(build/header_guard) syntax,
-    # and not the general NOLINT or NOLINT(*) syntax.
-    raw_lines = lines
-    for i in raw_lines:
-        if re.match(r"//\s*NOLINT\(build/header_guard\)", i):
-            return
-
-    # Allow pragma once instead of header guards
-    for i in raw_lines:
-        if re.match(r"^\s*#pragma\s+once", i):
-            return
+    if can_ignore_file(lines):
+        return
 
     if re.match(r".*/include/.*", filename):
         expected_guard = re.sub(r"^.*/include/", "", filename)
@@ -69,7 +69,7 @@ def FixHeaderGuard(filename):
     ifndef_linenum = -1
     define = ""
     define_linenum = -1
-    for linenum, line in enumerate(raw_lines):
+    for linenum, line in enumerate(lines):
         linesplit = line.split()
         if len(linesplit) >= 2:
             # find the first occurrence of #ifndef and #define, save arg
