@@ -57,7 +57,7 @@ endfunction()
 function(swift_list_targets out_var)
   set(argOption "ONLY_THIS_REPO")
   set(argSingle "")
-  set(argMulti "TYPES" "SWIFT_TYPES")
+  set(argMulti "TYPES" "SWIFT_TYPES" "SWIFT_LEVELS")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
   if(x_UNPARSED_ARGUMENTS)
@@ -85,6 +85,14 @@ function(swift_list_targets out_var)
       endif()
 
       if(NOT ${swift_type} IN_LIST x_SWIFT_TYPES)
+        continue()
+      endif()
+    endif()
+
+    if(x_SWIFT_LEVELS AND NOT type STREQUAL "INTERFACE_LIBRARY")
+      get_target_property(swift_level ${target} SWIFT_LEVEL)
+
+      if (NOT ${swift_level} IN_LIST x_SWIFT_LEVELS)
         continue()
       endif()
     endif()

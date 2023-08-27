@@ -171,7 +171,7 @@ function(_extract_sonarcloud_project_files output_project_source_files output_pr
   set(${output_project_include_directories} ${project_include_directories} PARENT_SCOPE)
 endfunction()
 
-function(generate_sonarcloud_project_properties sonarcloud_project_properties_path)
+function(generate_sonarcloud_project_properties level sonarcloud_project_properties_path)
   if (NOT IS_ABSOLUTE ${sonarcloud_project_properties_path})
     message(FATAL_ERROR "Function \"generate_sonarcloud_project_properties\""
            "only accepts absolute paths to avoid ambiguity")
@@ -183,24 +183,19 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
 
   swift_list_targets(source_targets
     ONLY_THIS_REPO
+    SWIFT_LEVELS ${level}
     SWIFT_TYPES
       executable
       library
-  )
-
-  swift_list_targets(test_targets
-    ONLY_THIS_REPO
-    SWIFT_TYPES
       test
       test_library
   )
 
   _extract_sonarcloud_project_files(source_source_files source_include_directories ${source_targets})
-  _extract_sonarcloud_project_files(test_source_files test_include_directories ${test_targets})
 
   set(sonarcloud_project_properties_content "sonar.sourceEncoding=UTF-8\n")
 
-  set(source_files ${source_source_files} ${source_include_directories} ${test_source_files})
+  set(source_files ${source_source_files} ${source_include_directories})
   foreach (dir ${source_include_directories})
     if(${dir} MATCHES "/$")
       set(source_files ${source_files} ${dir}*.h ${dir}**/*.h)
@@ -210,24 +205,6 @@ function(generate_sonarcloud_project_properties sonarcloud_project_properties_pa
   endforeach()
   list(JOIN source_files ",${_sonarcloud_newline}" sonar_sources)
   string(APPEND sonarcloud_project_properties_content "sonar.inclusions=${_sonarcloud_newline}${sonar_sources}\n")
-
-  if(test_source_files)
-    set(test_files ${test_source_files})
-    foreach(source_file ${source_source_files})
-      list(REMOVE_ITEM test_files ${source_file})
-    endforeach()
-
-    # Exclude any headers in sub-directories of test folder from coverage reporting
-    foreach(test_file ${test_files})
-      get_filename_component(test_directory "${test_file}" DIRECTORY)
-      set(test_files ${test_files} "${test_directory}/*.h")
-    endforeach()
-    list(REMOVE_DUPLICATES test_files)
-
-    list(JOIN test_files ",${_sonarcloud_newline}" sonar_test_files)
-    string(APPEND sonarcloud_project_properties_content "sonar.coverage.exclusions=${_sonarcloud_newline}${sonar_test_files}\n")
-    string(APPEND sonarcloud_project_properties_content "sonar.cpd.exclusions=${_sonarcloud_newline}${sonar_test_files}\n")
-  endif()
 
   file(GENERATE
     OUTPUT "${sonarcloud_project_properties_path}"
