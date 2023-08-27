@@ -82,24 +82,33 @@
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON CACHE BOOL "Export compile commands" FORCE)
 
 # Helper function to actually create the targets, not to be used outside this file
-function(create_clang_tidy_targets key fixes)
+function(create_clang_tidy_targets level)
+  unset(all_abs_srcs)
+  swift_list_compilable_targets(all_targets ONLY_THIS_REPO SWIFT_LEVELS ${level})
+  foreach(target IN LISTS all_targets)
+    get_target_property(target_srcs ${target} SOURCES)
+    get_target_property(target_dir ${target} SOURCE_DIR)
+    unset(abs_srcs)
+    foreach(file ${target_srcs})
+      get_filename_component(abs_file ${file} ABSOLUTE BASE_DIR ${target_dir})
+      list(APPEND abs_srcs ${abs_file})
+    endforeach()
+
+    list(APPEND all_abs_srcs ${abs_srcs})
+  endforeach()
+
+  list(REMOVE_DUPLICATES all_abs_srcs)
+  list(FILTER all_abs_srcs EXCLUDE REGEX "pb.cc")
   add_custom_target(
-    clang-tidy-${key}
-    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} -export-fixes=${CMAKE_SOURCE_DIR}/${fixes}
+    clang-tidy-level${level}
+    COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR} -export-fixes=${CMAKE_SOURCE_DIR}/fixes-level${level}.yaml -config-file=${CMAKE_BINARY_DIR}/clang-tidy-level${level}
             ${ARGN}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
   add_custom_target(
-    clang-tidy-${key}-check
-    COMMAND test ! -f ${CMAKE_SOURCE_DIR}/${fixes}
-    DEPENDS clang-tidy-${key}
+    clang-tidy-${level}-check
+    COMMAND test ! -f ${CMAKE_SOURCE_DIR}/fixes-level${level}.yaml
+    DEPENDS clang-tidy-level${level}
     WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-  if(DEFINED SWIFT_CLANG_TIDY_RATCHET_FILE)
-    add_custom_target(
-      clang-tidy-${key}-ratchet-check
-      COMMAND ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/run-clang-tidy.py -clang-tidy-binary ${CLANG_TIDY} -p ${CMAKE_BINARY_DIR}
-              ${ARGN} 2>/dev/null | ${CMAKE_CURRENT_SOURCE_DIR}/cmake/common/scripts/clang_tidy_ratchet.py --reference ${SWIFT_CLANG_TIDY_RATCHET_FILE}
-      WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
-  endif()
 endfunction()
 
 macro(early_exit level msg)

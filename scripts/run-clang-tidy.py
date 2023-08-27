@@ -81,7 +81,7 @@ def make_absolute(f, directory):
 
 def get_tidy_invocation(f, clang_tidy_binary, checks, tmpdir, build_path,
                        header_filter, allow_enabling_alpha_checkers,
-                       extra_arg, extra_arg_before, quiet, config,
+                       extra_arg, extra_arg_before, quiet, config, config_file,
                        line_filter):
  """Gets a command line for clang-tidy."""
  start = [clang_tidy_binary]
@@ -109,6 +109,8 @@ def get_tidy_invocation(f, clang_tidy_binary, checks, tmpdir, build_path,
      start.append('-quiet')
  if config:
      start.append('-config=' + config)
+ if config_file:
+     start.append('-config-file=' + config_file)
  start.append(f)
  return start
 
@@ -165,7 +167,7 @@ def run_tidy(args, tmpdir, build_path, queue, lock, failed_files):
                                     tmpdir, build_path, args.header_filter,
                                     args.allow_enabling_alpha_checkers,
                                     args.extra_arg, args.extra_arg_before,
-                                    args.quiet, args.config, args.line_filter)
+                                    args.quiet, args.config, args.config_file, args.line_filter)
 
    proc = subprocess.Popen(invocation, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
    output, err = proc.communicate()
@@ -207,6 +209,8 @@ def main():
                      'When the value is empty, clang-tidy will '
                      'attempt to find a file named .clang-tidy for '
                      'each source file in its parent directories.')
+ parser.add_argument('-config-file', default=None,
+                     help='Specify a config file')
  parser.add_argument('-header-filter', default=None,
                      help='regular expression matching the names of the '
                      'headers to output diagnostics from. Diagnostics from '
