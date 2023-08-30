@@ -11,7 +11,7 @@
 #
 
 include("GenericFindDependency")
-option(libsbp_ENABLE_TESTS "" OFF)
+option(libsbp_ENABLE_TESTS "" true)
 option(libsbp_ENABLE_DOCS "" OFF)
 GenericFindDependency(
   TARGET sbp

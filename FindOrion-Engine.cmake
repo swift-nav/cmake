@@ -12,7 +12,7 @@
 
 include("GenericFindDependency")
 
-option(orion-engine_ENABLE_TESTS "" false)
+option(orion-engine_ENABLE_TESTS "" true)
 
 GenericFindDependency(
   TARGET orion_engine

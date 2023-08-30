@@ -11,7 +11,7 @@
 #
 
 include("GenericFindDependency")
-option(libsettings_ENABLE_TESTS "" OFF)
+option(libsettings_ENABLE_TESTS "" true)
 GenericFindDependency(
   TARGET settings
 )

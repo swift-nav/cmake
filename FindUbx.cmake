@@ -11,7 +11,7 @@
 #
 
 include("GenericFindDependency")
-option(libubx_ENABLE_TESTS "" OFF)
+option(libubx_ENABLE_TESTS "" true)
 GenericFindDependency(
   TARGET ubx
   SOURCE_DIR "c"

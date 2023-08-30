@@ -12,9 +12,9 @@
 
 include("GenericFindDependency")
 
-option(starling_ENABLE_TESTS "" OFF)
-option(starling_ENABLE_TEST_LIBS "" OFF)
-option(starling_ENABLE_EXAMPLES "" OFF)
+option(starling_ENABLE_TESTS "" true)
+option(starling_ENABLE_TEST_LIBS "" true)
+option(starling_ENABLE_EXAMPLES "" true)
 
 GenericFindDependency(
   TARGET pvt-engine

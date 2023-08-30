@@ -11,7 +11,7 @@
 #
 
 include("GenericFindDependency")
-option(libixcom_ENABLE_TESTS "" OFF)
+option(libixcom_ENABLE_TESTS "" true)
 GenericFindDependency(
   TARGET ixcom
   SOURCE_DIR "c"

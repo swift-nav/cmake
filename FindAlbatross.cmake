@@ -12,8 +12,8 @@
 
 include("GenericFindDependency")
 
-option(albatross_ENABLE_EXAMPLES "" false)
-option(albatross_ENABLE_TESTS "" false)
+option(albatross_ENABLE_EXAMPLES "" true)
+option(albatross_ENABLE_TESTS "" true)
 
 GenericFindDependency(
   TARGET albatross

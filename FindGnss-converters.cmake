@@ -11,7 +11,7 @@
 #
 
 include("GenericFindDependency")
-option(gnss-converters_ENABLE_TESTS "" OFF)
+option(gnss-converters_ENABLE_TESTS "" true)
 GenericFindDependency(
   TARGET gnss_converters
   SOURCE_DIR "gnss-converters/c"

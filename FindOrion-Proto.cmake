@@ -12,7 +12,7 @@
 
 include("GenericFindDependency")
 
-option(orion_proto_ENABLE_TESTS "" false)
+option(orion_proto_ENABLE_TESTS "" true)
 
 GenericFindDependency(
   TARGET orion-proto

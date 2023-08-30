@@ -11,9 +11,9 @@
 #
 
 include("GenericFindDependency")
-option(pal_ENABLE_TESTS "" OFF)
-option(pal_ENABLE_EXAMPLES "" OFF)
-option(pal_ENABLE_TEST_LIBS "" OFF)
+option(pal_ENABLE_TESTS "" true)
+option(pal_ENABLE_EXAMPLES "" true)
+option(pal_ENABLE_TEST_LIBS "" true)
 GenericFindDependency(
   TARGET pal
   ADDITIONAL_TARGETS pal++

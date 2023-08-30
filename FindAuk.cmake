@@ -12,7 +12,7 @@
 
 include("GenericFindDependency")
 
-option(auk_ENABLE_TESTS "" FALSE)
+option(auk_ENABLE_TESTS "" true)
 
 GenericFindDependency(TARGET swiftnav::ssr-client
                       SOURCE_DIR auk)

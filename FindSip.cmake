@@ -12,7 +12,7 @@
 
 include("GenericFindDependency")
 
-option(sip_ENABLE_TESTS "" false)
+option(sip_ENABLE_TESTS "" true)
 
 GenericFindDependency(
   TARGET sip

@@ -11,7 +11,7 @@
 #
 
 include("GenericFindDependency")
-option(libswiftnav_ENABLE_TESTS "" OFF)
+option(libswiftnav_ENABLE_TESTS "" true)
 GenericFindDependency(
   TARGET swiftnav
   SYSTEM_HEADER_FILE "swiftnav/bits.h"

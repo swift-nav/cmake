@@ -11,8 +11,8 @@
 #
 
 include("GenericFindDependency")
-option(swiftlets_ENABLE_TESTS "" OFF)
-option(swiftlets_ENABLE_TEST_LIBS "" OFF)
+option(swiftlets_ENABLE_TESTS "" true)
+option(swiftlets_ENABLE_TEST_LIBS "" true)
 GenericFindDependency(
     TARGET swiftlets
     SOURCE_DIR swiftlets
