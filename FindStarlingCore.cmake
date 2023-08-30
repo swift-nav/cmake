@@ -13,7 +13,7 @@
 include("GenericFindDependency")
 
 option(starling-core_ENABLE_TESTS "" OFF)
-option(starling-core_ENABLE_TEST_LIBS "" OFF)
+option(starling-core_ENABLE_TEST_LIBS "" ON)
 
 GenericFindDependency(
   TARGET internal-utils
