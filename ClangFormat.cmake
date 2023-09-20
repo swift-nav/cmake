@@ -142,7 +142,7 @@ endmacro()
 # documentation in the file header.
 function(swift_setup_clang_format)
   set(argOption "REQUIRED")
-  set(argSingle "SCRIPT")
+  set(argSingle "SCRIPT" "GIT_DESCRIBE_MATCH")
   set(argMulti "CLANG_FORMAT_NAMES" "PATTERNS")
 
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
@@ -232,10 +232,16 @@ function(swift_setup_clang_format)
     set(patterns '*.[ch]' '*.cpp' '*.cc' '*.hpp')
   endif()
 
+  if(x_GIT_DESCRIBE_MATCH)
+    set(git_describe_match --match=${x_GIT_DESCRIBE_MATCH})
+  else()
+    set(git_describe_match)
+  endif()
+
   create_clang_format_targets(
       TOP_LEVEL ${top_level_project}
       ALL_COMMAND git ls-files ${patterns} | xargs -r ${${PROJECT_NAME}_CLANG_FORMAT} -i
-      DIFF_COMMAND git describe --tags --abbrev=0 --always
+      DIFF_COMMAND git describe --tags --abbrev=0 --always ${git_describe_match}
                    | xargs -rI % git diff --diff-filter=ACMRTUXB --name-only --line-prefix=`git rev-parse --show-toplevel`/ % -- ${patterns}
                    | xargs -r ${${PROJECT_NAME}_CLANG_FORMAT} -i
   )
