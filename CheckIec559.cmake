@@ -12,4 +12,3 @@ function(check_cxx_double_is_iec559)
     message(FATAL_ERROR "Compiler does not support IEC 559 (IEEE 754) doubles.")
   endif()
 endfunction()
-
