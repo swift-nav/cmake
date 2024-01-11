@@ -18,13 +18,13 @@ endif()
 find_path(suitesparse_cholmod_INCLUDE_DIR
   NAMES cholmod.h
   HINTS ${SUITESPARSE_DIRS}
-  PATH_SUFFIXES "suitesparse" "include/suitesparse"
+  PATH_SUFFIXES "include" "include/suitesparse"
 )
 
 find_path(suitesparse_spqr_INCLUDE_DIR
   NAMES SuiteSparseQR.hpp
   HINTS ${SUITESPARSE_DIRS}
-  PATH_SUFFIXES "suitesparse" "include/suitesparse"
+  PATH_SUFFIXES "include" "include/suitesparse"
 )
 
 find_library(suitesparse_cholmod_LIBRARY
