@@ -14,6 +14,7 @@ option(SWIFT_ENABLE_SCCACHE "Use sccache to speed up compilation process" OFF)
 
 if(SWIFT_ENABLE_SCCACHE)
   find_program(SCCACHE_PATH sccache)
+  SCCACHE_IGNORE_SERVER_IO_ERROR=1
   if(SCCACHE_PATH)
     message(STATUS "Using sccache at ${SCCACHE_PATH}")
     set(CMAKE_C_COMPILER_LAUNCHER ${SCCACHE_PATH})
