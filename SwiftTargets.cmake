@@ -151,6 +151,7 @@ include(CompileOptions)
 include(LanguageStandards)
 include(TestTargets)
 include(ListTargets)
+include(CheckCXXSourceCompiles)
 
 cmake_policy(SET CMP0007 NEW)  # new behaviour list command no longer ignores empty elements
 
@@ -247,10 +248,40 @@ function(swift_add_target target type)
     list(APPEND compile_options_args REMOVE ${x_REMOVE_COMPILE_OPTIONS})
   endif()
 
+  set(extra_definitions)
   if (x_C_STANDARD)
     list(APPEND language_standards_args C ${x_C_STANDARD})
   endif()
   if (x_CXX_STANDARD)
+    if (${x_CXX_STANDARD} STREQUAL "20")
+      # check if the compiler supports memory_resource
+      set(CMAKE_REQUIRED_FLAGS "-std=c++20")
+      check_cxx_source_compiles("
+#include <memory_resource>
+  int main() {
+    return 0;
+  }
+  " memory_resource)
+      if (NOT memory_resource)
+        list(APPEND extra_definitions "SWIFTNAV_EXPERIMENTAL_MEMORY_RESOURCE")
+      endif()
+      check_cxx_source_compiles("
+  #include <iostream>
+  int a =
+  #ifdef _LIBCPP_VERSION
+    1;
+  #else
+    kdfasfdl
+  #endif
+  int main() {
+    return 0;
+  }
+  " libcxx)
+      if (libcxx)
+        list(APPEND extra_definitions "_LIBCPP_ENABLE_CXX20_REMOVED_FEATURES")
+      endif()
+    endif()
+    message(STATUS "DA LANG ${x_CXX_STANDARD}")
     list(APPEND language_standards_args CXX ${x_CXX_STANDARD})
   endif()
 
@@ -351,6 +382,7 @@ function(swift_add_target target type)
     swift_set_language_standards(${target} ${language_standards_args})
     target_code_coverage(${target} NO_RUN)
 
+    target_compile_definitions(${target} PRIVATE ${extra_definitions})
     if (NOT x_SKIP_COMPILE_OPTIONS)
       swift_set_compile_options(${target} ${compile_options_args} EXTRA_FLAGS ${extra_flags})
     endif()
