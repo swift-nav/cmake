@@ -281,7 +281,6 @@ function(swift_add_target target type)
         list(APPEND extra_definitions "_LIBCPP_ENABLE_CXX20_REMOVED_FEATURES")
       endif()
     endif()
-    message(STATUS "DA LANG ${x_CXX_STANDARD}")
     list(APPEND language_standards_args CXX ${x_CXX_STANDARD})
   endif()
 
