@@ -151,7 +151,6 @@ include(CompileOptions)
 include(LanguageStandards)
 include(TestTargets)
 include(ListTargets)
-include(CheckCXXSourceCompiles)
 
 cmake_policy(SET CMP0007 NEW)  # new behaviour list command no longer ignores empty elements
 
@@ -248,7 +247,6 @@ function(swift_add_target target type)
     list(APPEND compile_options_args REMOVE ${x_REMOVE_COMPILE_OPTIONS})
   endif()
 
-  set(extra_definitions)
   if (x_C_STANDARD)
     list(APPEND language_standards_args C ${x_C_STANDARD})
   endif()
@@ -353,7 +351,6 @@ function(swift_add_target target type)
     swift_set_language_standards(${target} ${language_standards_args})
     target_code_coverage(${target} NO_RUN)
 
-    target_compile_definitions(${target} PRIVATE ${extra_definitions})
     if (NOT x_SKIP_COMPILE_OPTIONS)
       swift_set_compile_options(${target} ${compile_options_args} EXTRA_FLAGS ${extra_flags})
     endif()
