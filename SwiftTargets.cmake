@@ -253,34 +253,6 @@ function(swift_add_target target type)
     list(APPEND language_standards_args C ${x_C_STANDARD})
   endif()
   if (x_CXX_STANDARD)
-    if (${x_CXX_STANDARD} STREQUAL "20")
-      # check if the compiler supports memory_resource
-      set(CMAKE_REQUIRED_FLAGS "-std=c++20")
-      check_cxx_source_compiles("
-#include <memory_resource>
-  int main() {
-    return 0;
-  }
-  " memory_resource)
-      if (NOT memory_resource)
-        list(APPEND extra_definitions "SWIFTNAV_EXPERIMENTAL_MEMORY_RESOURCE")
-      endif()
-      check_cxx_source_compiles("
-  #include <iostream>
-  int a =
-  #ifdef _LIBCPP_VERSION
-    1;
-  #else
-    kdfasfdl
-  #endif
-  int main() {
-    return 0;
-  }
-  " libcxx)
-      if (libcxx)
-        list(APPEND extra_definitions "_LIBCPP_ENABLE_CXX20_REMOVED_FEATURES")
-      endif()
-    endif()
     list(APPEND language_standards_args CXX ${x_CXX_STANDARD})
   endif()
 
