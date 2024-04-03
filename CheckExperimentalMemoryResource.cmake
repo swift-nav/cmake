@@ -1,18 +1,11 @@
 include(CheckCXXSourceCompiles)
 
-# Some toolchains require explicitly linking against libatomic
+# The libc++ implementation that ships with clang-14 still
+# has the memory_resource header under experimental.
 #
-# If such linking is required, then this function sets the
-# value of result to "atomic". Otherwise it remains untouched.
-# This makes it so that the function only needs to be called once
-# per project.
-#
-# It can be used as follows:
-#
-# check_cxx_needs_atomic(LINK_ATOMIC)
-# target_link_libraries(foo PRIVATE ${LINK_ATOMIC})
-# ...
-# target_link_libraries(bar PRIVATE ${LINK_ATOMIC})
+# This functions checks if we are using such a standard library
+# implementation and sets a definition to be used if we need to
+# include that version of the header.
 #
 function(check_experimental_memory_resource result)
   check_cxx_source_compiles("
