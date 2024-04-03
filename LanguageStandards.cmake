@@ -54,16 +54,12 @@ function(swift_set_language_standards)
     set(x_CXX 14)
   endif()
 
-  if (x_CXX)
-    message(STATUS "C++ STANDARD: ${x_CXX}")
-  endif()
   set(C_EXTENSIONS ON)
 
   if(NOT x_C_EXTENSIONS_ON)
     set(C_EXTENSIONS OFF)
   endif()
 
-  message(STATUS "UNPARSED ARGS: ${x_UNPARSED_ARGUMENTS}")
   set_target_properties(${x_UNPARSED_ARGUMENTS}
       PROPERTIES
           C_STANDARD ${x_C}
