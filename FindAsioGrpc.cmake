@@ -12,6 +12,10 @@
 
 include("GenericFindDependency")
 
+# asio-grpc has some logic to conditionally enable boost containers, this
+# should just be default by default.
+option(ASIO_GRPC_USE_BOOST_CONTAINER "(deprecated) Use Boost.Container instead of <memory_resource>" false)
+
 GenericFindDependency(
   TARGET asio-grpc::asio-grpc-standalone-asio
   SOURCE_DIR asio-grpc
