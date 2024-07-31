@@ -60,7 +60,20 @@ function(swift_set_language_standards)
     set(C_EXTENSIONS OFF)
   endif()
 
-  set_target_properties(${x_UNPARSED_ARGUMENTS}
+  if(${CMAKE_C_COMPILER_ID} STREQUAL "IAR")
+    set_target_properties(${x_UNPARSED_ARGUMENTS}
+      PROPERTIES
+      C_STANDARD_REQUIRED ON
+      C_EXTENSIONS ${C_EXTENSIONS}
+      CXX_STANDARD_REQUIRED ON
+      CXX_EXTENSIONS OFF
+    )
+    target_compile_options(${x_UNPARSED_ARGUMENTS} PRIVATE $<$<COMPILE_LANGUAGE:CXX>:--strict>)
+    if(NOT ${C_EXTENSIONS})
+      target_compile_options(${x_UNPARSED_ARGUMENTS} PRIVATE $<$<COMPILE_LANGUAGE:C>:--strict>)
+    endif()
+  else()
+    set_target_properties(${x_UNPARSED_ARGUMENTS}
       PROPERTIES
           C_STANDARD ${x_C}
           C_STANDARD_REQUIRED ON
@@ -68,5 +81,6 @@ function(swift_set_language_standards)
           CXX_STANDARD ${x_CXX}
           CXX_STANDARD_REQUIRED ON
           CXX_EXTENSIONS OFF
-  )
+    )
+  endif()
 endfunction()
