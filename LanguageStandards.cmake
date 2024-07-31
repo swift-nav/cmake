@@ -60,7 +60,7 @@ function(swift_set_language_standards)
     set(C_EXTENSIONS OFF)
   endif()
 
-  if(${CMAKE_C_COMPILER_ID} STREQUAL "IAR")
+  if(CMAKE_C_COMPILER_ID STREQUAL "IAR")
     set_target_properties(${x_UNPARSED_ARGUMENTS}
       PROPERTIES
       C_STANDARD_REQUIRED ON
