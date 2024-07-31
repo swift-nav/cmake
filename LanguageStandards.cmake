@@ -81,6 +81,6 @@ function(swift_set_language_standards)
           CXX_STANDARD ${x_CXX}
           CXX_STANDARD_REQUIRED ON
           CXX_EXTENSIONS OFF
-  )
+    )
   endif()
 endfunction()
