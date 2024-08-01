@@ -129,26 +129,6 @@ function (add_static_library_bundle target)
   string (APPEND mri_script "echo save\n")
   string (APPEND mri_script "echo end\n")
 
-  if (NOT ARCHIVE_IAR)
-    set (mri_script_file ${mri_script_dir}/script.mri.sh)
-
-    file (GENERATE
-      OUTPUT ${mri_script_file}
-      CONTENT "${mri_script}"
-      CONDITION 1
-    )
-
-    add_custom_command (
-      OUTPUT ${output_directory}/${output_library}
-      COMMAND bash ${mri_script_file} | ${CMAKE_AR} -M
-      COMMAND_EXPAND_LISTS
-      WORKING_DIRECTORY
-        ${output_directory}
-      DEPENDS
-        ${bundle_libraries}
-    )
-  endif()
-
   if (ARCHIVE_IAR)
     set (iar_script)
     string (APPEND iar_script "--create")
@@ -169,6 +149,24 @@ function (add_static_library_bundle target)
     add_custom_command (
       OUTPUT ${output_directory}/${output_library}
       COMMAND ${CMAKE_AR} -f ${iar_script_file}
+      COMMAND_EXPAND_LISTS
+      WORKING_DIRECTORY
+        ${output_directory}
+      DEPENDS
+        ${bundle_libraries}
+    )
+  else ()
+    set (mri_script_file ${mri_script_dir}/script.mri.sh)
+
+    file (GENERATE
+      OUTPUT ${mri_script_file}
+      CONTENT "${mri_script}"
+      CONDITION 1
+    )
+
+    add_custom_command (
+      OUTPUT ${output_directory}/${output_library}
+      COMMAND bash ${mri_script_file} | ${CMAKE_AR} -M
       COMMAND_EXPAND_LISTS
       WORKING_DIRECTORY
         ${output_directory}
