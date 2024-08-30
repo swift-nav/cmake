@@ -135,6 +135,10 @@ function(swift_set_compile_options)
     endif()
   endif()
 
+  if(CMAKE_SYSTEM_NAME MATCHES "QNX")
+    list(APPEND all_flags -D_QNX_SOURCE)
+  endif ()
+
   list(APPEND all_flags
        -Wall
        -Wcast-align
