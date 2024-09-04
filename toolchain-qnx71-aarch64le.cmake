@@ -6,10 +6,10 @@ set(arch gcc_ntoaarch64le)
 set(ntoarch aarch64)
 set(QNX_PROCESSOR aarch64le)
 
-set(CMAKE_C_COMPILER $ENV{QNX_HOST}/usr/bin/nto${ntoarch}-gcc)
+set(CMAKE_C_COMPILER $ENV{QNX_HOST}/usr/bin/qcc -N 8000K)
 set(CMAKE_C_COMPILER_TARGET ${arch})
 
-set(CMAKE_CXX_COMPILER $ENV{QNX_HOST}/usr/bin/nto${ntoarch}-g++)
+set(CMAKE_CXX_COMPILER $ENV{QNX_HOST}/usr/bin/qcc -lang-c++ -N 8000K)
 set(CMAKE_CXX_COMPILER_TARGET ${arch})
 
 set(CMAKE_ASM_COMPILER qcc -V${arch})
