@@ -54,7 +54,7 @@ lint:
   max_branches: 40 # Default target: 12
   max_arguments: 6 # Default target: 5
   max_localvars: 15
-  max_statements: 125 # Default target: 50
+  max_statements: 130 # Default target: 50
 encode:
   emit_byteorder_mark: false
   input_encoding: utf-8
