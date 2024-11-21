@@ -1,1 +1,5 @@
 * @swift-nav/devinfra
+
+ClangFormat.cmake @swift-nav/coding-guidelines-ccb
+ClangTidy.cmake @swift-nav/coding-guidelines-ccb
+OldClangTidy.cmake @swift-nav/coding-guidelines-ccb
