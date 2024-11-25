@@ -1,4 +1,4 @@
-* @swift-nav/devinfra
+* @swift-nav/build
 
 ClangFormat.cmake @swift-nav/coding-guidelines-ccb
 ClangTidy.cmake @swift-nav/coding-guidelines-ccb
