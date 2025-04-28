@@ -10,6 +10,9 @@
 # WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 #
 
+option (protobuf_INSTALL "Install protobuf binaries and files" OFF)
+option (utf8_range_ENABLE_INSTALL "Configure installation" OFF)
+
 include("GenericFindDependency")
 option(protocol_BUILD_TESTS "" OFF)
 GenericFindDependency(
