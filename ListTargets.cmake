@@ -37,7 +37,7 @@
 # swift_list_targets
 #
 
-cmake_minimum_required(VERSION 3.7)
+cmake_minimum_required(VERSION 3.13)
 
 function(get_all_targets result dir)
   get_property(
