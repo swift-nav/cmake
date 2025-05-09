@@ -250,8 +250,11 @@ function(swift_add_target target type)
   if (x_C_STANDARD)
     list(APPEND language_standards_args C ${x_C_STANDARD})
   endif()
+
   if (x_CXX_STANDARD)
     list(APPEND language_standards_args CXX ${x_CXX_STANDARD})
+  elseif (SWIFT_CXX_STANDARD)
+    list(APPEND language_standards_args CXX ${SWIFT_CXX_STANDARD})
   endif()
 
   if (x_INTERFACE AND x_OBJECT)

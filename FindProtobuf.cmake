@@ -10,6 +10,7 @@
 # WARRANTIES OF MERCHANTABILITY AND/OR FITNESS FOR A PARTICULAR PURPOSE.
 #
 
+option(ABSL_PROPAGATE_CXX_STD "Use CMake C++ standard meta features (e.g. cxx_std_14) that propagate to targets that link to Abseil" true)
 option(protobuf_INSTALL "Install protobuf binaries and files" OFF)
 option(utf8_range_ENABLE_INSTALL "Configure installation" OFF)
 
@@ -17,6 +18,6 @@ include("GenericFindDependency")
 option(protocol_BUILD_TESTS "" OFF)
 GenericFindDependency(
   TARGET "libprotobuf"
-  SOURCE_DIR "protobuf/cmake"
+  SOURCE_DIR "protobuf"
   SYSTEM_INCLUDES
 )
