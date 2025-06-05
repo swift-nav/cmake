@@ -12,6 +12,7 @@
 
 include("GenericFindDependency")
 option(nanopb_BUILD_GENERATOR "" OFF)
+option(NANOPB_PROTOC_OLDER_THAN_3_6_0 "" ON)
 GenericFindDependency(
   TARGET protobuf-nanopb
   SOURCE_DIR "nanopb"
