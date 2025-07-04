@@ -322,6 +322,10 @@ function(swift_add_valgrind_memcheck target)
     list(APPEND valgrind_tool_options "--leak-check=${x_LEAK_CHECK}")
   endif()
 
+  if (x_SUPPRESSIONS_FILE)
+    list(APPEND valgrind_tool_options "--suppressions=${CMAKE_SOURCE_DIR}/${x_SUPPRESSIONS_FILE}")
+  endif()
+
   setup_custom_target(${valgrind_tool} ${target_name})
 
   if (x_GENERATE_JUNIT_REPORT)
