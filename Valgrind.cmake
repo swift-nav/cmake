@@ -294,7 +294,7 @@ endmacro()
 
 function(swift_add_valgrind_memcheck target)
   set(argOption SHOW_REACHABLE TRACK_ORIGINS UNDEF_VALUE_ERRORS GENERATE_JUNIT_REPORT)
-  set(argSingle LEAK_CHECK)
+  set(argSingle LEAK_CHECK SUPPRESSIONS_FILE)
   set(argMulti JUNIT_OPTIONS)
 
   set(valgrind_tool memcheck)
@@ -320,6 +320,10 @@ function(swift_add_valgrind_memcheck target)
 
   if (x_LEAK_CHECK)
     list(APPEND valgrind_tool_options "--leak-check=${x_LEAK_CHECK}")
+  endif()
+
+  if (x_SUPPRESSIONS_FILE)
+    list(APPEND valgrind_tool_options "--suppressions=${CMAKE_SOURCE_DIR}/${x_SUPPRESSIONS_FILE}")
   endif()
 
   setup_custom_target(${valgrind_tool} ${target_name})
