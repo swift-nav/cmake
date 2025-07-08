@@ -294,7 +294,7 @@ endmacro()
 
 function(swift_add_valgrind_memcheck target)
   set(argOption SHOW_REACHABLE TRACK_ORIGINS UNDEF_VALUE_ERRORS GENERATE_JUNIT_REPORT)
-  set(argSingle LEAK_CHECK)
+  set(argSingle LEAK_CHECK SUPPRESSIONS_FILE)
   set(argMulti JUNIT_OPTIONS)
 
   set(valgrind_tool memcheck)
