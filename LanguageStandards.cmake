@@ -39,6 +39,9 @@
 #   )
 #
 
+set(SWIFT_C_STANDARD 99 CACHE STRING "Default C version for all swift targets")
+set(SWIFT_CXX_STANDARD 14 CACHE STRING "Default C++ version for all swift targets")
+
 function(swift_set_language_standards)
   set(argOption C_EXTENSIONS_ON)
   set(argSingle "C" "CXX")
@@ -47,11 +50,11 @@ function(swift_set_language_standards)
   cmake_parse_arguments(x "${argOption}" "${argSingle}" "${argMulti}" ${ARGN})
 
   if(NOT x_C)
-    set(x_C 99)
+    set(x_C ${SWIFT_C_STANDARD})
   endif()
 
   if(NOT x_CXX)
-    set(x_CXX 14)
+    set(x_CXX ${SWIFT_CXX_STANDARD})
   endif()
 
   set(C_EXTENSIONS ON)
