@@ -39,8 +39,8 @@
 #   )
 #
 
-option(SWIFT_C_STANDARD "Default C version for all swift targets" 99)
-option(SWIFT_CXX_STANDARD "Default C++ version for all swift targets" 14)
+set(SWIFT_C_STANDARD 99 CACHE STRING "Default C version for all swift targets")
+set(SWIFT_CXX_STANDARD 14 CACHE STRING "Default C++ version for all swift targets")
 
 function(swift_set_language_standards)
   set(argOption C_EXTENSIONS_ON)
