@@ -13,18 +13,22 @@
 include("GenericFindDependency")
 option(CHECK_ENABLE_TESTS "" OFF)
 option(CHECK_INSTALL "" OFF)
+
+# Store current compile options to restore later
+set(_SAVED_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+
+# Temporarily modify CMAKE_C_FLAGS to disable implicit-function-declaration errors
+# for the check library compilation (needed for Windows/MinGW compatibility)
+if(WIN32)
+  string(REPLACE "-Werror" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=implicit-function-declaration")
+endif()
+
 GenericFindDependency(
   TARGET check
   SYSTEM_INCLUDES
 )
 
-# Disable warnings-as-errors for check library since it's a third-party dependency
-# and its source files are compiled directly (not just headers), so SYSTEM_INCLUDES
-# doesn't suppress warnings. This prevents issues like implicit function declarations
-# on Windows (e.g., alarm() in timer_delete.c) from breaking the build.
-if(TARGET check)
-  target_compile_options(check PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wno-error>)
-endif()
-if(TARGET checkShared)
-  target_compile_options(checkShared PRIVATE $<$<COMPILE_LANGUAGE:C>:-Wno-error>)
-endif()
+# Restore original compile flags
+set(CMAKE_C_FLAGS "${_SAVED_CMAKE_C_FLAGS}")
+unset(_SAVED_CMAKE_C_FLAGS)
