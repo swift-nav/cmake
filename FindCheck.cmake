@@ -18,10 +18,17 @@ option(CHECK_INSTALL "" OFF)
 set(_SAVED_CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
 
 # Temporarily modify CMAKE_C_FLAGS to disable implicit-function-declaration errors
-# for the check library compilation (needed for Windows/MinGW compatibility)
+# for the check library compilation (needed for Windows compatibility)
 if(WIN32)
-  string(REPLACE "-Werror" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
-  set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=implicit-function-declaration")
+  if(MSVC)
+    # MSVC: Remove warnings-as-errors flag and disable specific warning C4013 (implicit function declaration)
+    string(REPLACE "/WX" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} /wd4013")
+  else()
+    # MinGW/GCC: Remove -Werror and disable implicit-function-declaration errors
+    string(REPLACE "-Werror" "" CMAKE_C_FLAGS "${CMAKE_C_FLAGS}")
+    set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -Wno-error=implicit-function-declaration")
+  endif()
 endif()
 
 GenericFindDependency(
